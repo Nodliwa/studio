@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="70" viewBox="0 0 280 70">
+  <style>
+    .simpli-text {
+      font-family: 'PT Sans', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      fill: #00A693;
+    }
+    .plan-text {
+      font-family: 'PT Sans', sans-serif;
+      font-size: 48px;
+      font-weight: 400;
+      fill: #00A693;
+    }
+    .tagline-text {
+      font-family: 'PT Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 400;
+      fill: #4A4A4A;
+    }
+  </style>
+  <text x="10" y="45" class="simpli-text">Simpli</text>
+  <text x="135" y="45" class="plan-text">Plan</text>
+  <text x="75" y="65" class="tagline-text">Celebrating People</text>
+</svg>

@@ -5,7 +5,7 @@ export default function PageHeader() {
     <header className="container mx-auto px-4 py-8 md:px-8">
       <div className="flex flex-col items-center text-center">
         <Image
-          src="https://storage.googleapis.com/aifirebase-7033b.appspot.com/public/logo.png"
+          src="/logo.svg"
           alt="SimpliPlan Logo"
           width={280}
           height={70}
