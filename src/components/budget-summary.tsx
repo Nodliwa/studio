@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronRight } from "lucide-react";
+import React from "react";
 
 interface BudgetSummaryProps {
   categories: BudgetCategory[];
@@ -26,7 +27,7 @@ const SummaryRow = ({ category }: { category: BudgetCategory }) => {
 
   return (
     <Collapsible asChild>
-      <>
+      <React.Fragment>
         <TableRow>
           <TableCell colSpan={2}>
             <CollapsibleTrigger className="flex w-full items-center justify-between text-left">
@@ -48,7 +49,7 @@ const SummaryRow = ({ category }: { category: BudgetCategory }) => {
             ))}
           </>
         </CollapsibleContent>
-      </>
+      </React.Fragment>
     </Collapsible>
   );
 };
