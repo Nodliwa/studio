@@ -93,11 +93,6 @@ export const initialBudgetData: BudgetCategory[] = [
         icon: Handshake,
         total: 0,
         items: [
-            { id: "item-7-1", name: "Tent", metric: "per item", quantity: 1, unitPrice: 1000, total: 0, comment: "" },
-            { id: "item-7-2", name: "Tables", metric: "per item", quantity: 4, unitPrice: 150, total: 0, comment: "" },
-            { id: "item-7-3", name: "Chairs", metric: "per item", quantity: 50, unitPrice: 15, total: 0, comment: "" },
-            { id: "item-7-4", name: "Mobile Fridge", metric: "per item", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
-            { id: "item-7-5", name: "Mobile Toilet", metric: "per item", quantity: 3, unitPrice: 1000, total: 0, comment: "" },
             { id: "item-7-6", name: "Gas Stove / Burner", metric: "per item", quantity: 1, unitPrice: 500, total: 0, comment: "" },
             { id: "item-7-7", name: "Imbiza / Pots", metric: "per item", quantity: 6, unitPrice: 100, total: 0, comment: "" },
             { id: "item-7-8", name: "Plates", metric: "per item", quantity: 40, unitPrice: 10, total: 0, comment: "" },
@@ -121,6 +116,11 @@ export const initialBudgetData: BudgetCategory[] = [
             { id: "item-8-3", name: "Bakers", metric: "per day", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
             { id: "item-8-4", name: "Bakkie Hire", metric: "per day", quantity: 1, unitPrice: 650, total: 0, comment: "" },
             { id: "item-8-5", name: "Bus / Taxi", metric: "per day", quantity: 0, unitPrice: 1500, total: 0, comment: "" },
+            { id: "item-7-1", name: "Tent", metric: "per item", quantity: 1, unitPrice: 1000, total: 0, comment: "" },
+            { id: "item-7-2", name: "Tables", metric: "per item", quantity: 4, unitPrice: 150, total: 0, comment: "" },
+            { id: "item-7-3", name: "Chairs", metric: "per item", quantity: 50, unitPrice: 15, total: 0, comment: "" },
+            { id: "item-7-4", name: "Mobile Fridge", metric: "per item", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
+            { id: "item-7-5", name: "Mobile Toilet", metric: "per item", quantity: 3, unitPrice: 1000, total: 0, comment: "" },
         ],
     },
 ];
