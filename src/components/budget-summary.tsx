@@ -57,9 +57,9 @@ const SummaryRow = ({ category }: { category: BudgetCategory }) => {
 
 export function BudgetSummary({ categories, grandTotal }: BudgetSummaryProps) {
   return (
-    <Card className="sticky top-8">
+    <Card className="sticky top-8 shadow-lg border-border/60">
       <CardHeader>
-        <CardTitle className="font-headline">Dashboard</CardTitle>
+        <CardTitle className="font-headline text-2xl">Dashboard</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
@@ -70,7 +70,7 @@ export function BudgetSummary({ categories, grandTotal }: BudgetSummaryProps) {
           </TableBody>
         </Table>
       </CardContent>
-      <CardFooter className="flex-col items-stretch p-6">
+      <CardFooter className="flex-col items-stretch p-6 bg-muted/50 rounded-b-lg">
         <div className="flex justify-between items-center text-xl font-bold">
           <span>Grand Total</span>
           <span className="font-mono text-primary">{formatCurrency(grandTotal)}</span>

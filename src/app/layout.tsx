@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { PT_Sans } from 'next/font/google';
+import { PT_Sans, Merriweather } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster";
@@ -8,6 +8,12 @@ const ptSans = PT_Sans({
   subsets: ['latin'],
   weight: ['400', '700'],
   variable: '--font-sans',
+});
+
+const merriweather = Merriweather({
+  subsets: ['latin'],
+  weight: ['700'],
+  variable: '--font-headline',
 });
 
 
@@ -31,7 +37,8 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen bg-background font-body antialiased",
-          ptSans.variable
+          ptSans.variable,
+          merriweather.variable
         )}
       >
         {children}
