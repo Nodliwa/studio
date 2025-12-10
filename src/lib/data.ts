@@ -7,6 +7,7 @@ export const initialBudgetData: BudgetCategory[] = [
       name: "Meat",
       icon: UtensilsCrossed,
       total: 0,
+      order: 1,
       items: [
         { id: "item-1-1", name: "Lamb", metric: "per kg", quantity: 100, unitPrice: 185, total: 0, comment: "" },
         { id: "item-1-2", name: "Beef", metric: "per kg", quantity: 50, unitPrice: 175, total: 0, comment: "" },
@@ -19,6 +20,7 @@ export const initialBudgetData: BudgetCategory[] = [
       name: "Starch",
       icon: Wheat,
       total: 0,
+      order: 2,
       items: [
         { id: "item-2-1", name: "Bread", metric: "per loaf", quantity: 40, unitPrice: 20, total: 0, comment: "" },
         { id: "item-2-2", name: "Samp (Umngqusho)", metric: "10kg", quantity: 5, unitPrice: 150, total: 0, comment: "" },
@@ -32,6 +34,7 @@ export const initialBudgetData: BudgetCategory[] = [
       name: "Vegetables",
       icon: Carrot,
       total: 0,
+      order: 3,
       items: [
         { id: "item-3-1", name: "Cabbage", metric: "8 heads", quantity: 4, unitPrice: 200, total: 0, comment: "" },
         { id: "item-3-2", name: "Potatoes", metric: "10kg", quantity: 5, unitPrice: 45, total: 0, comment: "" },
@@ -45,6 +48,7 @@ export const initialBudgetData: BudgetCategory[] = [
       name: "Fruit",
       icon: Apple,
       total: 0,
+      order: 4,
       items: [
         { id: "item-4-1", name: "Apples", metric: "per box", quantity: 3, unitPrice: 225, total: 0, comment: "" },
         { id: "item-4-2", name: "Banana", metric: "per box", quantity: 3, unitPrice: 150, total: 0, comment: "" },
@@ -58,6 +62,7 @@ export const initialBudgetData: BudgetCategory[] = [
       name: "Refreshments",
       icon: Coffee,
       total: 0,
+      order: 5,
       items: [
         { id: "item-5-1", name: "Coffee", metric: "750g", quantity: 3, unitPrice: 120, total: 0, comment: "" },
         { id: "item-5-2", name: "Teabag", metric: "100's", quantity: 3, unitPrice: 50, total: 0, comment: "" },
@@ -73,6 +78,7 @@ export const initialBudgetData: BudgetCategory[] = [
         name: "Deceased",
         icon: Cross,
         total: 0,
+        order: 6,
         items: [
             { id: "item-6-1", name: "Municipal Grave fees", metric: "per item", quantity: 1, unitPrice: 1500, total: 0, comment: "" },
             { id: "item-6-2", name: "Coffin", metric: "per item", quantity: 1, unitPrice: 10000, total: 0, comment: "" },
@@ -92,6 +98,7 @@ export const initialBudgetData: BudgetCategory[] = [
         name: "Service",
         icon: Handshake,
         total: 0,
+        order: 7,
         items: [
             { id: "item-7-6", name: "Gas Stove / Burner", metric: "per item", quantity: 1, unitPrice: 500, total: 0, comment: "" },
             { id: "item-7-7", name: "Imbiza / Pots", metric: "per item", quantity: 6, unitPrice: 100, total: 0, comment: "" },
@@ -110,6 +117,7 @@ export const initialBudgetData: BudgetCategory[] = [
         name: "Logistics",
         icon: Truck,
         total: 0,
+        order: 8,
         items: [
             { id: "item-8-1", name: "Slaughters", metric: "per day", quantity: 5, unitPrice: 100, total: 0, comment: "" },
             { id: "item-8-2", name: "Cookers", metric: "per day", quantity: 1, unitPrice: 2000, total: 0, comment: "" },

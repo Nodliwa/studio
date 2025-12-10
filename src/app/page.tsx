@@ -9,7 +9,22 @@ import { BudgetAccordion } from "@/components/budget-accordion";
 import { BudgetSummary } from "@/components/budget-summary";
 import { UtensilsCrossed } from "lucide-react";
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn, setDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, writeBatch } from 'firebase/firestore';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 export default function Home() {
   const { user, isUserLoading } = useUser();
@@ -25,6 +40,13 @@ export default function Home() {
 
   const { data: fetchedCategories, isLoading: categoriesLoading } = useCollection<BudgetCategory>(categoriesCollection);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   useEffect(() => {
     if (!user && auth) {
       initiateAnonymousSignIn(auth);
@@ -33,7 +55,7 @@ export default function Home() {
   
   useEffect(() => {
     if (fetchedCategories) {
-        const sortedCategories = fetchedCategories.sort((a, b) => a.name.localeCompare(b.name));
+        const sortedCategories = [...fetchedCategories].sort((a, b) => a.order - b.order);
         let newGrandTotal = 0;
 
         const categoriesWithTotals = sortedCategories.map(category => {
@@ -53,10 +75,12 @@ export default function Home() {
         setBudgetData(categoriesWithTotals);
         setGrandTotal(newGrandTotal);
     } else if (!categoriesLoading && user && fetchedCategories === null) {
-      initialBudgetData.forEach(category => {
+      const batch = writeBatch(firestore);
+      initialBudgetData.forEach((category, index) => {
         const categoryDocRef = doc(firestore, 'users', user.uid, 'categories', category.id);
-        setDocumentNonBlocking(categoryDocRef, { ...category, icon: null }, { merge: true });
+        batch.set(categoryDocRef, { ...category, icon: null, order: index });
       });
+      batch.commit();
     }
 }, [fetchedCategories, categoriesLoading, user, firestore]);
 
@@ -115,6 +139,30 @@ export default function Home() {
       setDocumentNonBlocking(categoryDocRef, { ...category, items: newItems }, { merge: true });
     }
   };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setBudgetData((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over!.id);
+        const newOrder = arrayMove(items, oldIndex, newIndex);
+
+        // Update order in Firestore
+        if (user) {
+          const batch = writeBatch(firestore);
+          newOrder.forEach((category, index) => {
+            const docRef = doc(firestore, 'users', user.uid, 'categories', category.id);
+            batch.update(docRef, { order: index });
+          });
+          batch.commit();
+        }
+        
+        return newOrder;
+      });
+    }
+  };
   
   if (isUserLoading || categoriesLoading) {
     return (
@@ -136,11 +184,22 @@ export default function Home() {
             />
           </div>
           <div className="lg:col-span-3">
-            <BudgetAccordion 
-              categories={budgetData}
-              onItemChange={handleItemChange}
-              onAddItem={handleAddItem}
-            />
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={budgetData}
+                strategy={verticalListSortingStrategy}
+              >
+                <BudgetAccordion 
+                  categories={budgetData}
+                  onItemChange={handleItemChange}
+                  onAddItem={handleAddItem}
+                />
+              </SortableContext>
+            </DndContext>
           </div>
         </div>
       </main>

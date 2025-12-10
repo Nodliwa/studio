@@ -19,4 +19,5 @@ export interface BudgetCategory {
   items: BudgetItem[];
   subCategories?: BudgetCategory[];
   total: number;
+  order: number;
 }
