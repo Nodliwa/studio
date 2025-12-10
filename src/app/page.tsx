@@ -80,16 +80,16 @@ export default function Home() {
       <PageHeader />
       <main className="container mx-auto p-4 md:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8">
-          <div className="lg:col-span-2 lg:order-2">
-            <BudgetAccordion 
-              categories={processedData.categories}
-              onItemChange={handleItemChange}
-            />
-          </div>
-          <div className="mt-8 lg:mt-0 lg:order-1 lg:col-span-1">
+          <div className="lg:col-span-1">
             <BudgetSummary 
               categories={processedData.categories}
               grandTotal={processedData.grandTotal}
+            />
+          </div>
+          <div className="lg:col-span-2 mt-8 lg:mt-0">
+            <BudgetAccordion 
+              categories={processedData.categories}
+              onItemChange={handleItemChange}
             />
           </div>
         </div>
