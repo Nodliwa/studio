@@ -1,11 +1,10 @@
 import type { BudgetCategory } from "./types";
 import { UtensilsCrossed, Wheat, Carrot, Apple, Coffee, Cross, Handshake, Truck } from "lucide-react";
 
-export const initialBudgetData: BudgetCategory[] = [
+export const initialBudgetData: Omit<BudgetCategory, 'icon'>[] = [
     {
       id: "cat-1",
       name: "Meat",
-      icon: UtensilsCrossed,
       total: 0,
       order: 1,
       items: [
@@ -18,7 +17,6 @@ export const initialBudgetData: BudgetCategory[] = [
     {
       id: "cat-2",
       name: "Starch",
-      icon: Wheat,
       total: 0,
       order: 2,
       items: [
@@ -32,7 +30,6 @@ export const initialBudgetData: BudgetCategory[] = [
     {
       id: "cat-3",
       name: "Vegetables",
-      icon: Carrot,
       total: 0,
       order: 3,
       items: [
@@ -46,7 +43,6 @@ export const initialBudgetData: BudgetCategory[] = [
     {
       id: "cat-4",
       name: "Fruit",
-      icon: Apple,
       total: 0,
       order: 4,
       items: [
@@ -60,7 +56,6 @@ export const initialBudgetData: BudgetCategory[] = [
     {
       id: "cat-5",
       name: "Refreshments",
-      icon: Coffee,
       total: 0,
       order: 5,
       items: [
@@ -76,7 +71,6 @@ export const initialBudgetData: BudgetCategory[] = [
     {
         id: "cat-6",
         name: "Deceased",
-        icon: Cross,
         total: 0,
         order: 6,
         items: [
@@ -96,7 +90,6 @@ export const initialBudgetData: BudgetCategory[] = [
     {
         id: "cat-7",
         name: "Service",
-        icon: Handshake,
         total: 0,
         order: 7,
         items: [
@@ -115,7 +108,6 @@ export const initialBudgetData: BudgetCategory[] = [
     {
         id: "cat-8",
         name: "Logistics",
-        icon: Truck,
         total: 0,
         order: 8,
         items: [

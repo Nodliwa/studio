@@ -62,35 +62,40 @@ export default function Home() {
   }, [user, auth]);
   
   useEffect(() => {
-    if (fetchedCategories) {
+    if (user && !budgetLoading && !categoriesLoading) {
+      if (fetchedCategories && fetchedCategories.length > 0) {
+        // Categories exist, process them
         const sortedCategories = [...fetchedCategories].sort((a, b) => a.order - b.order);
         let newGrandTotal = 0;
 
         const categoriesWithTotals = sortedCategories.map(category => {
-            let categoryTotal = 0;
-            const items = category.items || [];
-            const itemsWithTotals = items.map(item => {
-                const itemTotal = (item.quantity || 0) * (item.unitPrice || 0);
-                categoryTotal += itemTotal;
-                return { ...item, total: itemTotal };
-            });
-            category.items = itemsWithTotals;
-            category.total = categoryTotal;
-            newGrandTotal += categoryTotal;
-            return category;
+          let categoryTotal = 0;
+          const items = category.items || [];
+          const itemsWithTotals = items.map(item => {
+            const itemTotal = (item.quantity || 0) * (item.unitPrice || 0);
+            categoryTotal += itemTotal;
+            return { ...item, total: itemTotal };
+          });
+          category.items = itemsWithTotals;
+          category.total = categoryTotal;
+          newGrandTotal += categoryTotal;
+          return category;
         });
 
         setBudgetData(categoriesWithTotals);
         setGrandTotal(newGrandTotal);
-    } else if (!categoriesLoading && user && fetchedCategories?.length === 0) {
-      const batch = writeBatch(firestore);
-      initialBudgetData.forEach((category, index) => {
-        const categoryDocRef = doc(firestore, 'users', user.uid, 'budgets', 'main-budget', 'categories', category.id);
-        batch.set(categoryDocRef, { ...category, icon: null, order: index });
-      });
-      batch.commit();
+      } else if (fetchedCategories?.length === 0) {
+        // No categories, so seed the initial data
+        const batch = writeBatch(firestore);
+        initialBudgetData.forEach((category, index) => {
+          const categoryDocRef = doc(firestore, 'users', user.uid, 'budgets', 'main-budget', 'categories', category.id);
+          const { icon, ...categoryData } = category;
+          batch.set(categoryDocRef, { ...categoryData, order: index });
+        });
+        batch.commit();
+      }
     }
-}, [fetchedCategories, categoriesLoading, user, firestore]);
+  }, [fetchedCategories, categoriesLoading, budgetLoading, user, firestore]);
 
 
   const handleItemChange = (

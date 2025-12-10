@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "./ui/button";
-import { PlusCircle, GripVertical } from "lucide-react";
+import { PlusCircle, GripVertical, UtensilsCrossed, Wheat, Carrot, Apple, Coffee, Cross, Handshake, Truck } from "lucide-react";
 import React from "react";
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -32,6 +32,18 @@ interface BudgetAccordionProps {
   onAddItem: (categoryPath: string[]) => void;
   categoryPath?: string[];
 }
+
+const iconMap: { [key: string]: React.ElementType } = {
+  'cat-1': UtensilsCrossed,
+  'cat-2': Wheat,
+  'cat-3': Carrot,
+  'cat-4': Apple,
+  'cat-5': Coffee,
+  'cat-6': Cross,
+  'cat-7': Handshake,
+  'cat-8': Truck,
+};
+
 
 const SortableCategory = ({ category, onItemChange, onAddItem, categoryPath = [] }: { category: BudgetCategory } & Omit<BudgetAccordionProps, 'categories'>) => {
   const {
@@ -48,7 +60,7 @@ const SortableCategory = ({ category, onItemChange, onAddItem, categoryPath = []
   };
 
   const currentPath = [...categoryPath, category.id];
-  const Icon = category.icon;
+  const Icon = iconMap[category.id] || UtensilsCrossed;
 
   return (
     <div ref={setNodeRef} style={style}>
