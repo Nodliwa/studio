@@ -143,57 +143,18 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isValidUserDocument(userId);
       allow update: if isExistingOwner(userId) && isImmutableUserDocument();
       allow delete: if isExistingOwner(userId);
-    }
 
-    /**
-     * @description Rules for the user's Budgets subcollection.
-     * @path /users/{userId}/budgets/{budgetId}
-     * @allow A user (auth.uid='user123') can (list) their own budgets at /users/user123/budgets.
-     * @allow A user (auth.uid='user123') can (create) a new budget at /users/user123/budgets/{budgetId}.
-     * @deny A user (auth.uid='user456') cannot (get) a budget from /users/user123/budgets/{budgetId}.
-     * @deny A user (auth.uid='user123') cannot (create) a budget where the budget's internal `userId` is 'user456'.
-     * @principle Enforces that all budget documents and sub-documents are owned by and only accessible to the user specified in the path.
-     */
-    match /users/{userId}/budgets/{budgetId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidBudgetDocument(userId);
-      allow update: if isExistingOwner(userId) && isImmutableBudgetDocument();
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Rules for the Categories subcollection within a budget.
-     * @path /users/{userId}/budgets/{budgetId}/categories/{categoryId}
-     * @allow A user (auth.uid='user123') can (get) a category within their own budget.
-     * @allow A user (auth.uid='user123') can (list) all categories for one of their budgets.
-     * @deny A user (auth.uid='user456') cannot (update) a category in another user's budget.
-     * @deny A user (auth.uid='user123') cannot (create) a category that references a different budgetId.
-     * @principle Extends path-based ownership down to the category level, ensuring data integrity with its parent budget.
-     */
-    match /users/{userId}/budgets/{budgetId}/categories/{categoryId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidCategoryDocument(budgetId);
-      allow update: if isExistingOwner(userId) && isImmutableCategoryDocument();
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Rules for the Items subcollection within a category.
-     * @path /users/{userId}/budgets/{budgetId}/categories/{categoryId}/items/{itemId}
-     * @allow A user (auth.uid='user123') can (delete) an item within their own category.
-     * @allow A user (auth.uid='user123') can (list) all items for one of their categories.
-     * @deny A user (auth.uid='user456') cannot (list) items from another user's category.
-     * @deny A user (auth.uid='user123') cannot change an item's parent categoryId on update.
-     * @principle Extends path-based ownership to the most granular data level, ensuring items are correctly linked to their parent category.
-     */
-    match /users/{userId}/budgets/{budgetId}/categories/{categoryId}/items/{itemId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidItemDocument(categoryId);
-      allow update: if isExistingOwner(userId) && isImmutableItemDocument();
-      allow delete: if isExistingOwner(userId);
+      /**
+       * @description Rules for the user's Categories subcollection.
+       * @path /users/{userId}/categories/{categoryId}
+       * @allow A user (auth.uid='user123') can (list) their own categories at /users/user123/categories.
+       * @allow A user (auth.uid='user123') can (create) a new category at /users/user123/categories/{categoryId}.
+       * @deny A user (auth.uid='user456') cannot (get) a category from /users/user123/categories/{categoryId}.
+       * @principle Enforces that all category documents are owned by and only accessible to the user specified in the path.
+       */
+      match /categories/{categoryId} {
+        allow get, list, create, update, delete: if isOwner(userId);
+      }
     }
   }
 }
