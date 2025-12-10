@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -36,6 +37,39 @@ export default function Home() {
         (item[field] as any) =
           typeof item[field] === "number" ? parseFloat(value as string) || 0 : value;
       }
+      return newData;
+    });
+  };
+
+  const handleAddItem = (categoryPath: number[]) => {
+    setBudgetData((prevData) => {
+      const newData = JSON.parse(JSON.stringify(prevData));
+      
+      let currentCategoryLevel = newData;
+      let categoryToUpdate: BudgetCategory | undefined;
+
+      for (let i = 0; i < categoryPath.length; i++) {
+        const index = categoryPath[i];
+        if (i === categoryPath.length - 1) {
+          categoryToUpdate = currentCategoryLevel[index];
+        } else {
+          currentCategoryLevel = currentCategoryLevel[index].subCategories!;
+        }
+      }
+
+      if (categoryToUpdate) {
+        const newItem: BudgetItem = {
+          id: `item-${Date.now()}`,
+          name: "",
+          metric: "",
+          quantity: 0,
+          unitPrice: 0,
+          total: 0,
+          comment: "",
+        };
+        categoryToUpdate.items.push(newItem);
+      }
+      
       return newData;
     });
   };
@@ -90,6 +124,7 @@ export default function Home() {
             <BudgetAccordion 
               categories={processedData.categories}
               onItemChange={handleItemChange}
+              onAddItem={handleAddItem}
             />
           </div>
         </div>

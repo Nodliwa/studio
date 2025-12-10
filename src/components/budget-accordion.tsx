@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { BudgetItem, BudgetCategory } from "@/lib/types";
@@ -19,14 +20,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "./ui/button";
+import { PlusCircle } from "lucide-react";
 
 interface BudgetAccordionProps {
   categories: BudgetCategory[];
   onItemChange: (categoryPath: number[], itemIndex: number, field: keyof BudgetItem, value: string | number) => void;
+  onAddItem: (categoryPath: number[]) => void;
   categoryPath?: number[];
 }
 
-export function BudgetAccordion({ categories, onItemChange, categoryPath = [] }: BudgetAccordionProps) {
+export function BudgetAccordion({ categories, onItemChange, onAddItem, categoryPath = [] }: BudgetAccordionProps) {
   return (
     <Accordion type="multiple" defaultValue={categories.map(c => c.id)} className="w-full">
       {categories.map((category, catIndex) => {
@@ -57,7 +61,14 @@ export function BudgetAccordion({ categories, onItemChange, categoryPath = [] }:
                         <TableBody>
                             {category.items.map((item, itemIndex) => (
                             <TableRow key={item.id}>
-                                <TableCell className="font-medium">{item.name}</TableCell>
+                                <TableCell className="font-medium">
+                                  <Input
+                                      type="text"
+                                      value={item.name}
+                                      onChange={(e) => onItemChange(currentPath, itemIndex, 'name', e.target.value)}
+                                      placeholder="Item name"
+                                  />
+                                </TableCell>
                                 <TableCell>
                                 <Input
                                     type="text"
@@ -104,11 +115,19 @@ export function BudgetAccordion({ categories, onItemChange, categoryPath = [] }:
                  <p className="px-6 pb-4 text-muted-foreground">No items in this category.</p>
                )}
 
+              <div className="px-6 pt-4 pb-4">
+                <Button variant="outline" onClick={() => onAddItem(currentPath)}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add New Item
+                </Button>
+              </div>
+
               {category.subCategories && category.subCategories.length > 0 && (
                 <div className="px-6 pb-4">
                   <BudgetAccordion 
                     categories={category.subCategories}
                     onItemChange={onItemChange}
+                    onAddItem={onAddItem}
                     categoryPath={currentPath}
                   />
                 </div>
