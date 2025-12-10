@@ -138,15 +138,15 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
           </div>
           <div className="space-y-1">
             <Label htmlFor="eventLocation">Event Location</Label>
-            <div className="flex items-center gap-2">
+            <div className="relative flex items-center">
               <Controller
                 name="eventLocation"
                 control={control}
                 render={({ field }) => (
-                  <Input id="eventLocation" {...field} disabled={!isEditing} />
+                  <Input id="eventLocation" {...field} disabled={!isEditing} className="pr-10" />
                 )}
               />
-              <Button type="button" variant="outline" size="icon" onClick={openGoogleMaps} disabled={!watch('eventLocation')}>
+              <Button type="button" variant="ghost" size="icon" onClick={openGoogleMaps} disabled={!watch('eventLocation')} className="absolute right-0 h-9 w-10 text-muted-foreground hover:text-primary">
                   <MapPin className="h-4 w-4" />
               </Button>
             </div>
