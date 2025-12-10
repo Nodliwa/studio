@@ -4,6 +4,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase';
+import { PlacesAutocompleteProvider } from '@/components/places-autocomplete-provider';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -42,9 +43,11 @@ export default function RootLayout({
           merriweather.variable
         )}
       >
-        <FirebaseClientProvider>
-          {children}
-        </FirebaseClientProvider>
+        <PlacesAutocompleteProvider>
+          <FirebaseClientProvider>
+            {children}
+          </FirebaseClientProvider>
+        </PlacesAutocompleteProvider>
         <Toaster />
       </body>
     </html>
