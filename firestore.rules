@@ -147,7 +147,8 @@ service cloud.firestore {
        * @description Rules for the user's Budgets subcollection.
        */
       match /budgets/{budgetId} {
-        allow get, list, create, update, delete: if isOwner(userId);
+        allow get, create, update, delete: if isOwner(userId);
+        allow list: if isOwner(userId);
 
         /**
          * @description Rules for the categories within a budget.
