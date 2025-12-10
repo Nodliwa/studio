@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useId } from "react";
 import type { BudgetItem, BudgetCategory } from "@/lib/types";
 import { initialBudgetData } from "@/lib/data";
 import PageHeader from "@/components/page-header";
@@ -11,6 +11,7 @@ import { UtensilsCrossed } from "lucide-react";
 
 export default function Home() {
   const [budgetData, setBudgetData] = useState<BudgetCategory[]>(initialBudgetData);
+  const uniqueId = useId();
 
   const handleItemChange = (
     categoryPath: number[],
@@ -60,7 +61,7 @@ export default function Home() {
 
       if (categoryToUpdate) {
         const newItem: BudgetItem = {
-          id: `item-${Date.now()}`,
+          id: `item-${uniqueId}-${Math.random()}`,
           name: "",
           metric: "",
           quantity: 0,
