@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -36,6 +37,8 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+const DEFAULT_BUDGET_NAME = "My Celebration Plan";
+
 export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
   const { user } = useUser();
   const [isEditing, setIsEditing] = useState(false);
@@ -49,7 +52,7 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      name: DEFAULT_BUDGET_NAME,
       eventLocation: "",
       expectedGuests: 0,
       eventType: "",
@@ -59,22 +62,24 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
   useEffect(() => {
     if (budget) {
       reset({
-        name: budget.name || "",
+        name: budget.name || DEFAULT_BUDGET_NAME,
         eventDate: budget.eventDate ? new Date(budget.eventDate) : undefined,
         eventLocation: budget.eventLocation || "",
         expectedGuests: budget.expectedGuests || 0,
         eventType: budget.eventType || "",
       });
-    } else if (user) {
-        // Set initial budget document if it doesn't exist
+      // If the budget exists but still has the default name, assume it's the first time
+      // and allow editing. Otherwise, default to view mode.
+      setIsEditing(budget.name === DEFAULT_BUDGET_NAME);
+    } else if (user && budgetRef) {
+        // Budget doesn't exist, create it and enter edit mode.
         const initialBudget: Omit<Budget, 'id'> = {
-            name: "My Celebration Plan",
+            name: DEFAULT_BUDGET_NAME,
             grandTotal: 0,
             userId: user.uid,
         };
-        if(budgetRef) {
-            setDocumentNonBlocking(budgetRef, initialBudget, {});
-        }
+        setDocumentNonBlocking(budgetRef, initialBudget, {});
+        setIsEditing(true);
     }
   }, [budget, reset, user, budgetRef]);
 
