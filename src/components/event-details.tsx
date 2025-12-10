@@ -70,7 +70,7 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
       });
       // If the budget exists but still has the default name, assume it's the first time
       // and allow editing. Otherwise, default to view mode.
-      setIsEditing(budget.name === DEFAULT_BUDGET_NAME);
+      setIsEditing(budget.name === DEFAULT_BUDGET_NAME && !budget.eventDate);
     } else if (user && budgetRef) {
         // Budget doesn't exist, create it and enter edit mode.
         const initialBudget: Omit<Budget, 'id'> = {
@@ -104,7 +104,7 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
 
   return (
     <Card className="shadow-lg border-border/60">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between p-4">
         <CardTitle className="font-headline text-2xl">
           Event Details
         </CardTitle>
@@ -112,8 +112,8 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
             <Button variant="outline" onClick={() => setIsEditing(true)}>Edit</Button>
         )}
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <CardContent className="p-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label htmlFor="name">My-Plan Name</Label>
             <Controller
