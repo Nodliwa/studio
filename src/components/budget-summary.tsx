@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { BudgetCategory } from "@/lib/types";
@@ -19,8 +20,8 @@ const SummaryRow = ({ category }: { category: BudgetCategory }) => {
   if (!hasSubCategories) {
     return (
       <TableRow>
-        <TableCell className="font-medium">{category.name}</TableCell>
-        <TableCell className="text-right font-mono">{formatCurrency(category.total)}</TableCell>
+        <TableCell className="font-medium py-2">{category.name}</TableCell>
+        <TableCell className="text-right font-mono py-2">{formatCurrency(category.total)}</TableCell>
       </TableRow>
     );
   }
@@ -29,8 +30,8 @@ const SummaryRow = ({ category }: { category: BudgetCategory }) => {
     <Collapsible asChild>
       <React.Fragment>
         <TableRow>
-          <TableCell colSpan={2}>
-            <CollapsibleTrigger className="flex w-full items-center justify-between text-left">
+          <TableCell colSpan={2} className="p-0">
+            <CollapsibleTrigger className="flex w-full items-center justify-between text-left px-4 py-2">
               <span className="flex items-center gap-2 font-medium">
                 <ChevronRight className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-90" />
                 {category.name}
@@ -43,8 +44,8 @@ const SummaryRow = ({ category }: { category: BudgetCategory }) => {
           <>
             {category.subCategories?.map((subCategory) => (
                 <TableRow key={subCategory.id} className="bg-muted/50 hover:bg-muted/80">
-                    <TableCell className="pl-12 font-normal text-muted-foreground">{subCategory.name}</TableCell>
-                    <TableCell className="text-right font-mono text-muted-foreground">{formatCurrency(subCategory.total)}</TableCell>
+                    <TableCell className="pl-12 font-normal text-muted-foreground py-2">{subCategory.name}</TableCell>
+                    <TableCell className="text-right font-mono text-muted-foreground py-2">{formatCurrency(subCategory.total)}</TableCell>
                 </TableRow>
             ))}
           </>
@@ -58,7 +59,7 @@ const SummaryRow = ({ category }: { category: BudgetCategory }) => {
 export function BudgetSummary({ categories, grandTotal }: BudgetSummaryProps) {
   return (
     <Card className="sticky top-8 shadow-lg border-border/60">
-      <CardHeader>
+      <CardHeader className="p-4">
         <CardTitle className="font-headline text-2xl">Dashboard</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
@@ -70,7 +71,7 @@ export function BudgetSummary({ categories, grandTotal }: BudgetSummaryProps) {
           </TableBody>
         </Table>
       </CardContent>
-      <CardFooter className="flex-col items-stretch p-6 bg-muted/50 rounded-b-lg">
+      <CardFooter className="flex-col items-stretch p-4 bg-muted/50 rounded-b-lg">
         <div className="flex justify-between items-center text-xl font-bold">
           <span>Grand Total</span>
           <span className="font-mono text-primary">{formatCurrency(grandTotal)}</span>
@@ -79,3 +80,4 @@ export function BudgetSummary({ categories, grandTotal }: BudgetSummaryProps) {
     </Card>
   );
 }
+
