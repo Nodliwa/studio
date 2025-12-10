@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -30,7 +31,7 @@ const Greeter = ({ name }: GreeterProps) => {
         {mainGreeting}
       </h1>
       {subGreeting && (
-        <p className="mt-2 text-muted-foreground">{subGreeting}</p>
+        <p className="mt-2 text-muted-foreground font-bold italic">{subGreeting}</p>
       )}
     </div>
   );
