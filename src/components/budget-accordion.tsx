@@ -26,16 +26,16 @@ import React from "react";
 
 interface BudgetAccordionProps {
   categories: BudgetCategory[];
-  onItemChange: (categoryPath: number[], itemIndex: number, field: keyof BudgetItem, value: string | number) => void;
-  onAddItem: (categoryPath: number[]) => void;
-  categoryPath?: number[];
+  onItemChange: (categoryPath: string[], itemIndex: number, field: keyof BudgetItem, value: string | number) => void;
+  onAddItem: (categoryPath: string[]) => void;
+  categoryPath?: string[];
 }
 
 export function BudgetAccordion({ categories, onItemChange, onAddItem, categoryPath = [] }: BudgetAccordionProps) {
   return (
     <Accordion type="multiple" defaultValue={categories.map(c => c.id)} className="w-full">
-      {categories.map((category, catIndex) => {
-        const currentPath = [...categoryPath, catIndex];
+      {categories.map((category) => {
+        const currentPath = [...categoryPath, category.id];
         const Icon = category.icon;
         return (
           <AccordionItem value={category.id} key={category.id} className="mb-4 rounded-lg border-b-0 bg-card shadow-sm overflow-hidden">
@@ -141,3 +141,4 @@ export function BudgetAccordion({ categories, onItemChange, onAddItem, categoryP
     </Accordion>
   );
 }
+

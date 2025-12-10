@@ -1,6 +1,6 @@
 
-import type { LucideIcon } from "lucide-react";
-import type { ComponentType } from "react";
+import type { LucideProps } from "lucide-react";
+import type { ComponentType, ForwardRefExoticComponent } from "react";
 
 export interface BudgetItem {
   id: string;
@@ -15,7 +15,7 @@ export interface BudgetItem {
 export interface BudgetCategory {
   id: string;
   name: string;
-  icon: LucideIcon | ComponentType<any>;
+  icon: ForwardRefExoticComponent<Omit<LucideProps, "ref">>;
   items: BudgetItem[];
   subCategories?: BudgetCategory[];
   total: number;
