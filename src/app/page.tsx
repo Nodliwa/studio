@@ -45,20 +45,22 @@ export default function Home() {
 
   const handleAddItem = (categoryPath: number[]) => {
     setBudgetData((prevData) => {
-      const newData = JSON.parse(JSON.stringify(prevData));
-      
+      const newData = [...prevData];
+  
       let currentCategoryLevel = newData;
       let categoryToUpdate: BudgetCategory | undefined;
-
-      for (let i = 0; i < categoryPath.length; i++) {
-        const index = categoryPath[i];
-        if (i === categoryPath.length - 1) {
-          categoryToUpdate = currentCategoryLevel[index];
+  
+      let parentCategory: BudgetCategory | undefined;
+      for (const index of categoryPath) {
+        parentCategory = currentCategoryLevel[index];
+        if (parentCategory.subCategories) {
+          currentCategoryLevel = parentCategory.subCategories;
         } else {
-          currentCategoryLevel = currentCategoryLevel[index].subCategories!;
+          currentCategoryLevel = [];
         }
       }
-
+      categoryToUpdate = parentCategory;
+  
       if (categoryToUpdate) {
         const newItem: BudgetItem = {
           id: `item-${uniqueId}-${categoryPath.join('-')}-${Date.now()}`,
@@ -75,10 +77,12 @@ export default function Home() {
         categoryToUpdate.items.push(newItem);
       }
       
-      return newData;
+      return newData.map(cat => ({
+        ...cat,
+        icon: cat.icon || UtensilsCrossed
+      }));
     });
   };
-
 
   const processedData = useMemo(() => {
     let grandTotal = 0;
@@ -138,4 +142,3 @@ export default function Home() {
     </div>
   );
 }
-
