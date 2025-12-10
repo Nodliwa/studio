@@ -1,0 +1,199 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model.
+ * A user can only access, modify, or delete data that exists within their
+ * own dedicated document tree. All access requires user authentication.
+ *
+ * Data Structure: All application data is hierarchically nested under the
+ * `/users/{userId}` collection path. A user's profile is the root document,
+ * and their budgets, categories, and items are stored in nested subcollections.
+ * This structure makes ownership-based security straightforward and performant.
+ *
+ * Key Security Decisions:
+ * - Default Deny: All operations are denied by default.
+ * - Authentication Required: No anonymous access is permitted for any data.
+ * - No User Enumeration: The top-level `/users` collection cannot be listed,
+ *   preventing malicious actors from discovering the entire user base.
+ * - Path-Based Ownership: A user's identity (auth.uid) is compared against
+ *   the `{userId}` segment in the document path to determine ownership.
+ *
+ * Denormalization for Authorization: The core authorization model relies on the
+ * document path itself, which is a highly performant strategy. To ensure data
+ * integrity, rules validate that key relational fields within documents (e.g., a
+ * budget's `userId` field) match the corresponding ID in the path upon creation.
+ * These relational fields are then enforced as immutable on update to prevent
+ * documents from being moved between owners or parent documents.
+ *
+ * Structural Segregation: The data model naturally uses structural segregation
+ * by nesting all private user content within their own document tree. This
+ * design inherently secures list operations, as a user can only query collections
+ * that are already inside their private data scope.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------------------
+    // Helper Functions
+    // -------------------------------------------------------------------------
+
+    /**
+     * Verifies that a user is signed in.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Verifies that the currently authenticated user's ID matches the
+     * specified userId from the document path. This is the cornerstone
+     * of the user-ownership security model.
+     * @param userId The user ID from the path wildcard.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * A stricter version of isOwner for update and delete operations. It ensures
+     * that the document being modified actually exists, which is a best practice
+     * to prevent unintended side effects.
+     * @param userId The user ID from the path wildcard.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Validates that the User document being created has its internal 'id'
+     * field correctly set to its own document ID.
+     */
+    function isValidUserDocument(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     * Enforces that the User document's 'id' field cannot be changed after creation.
+     */
+    function isImmutableUserDocument() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * Validates that the Budget document being created correctly references
+     * the parent user ID from the path.
+     */
+    function isValidBudgetDocument(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * Enforces that the Budget's 'userId' field is immutable.
+     */
+    function isImmutableBudgetDocument() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    /**
+     * Validates that the Category document being created correctly references
+     * the parent budget ID from the path.
+     */
+    function isValidCategoryDocument(budgetId) {
+      return request.resource.data.budgetId == budgetId;
+    }
+
+    /**
+     * Enforces that the Category's 'budgetId' field is immutable.
+     */
+    function isImmutableCategoryDocument() {
+      return request.resource.data.budgetId == resource.data.budgetId;
+    }
+
+    /**
+     * Validates that the Item document being created correctly references
+     * the parent category ID from the path.
+     */
+    function isValidItemDocument(categoryId) {
+      return request.resource.data.categoryId == categoryId;
+    }
+
+    /**
+     * Enforces that the Item's 'categoryId' field is immutable.
+     */
+    function isImmutableItemDocument() {
+      return request.resource.data.categoryId == resource.data.categoryId;
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Collection Rules
+    // -------------------------------------------------------------------------
+
+    /**
+     * @description Rules for the User collection.
+     * @path /users/{userId}
+     * @allow A user (auth.uid='user123') can (get) their own profile at /users/user123.
+     * @allow A user (auth.uid='user123') can (create) their own profile at /users/user123.
+     * @deny A user (auth.uid='user456') cannot (get) another user's profile at /users/user123.
+     * @deny Any user cannot (list) the /users collection to prevent user enumeration.
+     * @principle Restricts access to a user's own profile document and prevents discovery of other users.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && isValidUserDocument(userId);
+      allow update: if isExistingOwner(userId) && isImmutableUserDocument();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for the user's Budgets subcollection.
+     * @path /users/{userId}/budgets/{budgetId}
+     * @allow A user (auth.uid='user123') can (list) their own budgets at /users/user123/budgets.
+     * @allow A user (auth.uid='user123') can (create) a new budget at /users/user123/budgets/{budgetId}.
+     * @deny A user (auth.uid='user456') cannot (get) a budget from /users/user123/budgets/{budgetId}.
+     * @deny A user (auth.uid='user123') cannot (create) a budget where the budget's internal `userId` is 'user456'.
+     * @principle Enforces that all budget documents and sub-documents are owned by and only accessible to the user specified in the path.
+     */
+    match /users/{userId}/budgets/{budgetId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidBudgetDocument(userId);
+      allow update: if isExistingOwner(userId) && isImmutableBudgetDocument();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for the Categories subcollection within a budget.
+     * @path /users/{userId}/budgets/{budgetId}/categories/{categoryId}
+     * @allow A user (auth.uid='user123') can (get) a category within their own budget.
+     * @allow A user (auth.uid='user123') can (list) all categories for one of their budgets.
+     * @deny A user (auth.uid='user456') cannot (update) a category in another user's budget.
+     * @deny A user (auth.uid='user123') cannot (create) a category that references a different budgetId.
+     * @principle Extends path-based ownership down to the category level, ensuring data integrity with its parent budget.
+     */
+    match /users/{userId}/budgets/{budgetId}/categories/{categoryId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidCategoryDocument(budgetId);
+      allow update: if isExistingOwner(userId) && isImmutableCategoryDocument();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for the Items subcollection within a category.
+     * @path /users/{userId}/budgets/{budgetId}/categories/{categoryId}/items/{itemId}
+     * @allow A user (auth.uid='user123') can (delete) an item within their own category.
+     * @allow A user (auth.uid='user123') can (list) all items for one of their categories.
+     * @deny A user (auth.uid='user456') cannot (list) items from another user's category.
+     * @deny A user (auth.uid='user123') cannot change an item's parent categoryId on update.
+     * @principle Extends path-based ownership to the most granular data level, ensuring items are correctly linked to their parent category.
+     */
+    match /users/{userId}/budgets/{budgetId}/categories/{categoryId}/items/{itemId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidItemDocument(categoryId);
+      allow update: if isExistingOwner(userId) && isImmutableItemDocument();
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}
