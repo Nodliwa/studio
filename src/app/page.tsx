@@ -61,7 +61,7 @@ export default function Home() {
 
       if (categoryToUpdate) {
         const newItem: BudgetItem = {
-          id: `item-${uniqueId}-${Math.random()}`,
+          id: `item-${uniqueId}-${categoryPath.join('-')}-${Date.now()}`,
           name: "",
           metric: "",
           quantity: 0,
@@ -120,13 +120,13 @@ export default function Home() {
       <PageHeader />
       <main className="container mx-auto p-4 md:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8">
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-3 mb-8">
             <BudgetSummary 
               categories={processedData.categories}
               grandTotal={processedData.grandTotal}
             />
           </div>
-          <div className="lg:col-span-2 mt-8 lg:mt-0">
+          <div className="lg:col-span-3">
             <BudgetAccordion 
               categories={processedData.categories}
               onItemChange={handleItemChange}
@@ -138,3 +138,4 @@ export default function Home() {
     </div>
   );
 }
+
