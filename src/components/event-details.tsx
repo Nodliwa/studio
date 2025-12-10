@@ -104,17 +104,17 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
 
   return (
     <Card className="shadow-lg border-border/60">
-      <CardHeader className="flex flex-row items-center justify-between p-4">
+      <CardHeader className="flex flex-row items-center justify-between p-2">
         <CardTitle className="font-headline text-2xl">
           Event Details
         </CardTitle>
         {!isEditing && (
-            <Button variant="outline" onClick={() => setIsEditing(true)}>Edit</Button>
+            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>Edit</Button>
         )}
       </CardHeader>
-      <CardContent className="p-4">
-        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="space-y-2">
+      <CardContent className="p-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+          <div className="space-y-1">
             <Label htmlFor="name">My-Plan Name</Label>
             <Controller
               name="name"
@@ -122,7 +122,7 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
               render={({ field }) => <Input id="name" {...field} disabled={!isEditing} />}
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="eventDate">Event Date</Label>
             <Controller
               name="eventDate"
@@ -136,7 +136,7 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
               )}
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="eventLocation">Event Location</Label>
             <div className="flex items-center gap-2">
               <Controller
@@ -151,7 +151,7 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
               </Button>
             </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="expectedGuests">Number of Guests</Label>
             <Controller
               name="expectedGuests"
@@ -161,7 +161,7 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
               )}
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="eventType">Event Type</Label>
             <Controller
               name="eventType"
@@ -183,7 +183,7 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
             />
           </div>
           {isEditing && (
-            <div className="lg:col-span-4 flex justify-end gap-2 mt-4">
+            <div className="lg:col-span-4 flex justify-end gap-2 mt-2">
               <Button type="button" variant="ghost" onClick={() => {
                 reset(); // Revert changes
                 setIsEditing(false);
