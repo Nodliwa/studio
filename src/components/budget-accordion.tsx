@@ -58,7 +58,14 @@ export function BudgetAccordion({ categories, onItemChange, categoryPath = [] }:
                             {category.items.map((item, itemIndex) => (
                             <TableRow key={item.id}>
                                 <TableCell className="font-medium">{item.name}</TableCell>
-                                <TableCell>{item.metric}</TableCell>
+                                <TableCell>
+                                <Input
+                                    type="text"
+                                    value={item.metric}
+                                    onChange={(e) => onItemChange(currentPath, itemIndex, 'metric', e.target.value)}
+                                    className="w-24"
+                                />
+                                </TableCell>
                                 <TableCell>
                                 <Input
                                     type="number"

@@ -59,7 +59,7 @@ export function BudgetSummary({ categories, grandTotal }: BudgetSummaryProps) {
   return (
     <Card className="sticky top-8">
       <CardHeader>
-        <CardTitle className="font-headline">Budget Summary</CardTitle>
+        <CardTitle className="font-headline">Dashboard</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
