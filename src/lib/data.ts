@@ -1,5 +1,5 @@
 import type { BudgetCategory } from "./types";
-import { UtensilsCrossed, Wheat, Carrot, Apple, Coffee, Cross, Truck, PersonStanding, Handshake } from "lucide-react";
+import { UtensilsCrossed, Wheat, Carrot, Apple, Coffee, Cross, Handshake, Truck } from "lucide-react";
 
 export const initialBudgetData: BudgetCategory[] = [
     {
@@ -105,14 +105,22 @@ export const initialBudgetData: BudgetCategory[] = [
             { id: "item-7-10", name: "Spoons", metric: "10 pkt", quantity: 10, unitPrice: 20, total: 0, comment: "" },
             { id: "item-7-11", name: "Coffee Mugs", metric: "12 pack", quantity: 5, unitPrice: 200, total: 0, comment: "" },
             { id: "item-7-12", name: "Funeral Program", metric: "per item", quantity: 50, unitPrice: 15, total: 0, comment: "" },
-            { id: "item-7-13", name: "Slaughters", metric: "per day", quantity: 5, unitPrice: 100, total: 0, comment: "" },
-            { id: "item-7-14", name: "Cookers", metric: "per day", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
-            { id: "item-7-15", name: "Bakers", metric: "per day", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
-            { id: "item-7-16", name: "Bakkie Hire", metric: "per day", quantity: 1, unitPrice: 650, total: 0, comment: "" },
-            { id: "item-7-17", name: "Bus / Taxi", metric: "per day", quantity: 0, unitPrice: 1500, total: 0, comment: "" },
             { id: "item-7-18", name: "Videographer", metric: "per day", quantity: 1, unitPrice: 2500, total: 0, comment: "" },
             { id: "item-7-19", name: "Pastor", metric: "per day", quantity: 1, unitPrice: 3000, total: 0, comment: "" },
             { id: "item-7-20", name: "Church Quire", metric: "per day", quantity: 1, unitPrice: 3000, total: 0, comment: "" },
+        ],
+    },
+    {
+        id: "cat-8",
+        name: "Logistics",
+        icon: Truck,
+        total: 0,
+        items: [
+            { id: "item-8-1", name: "Slaughters", metric: "per day", quantity: 5, unitPrice: 100, total: 0, comment: "" },
+            { id: "item-8-2", name: "Cookers", metric: "per day", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
+            { id: "item-8-3", name: "Bakers", metric: "per day", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
+            { id: "item-8-4", name: "Bakkie Hire", metric: "per day", quantity: 1, unitPrice: 650, total: 0, comment: "" },
+            { id: "item-8-5", name: "Bus / Taxi", metric: "per day", quantity: 0, unitPrice: 1500, total: 0, comment: "" },
         ],
     },
 ];
