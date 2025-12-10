@@ -21,3 +21,14 @@ export interface BudgetCategory {
   total: number;
   order: number;
 }
+
+export interface Budget {
+  id: string;
+  name: string;
+  eventDate?: string;
+  eventLocation?: string;
+  expectedGuests?: number;
+  eventType?: string;
+  grandTotal: number;
+  userId: string;
+}

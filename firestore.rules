@@ -138,22 +138,30 @@ service cloud.firestore {
      * @principle Restricts access to a user's own profile document and prevents discovery of other users.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
+      allow get, update: if isOwner(userId);
       allow list: if false;
       allow create: if isOwner(userId) && isValidUserDocument(userId);
-      allow update: if isExistingOwner(userId) && isImmutableUserDocument();
       allow delete: if isExistingOwner(userId);
 
       /**
-       * @description Rules for the user's Categories subcollection.
-       * @path /users/{userId}/categories/{categoryId}
-       * @allow A user (auth.uid='user123') can (list) their own categories at /users/user123/categories.
-       * @allow A user (auth.uid='user123') can (create) a new category at /users/user123/categories/{categoryId}.
-       * @deny A user (auth.uid='user456') cannot (get) a category from /users/user123/categories/{categoryId}.
-       * @principle Enforces that all category documents are owned by and only accessible to the user specified in the path.
+       * @description Rules for the user's Budgets subcollection.
        */
-      match /categories/{categoryId} {
+      match /budgets/{budgetId} {
         allow get, list, create, update, delete: if isOwner(userId);
+
+        /**
+         * @description Rules for the categories within a budget.
+         */
+        match /categories/{categoryId} {
+          allow get, list, create, update, delete: if isOwner(userId);
+
+          /**
+           * @description Rules for items within a category.
+           */
+          match /items/{itemId} {
+             allow get, list, create, update, delete: if isOwner(userId);
+          }
+        }
       }
     }
   }

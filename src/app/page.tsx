@@ -1,14 +1,15 @@
 
 "use client";
 
-import { useState, useMemo, useEffect, useId } from 'react';
+import { useState, useEffect, useId } from 'react';
 import type { BudgetItem, BudgetCategory } from "@/lib/types";
 import { initialBudgetData } from "@/lib/data";
 import PageHeader from "@/components/page-header";
 import { BudgetAccordion } from "@/components/budget-accordion";
 import { BudgetSummary } from "@/components/budget-summary";
+import { EventDetails } from "@/components/event-details";
 import { UtensilsCrossed } from "lucide-react";
-import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn, setDocumentNonBlocking } from '@/firebase';
+import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn, setDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import {
   DndContext,
@@ -25,6 +26,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import Greeter from '@/components/greeter';
 
 export default function Home() {
   const { user, isUserLoading } = useUser();
@@ -34,8 +36,14 @@ export default function Home() {
   const [grandTotal, setGrandTotal] = useState(0);
   const uniqueId = useId();
 
+  const budgetDocRef = useMemoFirebase(() => (
+    user ? doc(firestore, 'users', user.uid, 'budgets', 'main-budget') : null
+  ), [user, firestore]);
+
+  const { data: budget, isLoading: budgetLoading } = useDoc(budgetDocRef);
+
   const categoriesCollection = useMemoFirebase(() => (
-    user ? collection(firestore, 'users', user.uid, 'categories') : null
+    user ? collection(firestore, 'users', user.uid, 'budgets', 'main-budget', 'categories') : null
   ), [user, firestore]);
 
   const { data: fetchedCategories, isLoading: categoriesLoading } = useCollection<BudgetCategory>(categoriesCollection);
@@ -74,10 +82,10 @@ export default function Home() {
 
         setBudgetData(categoriesWithTotals);
         setGrandTotal(newGrandTotal);
-    } else if (!categoriesLoading && user && fetchedCategories === null) {
+    } else if (!categoriesLoading && user && fetchedCategories?.length === 0) {
       const batch = writeBatch(firestore);
       initialBudgetData.forEach((category, index) => {
-        const categoryDocRef = doc(firestore, 'users', user.uid, 'categories', category.id);
+        const categoryDocRef = doc(firestore, 'users', user.uid, 'budgets', 'main-budget', 'categories', category.id);
         batch.set(categoryDocRef, { ...category, icon: null, order: index });
       });
       batch.commit();
@@ -94,7 +102,7 @@ export default function Home() {
     if (!user) return;
   
     const categoryId = categoryPath[0];
-    const categoryDocRef = doc(firestore, 'users', user.uid, 'categories', categoryId);
+    const categoryDocRef = doc(firestore, 'users', user.uid, 'budgets', 'main-budget', 'categories', categoryId);
   
     const updatedBudgetData = budgetData.map(cat => {
       if (cat.id === categoryId) {
@@ -120,7 +128,7 @@ export default function Home() {
     if (!user) return;
     
     const categoryId = categoryPath[0];
-    const categoryDocRef = doc(firestore, 'users', user.uid, 'categories', categoryId);
+    const categoryDocRef = doc(firestore, 'users', user.uid, 'budgets', 'main-budget', 'categories', categoryId);
     
     const category = budgetData.find(cat => cat.id === categoryId);
   
@@ -153,7 +161,7 @@ export default function Home() {
         if (user) {
           const batch = writeBatch(firestore);
           newOrder.forEach((category, index) => {
-            const docRef = doc(firestore, 'users', user.uid, 'categories', category.id);
+            const docRef = doc(firestore, 'users', user.uid, 'budgets', 'main-budget', 'categories', category.id);
             batch.update(docRef, { order: index });
           });
           batch.commit();
@@ -164,7 +172,7 @@ export default function Home() {
     }
   };
   
-  if (isUserLoading || categoriesLoading) {
+  if (isUserLoading || categoriesLoading || budgetLoading) {
     return (
         <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
             <p>Loading...</p>
@@ -176,7 +184,13 @@ export default function Home() {
     <div className="min-h-screen w-full bg-background font-sans text-foreground">
       <PageHeader />
       <main className="container mx-auto p-4 md:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8">
+        <Greeter name={user?.displayName || 'there'} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8 mt-8">
+          <div className="lg:col-span-3 mb-8">
+            <EventDetails budget={budget} budgetRef={budgetDocRef} />
+          </div>
+
           <div className="lg:col-span-3 mb-8">
             <BudgetSummary 
               categories={budgetData}
