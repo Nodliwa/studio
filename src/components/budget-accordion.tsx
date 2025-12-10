@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "./ui/button";
 import { PlusCircle } from "lucide-react";
+import React from "react";
 
 interface BudgetAccordionProps {
   categories: BudgetCategory[];
@@ -35,11 +36,12 @@ export function BudgetAccordion({ categories, onItemChange, onAddItem, categoryP
     <Accordion type="multiple" defaultValue={categories.map(c => c.id)} className="w-full">
       {categories.map((category, catIndex) => {
         const currentPath = [...categoryPath, catIndex];
+        const Icon = category.icon;
         return (
           <AccordionItem value={category.id} key={category.id} className="mb-4 rounded-lg border-b-0 bg-card shadow-sm overflow-hidden">
             <AccordionTrigger className="px-6 py-4 text-lg hover:no-underline [&[data-state=open]>svg]:text-primary">
               <div className="flex items-center gap-4">
-                <category.icon className="h-6 w-6 text-primary" />
+                {Icon && <Icon className="h-6 w-6 text-primary" />}
                 <span className="font-headline font-semibold">{category.name}</span>
                 <Badge variant="secondary" className="font-mono">{formatCurrency(category.total)}</Badge>
               </div>

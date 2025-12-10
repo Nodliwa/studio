@@ -7,6 +7,7 @@ import { initialBudgetData } from "@/lib/data";
 import PageHeader from "@/components/page-header";
 import { BudgetAccordion } from "@/components/budget-accordion";
 import { BudgetSummary } from "@/components/budget-summary";
+import { UtensilsCrossed } from "lucide-react";
 
 export default function Home() {
   const [budgetData, setBudgetData] = useState<BudgetCategory[]>(initialBudgetData);
@@ -67,12 +68,16 @@ export default function Home() {
           total: 0,
           comment: "",
         };
+        if (!categoryToUpdate.items) {
+          categoryToUpdate.items = [];
+        }
         categoryToUpdate.items.push(newItem);
       }
       
       return newData;
     });
   };
+
 
   const processedData = useMemo(() => {
     let grandTotal = 0;

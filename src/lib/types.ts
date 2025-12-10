@@ -1,4 +1,6 @@
+
 import type { LucideIcon } from "lucide-react";
+import type { ComponentType } from "react";
 
 export interface BudgetItem {
   id: string;
@@ -13,7 +15,7 @@ export interface BudgetItem {
 export interface BudgetCategory {
   id: string;
   name: string;
-  icon: LucideIcon;
+  icon: LucideIcon | ComponentType<any>;
   items: BudgetItem[];
   subCategories?: BudgetCategory[];
   total: number;
