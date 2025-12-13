@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -23,11 +23,12 @@ import { PlusCircle, PartyPopper, Heart, Cross } from 'lucide-react';
 
 function MyPlansPage() {
     const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
     const router = useRouter();
 
     const budgetsCollection = useMemoFirebase(() => (
-        user ? collection(user.firestore, 'users', user.uid, 'budgets') : null
-    ), [user]);
+        user ? collection(firestore, 'users', user.uid, 'budgets') : null
+    ), [user, firestore]);
 
     const { data: budgets, isLoading: budgetsLoading } = useCollection<Budget>(budgetsCollection);
 
@@ -37,13 +38,24 @@ function MyPlansPage() {
         }
     }, [user, isUserLoading, router]);
 
-    if (isUserLoading || budgetsLoading || !user || user.isAnonymous) {
+    if (isUserLoading || !user || user.isAnonymous) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
                 <p>Loading plans...</p>
             </div>
         );
     }
+    
+    // We can only get here if user is not null.
+    // The budgetsLoading check should happen after we are sure we have a user.
+    if (budgetsLoading) {
+        return (
+            <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
+                <p>Loading plans...</p>
+            </div>
+        );
+    }
+
 
     const handleNewPlan = (eventType: string) => {
         router.push(`/planner?eventType=${eventType}`);
