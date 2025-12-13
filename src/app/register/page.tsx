@@ -15,7 +15,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PageHeader from '@/components/page-header';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const registerSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -44,20 +44,24 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     setFirebaseError(null);
     try {
-        const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-        const user = userCredential.user;
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                unsubscribe(); // Unsubscribe to prevent this from running again
+                
+                // Create user profile in Firestore
+                const userDocRef = doc(firestore, 'users', user.uid);
+                await setDoc(userDocRef, {
+                    id: user.uid,
+                    email: data.email,
+                    displayName: `${data.firstName} ${data.lastName}`,
+                });
 
-        // Create user profile in Firestore
-        const userDocRef = doc(firestore, 'users', user.uid);
-        await setDoc(userDocRef, {
-            id: user.uid,
-            email: data.email,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            cellphone: data.cellphone || ''
+                router.push('/my-plans');
+            }
         });
 
-        router.push('/my-plans');
+        initiateEmailSignUp(auth, data.email, data.password);
+
     } catch (error) {
       if (error instanceof FirebaseError) {
         setFirebaseError(error.message);

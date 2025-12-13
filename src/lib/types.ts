@@ -36,7 +36,6 @@ export interface Budget {
 export interface User {
     id: string;
     email: string;
-    firstName: string;
-    lastName: string;
+    displayName: string;
     cellphone?: string;
 }

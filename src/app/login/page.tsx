@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth, initiateEmailSignIn } from '@/firebase';
+import { useAuth, initiateEmailSignIn, useUser } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -24,6 +24,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const auth = useAuth();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
 
@@ -35,13 +36,16 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
+  useEffect(() => {
+    if (!isUserLoading && user) {
+        router.push('/my-plans');
+    }
+  }, [user, isUserLoading, router]);
+
   const onSubmit = async (data: LoginFormValues) => {
     setFirebaseError(null);
     try {
-      // We are not awaiting this, auth state is handled by the listener
       initiateEmailSignIn(auth, data.email, data.password);
-      // It might be good to listen for success and then redirect
-      router.push('/my-plans');
     } catch (error) {
       if (error instanceof FirebaseError) {
         setFirebaseError(error.message);
