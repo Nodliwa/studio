@@ -10,26 +10,28 @@ export default function PageHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="container mx-auto px-4 py-4 md:px-8">
-      <div className="flex items-center justify-between">
-        <Link href="/">
-          <Image
-            src="/images/brand2.png"
-            alt="SimpliPlan Logo"
-            width={200}
-            height={50}
-            priority
-          />
-        </Link>
-        <nav className="hidden md:flex items-center gap-4">
-          <Link href="/" className={cn("text-lg font-medium", pathname === "/" ? "text-primary" : "text-foreground/80 hover:text-foreground")}>
-            Home
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center">
+        <div className="mr-4 flex">
+          <Link href="/" className="mr-6 flex items-center space-x-2">
+            <Image
+              src="/images/brand2.png"
+              alt="SimpliPlan Logo"
+              width={150}
+              height={37}
+              priority
+            />
           </Link>
-          <Link href="/my-plans" className={cn("text-lg font-medium", pathname === "/my-plans" ? "text-primary" : "text-foreground/80 hover:text-foreground")}>
-            My Plans
-          </Link>
-        </nav>
-        <div className="flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-4 text-sm">
+            <Link href="/" className={cn("transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
+              Home
+            </Link>
+            <Link href="/my-plans" className={cn("transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") ? "text-foreground" : "text-foreground/60")}>
+              My Plans
+            </Link>
+          </nav>
+        </div>
+        <div className="flex flex-1 items-center justify-end gap-2">
             <Button asChild variant="outline">
                 <Link href="/login">Login</Link>
             </Button>

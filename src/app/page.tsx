@@ -19,7 +19,7 @@ export default function LandingPage() {
         </p>
         <Link href="/planner" className="mt-8">
           <Button size="lg" className="font-semibold text-lg py-6 px-8">
-            Get Started for Free
+            Plan your Event
           </Button>
         </Link>
         
