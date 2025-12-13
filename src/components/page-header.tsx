@@ -10,7 +10,7 @@ export default function PageHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="w-full border-b bg-transparent">
+    <header className="w-full border-b bg-transparent p-3">
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center">
           <Link href="/" className="flex items-center space-x-2">

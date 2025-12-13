@@ -8,11 +8,11 @@ import PageHeader from '@/components/page-header';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen w-full bg-secondary font-sans text-foreground">
-      <main className="container mx-auto p-4 md:p-8">
+    <div className="min-h-screen w-full bg-secondary font-sans text-foreground p-4">
+      <main className="container mx-auto">
         <div className="bg-background rounded-lg shadow-lg">
           <PageHeader />
-          <div className="p-4 md:p-8 text-center">
+          <div className="p-2 md:p-4 text-center">
             <h1 className="text-4xl md:text-5xl font-bold font-headline text-foreground/90 mt-4">
               Celebrate Life, Simplified
             </h1>
