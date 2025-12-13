@@ -24,49 +24,49 @@ export default function LandingPage() {
         
         <div className="mt-24 w-full max-w-6xl">
           <h2 className="text-3xl font-bold font-headline">Features</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex flex-col items-center gap-2">
-                  <UtensilsCrossed className="h-8 w-8 text-primary" />
+              <CardHeader className="p-4">
+                <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
+                  <UtensilsCrossed className="h-6 w-6 text-primary" />
                   <span>Effortless Budgeting</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p>Organize your expenses by category and track every detail with our intuitive interface.</p>
+              <CardContent className="p-4 pt-0">
+                <p className="text-sm text-muted-foreground">Organize your expenses by category and track every detail with our intuitive interface.</p>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader>
-                <CardTitle className="flex flex-col items-center gap-2">
-                  <Cake className="h-8 w-8 text-primary" />
+              <CardHeader className="p-4">
+                <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
+                  <Cake className="h-6 w-6 text-primary" />
                   <span>Plan Any Event</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p>Whether it's a wedding, funeral, or birthday, our flexible tool adapts to your needs.</p>
+              <CardContent className="p-4 pt-0">
+                <p className="text-sm text-muted-foreground">Whether it's a wedding, funeral, or birthday, our flexible tool adapts to your needs.</p>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader>
-                <CardTitle className="flex flex-col items-center gap-2">
-                  <Handshake className="h-8 w-8 text-primary" />
+              <CardHeader className="p-4">
+                <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
+                  <Handshake className="h-6 w-6 text-primary" />
                   <span>Real-Time Updates</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p>See your grand total update instantly as you adjust quantities and prices. No surprises.</p>
+              <CardContent className="p-4 pt-0">
+                <p className="text-sm text-muted-foreground">See your grand total update instantly as you adjust quantities and prices. No surprises.</p>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader>
-                <CardTitle className="flex flex-col items-center gap-2">
-                  <ShoppingCart className="h-8 w-8 text-primary" />
+              <CardHeader className="p-4">
+                <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
+                  <ShoppingCart className="h-6 w-6 text-primary" />
                   <span>Shopping List Ready</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p>Your budget automatically becomes your shopping list, making your store trips a breeze.</p>
+              <CardContent className="p-4 pt-0">
+                <p className="text-sm text-muted-foreground">Your budget automatically becomes your shopping list, making your store trips a breeze.</p>
               </CardContent>
             </Card>
           </div>
