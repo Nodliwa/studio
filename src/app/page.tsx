@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { UtensilsCrossed, Cake, Handshake } from 'lucide-react';
+import { UtensilsCrossed, Cake, Handshake, ShoppingCart } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 
 export default function LandingPage() {
@@ -22,9 +22,9 @@ export default function LandingPage() {
           </Button>
         </Link>
         
-        <div className="mt-24 w-full max-w-5xl">
+        <div className="mt-24 w-full max-w-6xl">
           <h2 className="text-3xl font-bold font-headline">Features</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-8">
             <Card>
               <CardHeader>
                 <CardTitle className="flex flex-col items-center gap-2">
@@ -56,6 +56,17 @@ export default function LandingPage() {
               </CardHeader>
               <CardContent>
                 <p>See your grand total update instantly as you adjust quantities and prices. No surprises.</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex flex-col items-center gap-2">
+                  <ShoppingCart className="h-8 w-8 text-primary" />
+                  <span>Shopping List Ready</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>Your budget automatically becomes your shopping list, making your store trips a breeze.</p>
               </CardContent>
             </Card>
           </div>
