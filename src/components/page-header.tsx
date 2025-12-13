@@ -10,15 +10,15 @@ export default function PageHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="w-full border-b bg-transparent">
       <div className="container flex h-14 items-center">
         <div className="flex items-center">
           <Link href="/" className="flex items-center space-x-2">
             <Image
               src="/images/brand2.png"
               alt="SimpliPlan Logo"
-              width={173}
-              height={43}
+              width={199}
+              height={50}
               priority
             />
           </Link>
