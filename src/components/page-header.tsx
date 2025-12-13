@@ -11,7 +11,7 @@ export default function PageHeader() {
 
   return (
     <header className="w-full border-b bg-transparent">
-      <div className="container flex h-14 items-center">
+      <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center">
           <Link href="/" className="flex items-center space-x-2">
             <Image
@@ -23,7 +23,7 @@ export default function PageHeader() {
             />
           </Link>
         </div>
-        <nav className="hidden md:flex flex-1 items-center justify-center gap-4 text-sm">
+        <nav className="hidden md:flex items-center justify-center gap-4 text-sm absolute left-1/2 -translate-x-1/2">
             <Link href="/" className={cn("transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
               Home
             </Link>
