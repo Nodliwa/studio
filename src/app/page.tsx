@@ -1,5 +1,6 @@
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UtensilsCrossed, Cake, Handshake, ShoppingCart } from 'lucide-react';
@@ -68,6 +69,36 @@ export default function LandingPage() {
               <CardContent className="p-4 pt-0">
                 <p className="text-sm text-muted-foreground">Your budget automatically becomes your shopping list, making your store trips a breeze.</p>
               </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <div className="mt-24 w-full max-w-6xl">
+          <h2 className="text-3xl font-bold font-headline">Plan your Event</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+            <Card className="overflow-hidden">
+              <Image src="/images/wedding.jpg" alt="Wedding" width={400} height={300} className="object-cover w-full h-48" />
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Wedding</CardTitle>
+              </CardHeader>
+            </Card>
+            <Card className="overflow-hidden">
+              <Image src="/images/funeral2.png" alt="Funeral" width={400} height={300} className="object-cover w-full h-48" />
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Funeral</CardTitle>
+              </CardHeader>
+            </Card>
+            <Card className="overflow-hidden">
+              <Image src="/images/umemulo.jpg" alt="uMemulo" width={400} height={300} className="object-cover w-full h-48" />
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">uMemulo</CardTitle>
+              </CardHeader>
+            </Card>
+            <Card className="overflow-hidden">
+              <Image src="/images/umgidi1.jpg" alt="umGidi" width={400} height={300} className="object-cover w-full h-48" />
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">umGidi</CardTitle>
+              </CardHeader>
             </Card>
           </div>
         </div>
