@@ -25,7 +25,7 @@ export default function LandingPage() {
               </Button>
             </Link>
 
-            <div className="mt-24 w-full max-w-6xl mx-auto">
+            <div className="mt-8 w-full max-w-6xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
                 <Card className="overflow-hidden">
                   <Image src="/images/wedding.jpg" alt="Wedding" width={400} height={300} className="object-cover w-full h-48" />
