@@ -29,32 +29,32 @@ export default function LandingPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="overflow-hidden">
                   <Image src="/images/wedding.jpg" alt="Wedding" width={400} height={300} className="object-cover w-full h-48" />
-                  <CardHeader className="p-4">
+                  <CardHeader className="p-2">
                     <CardTitle className="text-xl font-semibold">Wedding</CardTitle>
                   </CardHeader>
                 </Card>
                 <Card className="overflow-hidden">
                   <Image src="/images/funeral2.png" alt="Funeral" width={400} height={300} className="object-cover w-full h-48" />
-                  <CardHeader className="p-4">
+                  <CardHeader className="p-2">
                     <CardTitle className="text-xl font-semibold">Funeral</CardTitle>
                   </CardHeader>
                 </Card>
                 <Card className="overflow-hidden">
                   <Image src="/images/umemulo.jpg" alt="uMemulo" width={400} height={300} className="object-cover w-full h-48" />
-                  <CardHeader className="p-4">
+                  <CardHeader className="p-2">
                     <CardTitle className="text-xl font-semibold">uMemulo</CardTitle>
                   </CardHeader>
                 </Card>
                 <Card className="overflow-hidden">
                   <Image src="/images/umgidi1.jpg" alt="umGidi" width={400} height={300} className="object-cover w-full h-48" />
-                  <CardHeader className="p-4">
+                  <CardHeader className="p-2">
                     <CardTitle className="text-xl font-semibold">umGidi</CardTitle>
                   </CardHeader>
                 </Card>
               </div>
             </div>
 
-            <div className="mt-24 w-full max-w-6xl mx-auto">
+            <div className="mt-12 w-full max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold font-headline">Features</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
                 <Card>
