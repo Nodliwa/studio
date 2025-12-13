@@ -10,6 +10,7 @@ import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import Greeter from '@/components/greeter';
 
 function MyPlansPage() {
     const { user, isUserLoading } = useUser();
@@ -22,29 +23,27 @@ function MyPlansPage() {
     const { data: budgets, isLoading: budgetsLoading } = useCollection<Budget>(budgetsCollection);
 
     useEffect(() => {
-        if (!isUserLoading && !user) {
-            router.push('/login');
+        if (!isUserLoading && (!user || user.isAnonymous)) {
+            router.push('/register');
         }
     }, [user, isUserLoading, router]);
 
-    if (isUserLoading || budgetsLoading) {
+    if (isUserLoading || budgetsLoading || !user || user.isAnonymous) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
                 <p>Loading plans...</p>
             </div>
         );
     }
-    
-    if (!user) {
-        return null; // or a loading spinner, since the redirect will happen
-    }
 
     return (
         <div className="min-h-screen bg-background">
             <PageHeader />
             <main className="container mx-auto p-4 md:p-8">
-                <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold font-headline">My Plans</h1>
+                <Greeter name={user.displayName || 'there'} />
+
+                <div className="flex items-center justify-between my-8">
+                    <h2 className="text-3xl font-bold font-headline">My Plans</h2>
                     <Button asChild>
                         <Link href="/planner">Create New Plan</Link>
                     </Button>
