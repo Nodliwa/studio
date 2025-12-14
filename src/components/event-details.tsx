@@ -17,7 +17,6 @@ import { useLoadScript } from "@react-google-maps/api";
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
   PopoverAnchor,
 } from "@/components/ui/popover";
 import { useRouter } from "next/navigation";
@@ -106,6 +105,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
             eventLocation: "",
             eventDate: "",
             expectedGuests: 0,
+            eventType: ""
         };
         setDocumentNonBlocking(budgetRef, initialBudget, {});
         setIsEditing(true);
