@@ -225,7 +225,7 @@ function MyPlansPage() {
         <div className="min-h-screen bg-secondary p-4 md:p-8">
             <div className="bg-background shadow-2xl min-h-full rounded-lg mx-auto">
                 <PageHeader />
-                <main className="container mx-auto p-4 md:p-8">
+                <main className="mx-auto px-40">
                     <Greeter />
                     <MotivationalQuote />
 

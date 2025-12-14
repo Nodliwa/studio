@@ -31,7 +31,7 @@ export default function LandingFooter() {
   
   return (
     <footer className="w-full mt-24 py-8 bg-secondary border-t">
-        <div className="container mx-auto px-4">
+        <div className="mx-auto px-40">
             <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto items-start">
                 <div>
                      <Card>
@@ -50,7 +50,7 @@ export default function LandingFooter() {
                                 </div>
                                 <div className="relative">
                                     <Textarea id="message" placeholder="Your message..." className="pr-20 min-h-[120px]" />
-                                    <Button type="submit" size="sm" className="absolute bottom-2 right-2">
+                                    <Button type="submit" size="sm" className="absolute" style={{ bottom: '0.5rem', right: '0.5rem' }}>
                                         Send
                                         <Send className="ml-2 h-4 w-4"/>
                                     </Button>
@@ -59,7 +59,7 @@ export default function LandingFooter() {
                         </CardContent>
                     </Card>
                 </div>
-                <div className="text-center">
+                <div className="text-center md:text-center">
                     <h3 className="text-2xl font-headline font-bold">Connect with Us</h3>
                     <div className="flex justify-center items-center gap-4 mt-4">
                         <Link href="#" className="text-muted-foreground hover:text-primary">

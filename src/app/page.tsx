@@ -18,7 +18,7 @@ export default function LandingPage() {
     <div className="min-h-screen w-full bg-secondary p-4 md:p-8">
       <div className="bg-background shadow-2xl min-h-full rounded-lg flex flex-col mx-auto">
           <PageHeader />
-          <main className="container mx-auto p-4 md:p-8 flex-grow">
+          <main className="mx-auto px-40 flex-grow">
           <div className="p-2 md:p-4 text-center">
             <h1 className="text-4xl md:text-5xl font-bold font-headline text-foreground/90">
               Celebrate Loved Ones. Plan Smart.            </h1>
