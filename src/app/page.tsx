@@ -19,13 +19,13 @@ export default function LandingPage() {
             <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
               SimpliPlan helps you budget for life's most important moments. From weddings to birthdays, plan your celebration with ease and confidence.
             </p>
-            <Link href="/planner" className="mt-8 inline-block">
+            <Link href="/my-plans" className="mt-8 inline-block">
               <Button size="lg" className="font-semibold text-lg py-6 px-8">
                 Plan your Event
               </Button>
             </Link>
 
-            <div className="mt-8 w-full max-w-6xl mx-auto">
+            <div className="mt-2 w-full max-w-6xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="overflow-hidden">
                   <Image src="/images/wedding.jpg" alt="Wedding" width={400} height={300} className="object-cover w-full h-48" />
@@ -54,7 +54,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="mt-12 w-full max-w-6xl mx-auto">
+            <div className="mt-8 w-full max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold font-headline">Features</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
                 <Card>

@@ -30,10 +30,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { MapPin } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface EventDetailsProps {
   budget: Budget | null;
   budgetRef: DocumentReference | null;
+  isTemplateMode?: boolean;
 }
 
 const formSchema = z.object({
@@ -123,9 +125,10 @@ const LocationInput = ({ field, disabled }: { field: any, disabled: boolean }) =
 };
 
 
-export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
+export function EventDetails({ budget, budgetRef, isTemplateMode = false }: EventDetailsProps) {
   const { user } = useUser();
-  const [isEditing, setIsEditing] = useState(false);
+  const router = useRouter();
+  const [isEditing, setIsEditing] = useState(isTemplateMode);
 
   const {
     control,
@@ -144,7 +147,9 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
   });
 
   useEffect(() => {
-    if (budget) {
+    if (isTemplateMode) {
+      setIsEditing(true);
+    } else if (budget) {
       reset({
         name: budget.name || DEFAULT_BUDGET_NAME,
         eventDate: budget.eventDate ? new Date(budget.eventDate) : undefined,
@@ -152,7 +157,7 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
         expectedGuests: budget.expectedGuests || 0,
         eventType: budget.eventType || "",
       });
-      setIsEditing(budget.name === DEFAULT_BUDGET_NAME && !budget.eventDate);
+       setIsEditing(budget.name === DEFAULT_BUDGET_NAME && !budget.eventDate);
     } else if (user && budgetRef) {
         const initialBudget: Omit<Budget, 'id'> = {
             name: DEFAULT_BUDGET_NAME,
@@ -162,9 +167,13 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
         setDocumentNonBlocking(budgetRef, initialBudget, {});
         setIsEditing(true);
     }
-  }, [budget, reset, user, budgetRef]);
+  }, [budget, reset, user, budgetRef, isTemplateMode]);
 
   const onSubmit = (data: FormData) => {
+    if (isTemplateMode) {
+      router.push('/register');
+      return;
+    }
     if (!budgetRef || !isDirty) return;
     
     const budgetUpdate = {
@@ -182,7 +191,7 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
         <CardTitle className="font-headline text-2xl">
           Event Details
         </CardTitle>
-        {!isEditing && (
+        {!isEditing && !isTemplateMode && (
             <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>Edit</Button>
         )}
       </CardHeader>
@@ -251,12 +260,14 @@ export function EventDetails({ budget, budgetRef }: EventDetailsProps) {
           </div>
           {isEditing && (
             <div className="lg:col-span-4 flex justify-end gap-2 mt-2">
-              <Button type="button" variant="ghost" onClick={() => {
-                reset(); // Revert changes
-                setIsEditing(false);
-              }}>Cancel</Button>
-              <Button type="submit" disabled={!isDirty || isSubmitting}>
-                Save Changes
+               {!isTemplateMode && (
+                <Button type="button" variant="ghost" onClick={() => {
+                  reset(); // Revert changes
+                  setIsEditing(false);
+                }}>Cancel</Button>
+               )}
+              <Button type="submit" disabled={!isTemplateMode && (!isDirty || isSubmitting)}>
+                {isTemplateMode ? 'Sign Up to Save' : 'Save Changes'}
               </Button>
             </div>
           )}

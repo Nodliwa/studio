@@ -2,7 +2,7 @@
 'use client';
 
 import { useUser, useCollection, useMemoFirebase, useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import type { Budget } from '@/lib/types';
@@ -29,7 +29,7 @@ function MyPlansPage() {
     const router = useRouter();
 
     const budgetsCollection = useMemoFirebase(() => (
-        user ? collection(firestore, 'users', user.uid, 'budgets') : null
+        user && !user.isAnonymous ? collection(firestore, 'users', user.uid, 'budgets') : null
     ), [user, firestore]);
 
     const { data: budgets, isLoading: budgetsLoading } = useCollection<Budget>(budgetsCollection);
@@ -40,47 +40,38 @@ function MyPlansPage() {
         }
     }, [user, isUserLoading, router]);
 
+    const handleNewPlan = async (eventType: string) => {
+        if (user && !user.isAnonymous) {
+            const newBudgetId = uuidv4();
+            const newBudget: Omit<Budget, 'id'> = {
+                name: `${eventType.charAt(0).toUpperCase() + eventType.slice(1)} Plan`,
+                grandTotal: 0,
+                userId: user.uid,
+                eventType: eventType,
+            };
+            
+            const newBudgetDocRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
+            await addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'budgets'), { ...newBudget, id: newBudgetId });
+            router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
+        } else {
+             router.push(`/planner/template?eventType=${eventType}`);
+        }
+    };
+
     if (isUserLoading || !user || user.isAnonymous) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-                <p>Loading plans...</p>
+                <p>Loading...</p>
             </div>
         );
     }
     
-    // We can only get here if user is not null.
-    // The budgetsLoading check should happen after we are sure we have a user.
     if (budgetsLoading) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
                 <p>Loading plans...</p>
             </div>
         );
-    }
-
-
-    const handleNewPlan = async (eventType: string) => {
-        if (!user) return;
-        
-        const newBudgetId = uuidv4();
-        const newBudget: Omit<Budget, 'id'> = {
-            name: `${eventType.charAt(0).toUpperCase() + eventType.slice(1)} Plan`,
-            grandTotal: 0,
-            userId: user.uid,
-            eventType: eventType,
-        };
-        
-        // Non-blocking write to create the budget document first
-        const budgetDocRef = addDocumentNonBlocking(
-            collection(firestore, 'users', user.uid, 'budgets'),
-            newBudget
-        );
-
-        // We don't have the ID immediately, so we'll navigate and let the planner page handle seeding
-        // For simplicity, let's create a doc with a known ID
-        await addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'budgets'), { ...newBudget, id: newBudgetId });
-
-        router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
     }
 
     return (
