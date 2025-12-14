@@ -7,6 +7,8 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
   UserCredential,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
 
 /** Initiate anonymous sign-in (non-blocking). */
@@ -37,4 +39,19 @@ export async function initiateEmailSignUp(authInstance: Auth, email: string, pas
     console.error("Error during the sign-up process:", error);
     throw error;
   }
+}
+
+/**
+ * Initiates Google Sign-In using a popup.
+ * Returns the user credential on successful authentication.
+ */
+export async function initiateGoogleSignIn(authInstance: Auth): Promise<UserCredential> {
+    const provider = new GoogleAuthProvider();
+    try {
+        const result = await signInWithPopup(authInstance, provider);
+        return result;
+    } catch (error) {
+        console.error("Error during Google sign-in:", error);
+        throw error;
+    }
 }
