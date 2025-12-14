@@ -74,9 +74,12 @@ function MyPlansPage() {
         );
     }
     
-    if (!user || user.isAnonymous) {
+    if (user.isAnonymous) {
+        // This should theoretically not be reached if the effect hook above works correctly,
+        // but it's a good failsafe.
+        router.push('/register');
         return (
-            <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
+             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
                 <p>Redirecting to registration...</p>
             </div>
         );
@@ -91,7 +94,7 @@ function MyPlansPage() {
     }
 
     return (
-        <div className="min-h-screen bg-secondary p-4">
+        <div className="min-h-screen bg-secondary p-4 md:p-8">
             <div className="bg-background rounded-lg shadow-lg">
                 <PageHeader />
                 <main className="container mx-auto p-4 md:p-8">
@@ -250,3 +253,5 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
+
+    
