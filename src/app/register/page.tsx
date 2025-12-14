@@ -79,58 +79,60 @@ export default function RegisterPage() {
       }
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageHeader />
-      <main className="container mx-auto flex items-center justify-center p-4 md:p-8">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle as="h2">Create an Account</CardTitle>
-            <CardDescription>Start planning your celebrations with SimpliPlan.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" {...register('firstName')} />
-                  {errors.firstName && <p className="text-destructive text-sm">{errors.firstName.message}</p>}
+    <div className="min-h-screen bg-secondary px-4 md:px-10 lg:px-40">
+      <div className="bg-background shadow-2xl min-h-screen">
+        <PageHeader />
+        <main className="container mx-auto flex items-center justify-center p-4 md:p-8">
+            <Card className="w-full max-w-md">
+            <CardHeader>
+                <CardTitle as="h2">Create an Account</CardTitle>
+                <CardDescription>Start planning your celebrations with SimpliPlan.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input id="firstName" {...register('firstName')} />
+                    {errors.firstName && <p className="text-destructive text-sm">{errors.firstName.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input id="lastName" {...register('lastName')} />
+                    {errors.lastName && <p className="text-destructive text-sm">{errors.lastName.message}</p>}
+                    </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" {...register('lastName')} />
-                  {errors.lastName && <p className="text-destructive text-sm">{errors.lastName.message}</p>}
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" {...register('email')} />
+                    {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" {...register('email')} />
-                {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cellphone">Cellphone (Optional)</Label>
-                <Input id="cellphone" type="tel" {...register('cellphone')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" {...register('password')} />
-                {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
-              </div>
+                <div className="space-y-2">
+                    <Label htmlFor="cellphone">Cellphone (Optional)</Label>
+                    <Input id="cellphone" type="tel" {...register('cellphone')} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input id="password" type="password" {...register('password')} />
+                    {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
+                </div>
 
-              {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
+                {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? 'Creating Account...' : 'Sign Up'}
-              </Button>
-            </form>
-             <div className="mt-4 text-center text-sm">
-                Already have an account?{' '}
-                <Link href="/login" className="underline">
-                    Login
-                </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </main>
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? 'Creating Account...' : 'Sign Up'}
+                </Button>
+                </form>
+                <div className="mt-4 text-center text-sm">
+                    Already have an account?{' '}
+                    <Link href="/login" className="underline">
+                        Login
+                    </Link>
+                </div>
+            </CardContent>
+            </Card>
+        </main>
+        </div>
     </div>
   );
 }
