@@ -124,15 +124,17 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
   };
 
   const handleLocationSelect = (description: string) => {
-      setAutocompleteValue(description, false); 
       setFormValue('eventLocation', description, { shouldDirty: true });
+      setAutocompleteValue(description, false); // Also update autocomplete state
       clearSuggestions();
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, fieldOnChange: (value: any) => void) => {
-    setAutocompleteValue(e.target.value);
-    fieldOnChange(e.target.value);
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>, fieldOnChange: (value: any) => void) => {
+    // This function now correctly updates both react-hook-form and use-places-autocomplete
+    fieldOnChange(e.target.value); // Update react-hook-form state
+    setAutocompleteValue(e.target.value); // Update use-places-autocomplete state
   };
+
 
   return (
     <Card className="shadow-lg border-border/60">
@@ -161,45 +163,45 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
                 name="eventLocation"
                 control={control}
                 render={({ field }) => (
-                    <Popover open={status === 'OK' && autocompleteData.length > 0}>
-                        <PopoverAnchor>
-                        <Input
-                            id="eventLocation"
-                            {...field}
-                            onChange={(e) => handleInputChange(e, field.onChange)}
-                            disabled={!isEditing || !isLoaded}
-                            placeholder={isLoaded ? "Start typing your address..." : "Loading location..."}
-                            autoComplete="off"
-                        />
-                        </PopoverAnchor>
-                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                        {status === 'OK' && (
-                            <div className="flex flex-col gap-2 p-2">
-                            {autocompleteData.map((suggestion) => {
-                                const {
-                                place_id,
-                                structured_formatting: { main_text, secondary_text },
-                                description
-                                } = suggestion;
-                                return (
-                                <Button
-                                    key={place_id}
-                                    variant="ghost"
-                                    className="justify-start h-auto text-left"
-                                    onClick={() => handleLocationSelect(description)}
-                                >
-                                    <div>
-                                    <strong>{main_text}</strong>
-                                    <br />
-                                    <small className="text-muted-foreground">{secondary_text}</small>
-                                    </div>
-                                </Button>
-                                );
-                            })}
-                            </div>
-                        )}
-                        </PopoverContent>
-                    </Popover>
+                  <Popover open={ready && status === 'OK' && autocompleteData.length > 0}>
+                    <PopoverAnchor>
+                      <Input
+                        id="eventLocation"
+                        {...field}
+                        onChange={(e) => handleLocationChange(e, field.onChange)}
+                        disabled={!isEditing || !isLoaded}
+                        placeholder={isLoaded ? "Start typing your address..." : "Loading location..."}
+                        autoComplete="off"
+                      />
+                    </PopoverAnchor>
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                      {status === 'OK' && (
+                         <div className="flex flex-col gap-2 p-2">
+                           {autocompleteData.map((suggestion) => {
+                             const {
+                               place_id,
+                               structured_formatting: { main_text, secondary_text },
+                               description
+                             } = suggestion;
+                             return (
+                               <Button
+                                 key={place_id}
+                                 variant="ghost"
+                                 className="justify-start h-auto text-left"
+                                 onClick={() => handleLocationSelect(description)}
+                               >
+                                 <div>
+                                   <strong>{main_text}</strong>
+                                   <br />
+                                   <small className="text-muted-foreground">{secondary_text}</small>
+                                 </div>
+                               </Button>
+                             );
+                           })}
+                         </div>
+                      )}
+                    </PopoverContent>
+                 </Popover>
                 )}
               />
           </div>
