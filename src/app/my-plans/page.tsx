@@ -140,13 +140,13 @@ function MyPlansPage() {
                                             <CrossIcon />
                                             Funeral
                                         </Button>
-                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('umemulo')}>
+                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('birthday')}>
                                             <ListChecks />
-                                            uMemulo
+                                            Birthday
                                         </Button>
-                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('umgidi')}>
+                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('other')}>
                                             <Wallet />
-                                            umGidi
+                                            Other
                                         </Button>
                                     </div>
                                 </DialogContent>
