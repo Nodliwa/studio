@@ -37,6 +37,7 @@ import { budgetTemplates } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { format } from 'date-fns';
+import MotivationalQuote from '@/components/motivational-quote';
 
 function calculateInitialTotal(categories: any[]): number {
     let grandTotal = 0;
@@ -226,6 +227,7 @@ function MyPlansPage() {
                 <PageHeader />
                 <main className="container mx-auto p-4 md:p-8">
                     <Greeter />
+                    <MotivationalQuote />
 
                     <div className="flex items-center justify-between my-8">
                         <div>
@@ -334,3 +336,5 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
+
+    
