@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { useUser, useFirestore, setDocumentNonBlocking } from "@/firebase";
+import { useUser, useFirestore } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
 import {
   DropdownMenu,
@@ -27,9 +27,10 @@ import {
 import { useState } from "react";
 import type { Budget, BudgetCategory } from "@/lib/types";
 import { v4 as uuidv4 } from 'uuid';
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, setDoc } from "firebase/firestore";
 import { CrossIcon } from "lucide-react";
 import { budgetTemplates } from "@/lib/data";
+import { useToast } from "@/hooks/use-toast";
 
 
 function calculateInitialTotal(categories: BudgetCategory[]): number {
@@ -52,6 +53,7 @@ export default function PageHeader() {
   const router = useRouter();
   const firestore = useFirestore();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleLogout = () => {
     signOut(auth);
@@ -73,12 +75,19 @@ export default function PageHeader() {
       };
 
       const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
-      setDocumentNonBlocking(budgetDocRef, newBudget, {});
+      await setDoc(budgetDocRef, newBudget, {});
 
       router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
     } else {
       router.push(`/planner/template?eventType=${eventType}`);
     }
+  };
+
+  const handleComingSoon = () => {
+    toast({
+        title: "Feature Coming Soon!",
+        description: "We're working hard to bring this to you.",
+    });
   };
 
 
@@ -133,11 +142,11 @@ export default function PageHeader() {
                           <CrossIcon />
                           Funeral
                         </Button>
-                         <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('umemulo')}>
+                         <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
                             <ListChecks />
                             uMemulo
                         </Button>
-                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('umgidi')}>
+                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
                             <Wallet />
                             umGidi
                         </Button>

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, setDocumentNonBlocking } from '@/firebase';
+import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, setDoc } from '@/firebase';
 import { collection, doc, writeBatch, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -34,6 +34,7 @@ import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Trash2 
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
 
 function calculateInitialTotal(categories: BudgetCategory[]): number {
     let grandTotal = 0;
@@ -53,6 +54,7 @@ function MyPlansPage() {
     const firestore = useFirestore();
     const router = useRouter();
     const [dialogOpen, setDialogOpen] = useState(false);
+    const { toast } = useToast();
 
     const budgetsCollection = useMemoFirebase(() => (
         user && !user.isAnonymous ? collection(firestore, 'users', user.uid, 'budgets') : null
@@ -84,12 +86,19 @@ function MyPlansPage() {
             };
             
             const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
-            setDocumentNonBlocking(budgetDocRef, newBudget, {});
+            await setDoc(budgetDocRef, newBudget, {});
 
             router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
         } else {
              router.push(`/planner/template?eventType=${eventType}`);
         }
+    };
+    
+    const handleComingSoon = () => {
+        toast({
+            title: "Feature Coming Soon!",
+            description: "We're working hard to bring this to you.",
+        });
     };
 
     const handleDeletePlan = async (budgetId: string) => {
@@ -115,9 +124,8 @@ function MyPlansPage() {
         }
         
         // After subcollections are handled in the batch, delete the main budget doc
-        batch.delete(budgetDocRef);
+        await deleteDocument(budgetDocRef);
         await batch.commit();
-        deleteDocument(budgetDocRef);
     };
     
     if (isUserLoading || !user || (user && user.isAnonymous)) {
@@ -214,11 +222,11 @@ function MyPlansPage() {
                                             <CrossIcon />
                                             Funeral
                                         </Button>
-                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('umemulo')}>
+                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
                                             <ListChecks />
                                             uMemulo
                                         </Button>
-                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('umgidi')}>
+                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
                                             <Wallet />
                                             umGidi
                                         </Button>
