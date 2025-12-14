@@ -79,7 +79,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                     {budget.eventDate && <CardDescription className="text-white/80 flex items-center gap-2"><CalendarDays className="h-4 w-4" /> {new Date(budget.eventDate).toLocaleDateString()}</CardDescription>}
                 </CardHeader>
                 <CardContent className="flex-grow space-y-2">
-                    <p><Wallet className="inline-block h-4 w-4 mr-2" />Total: {budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
+                    <p><Wallet className="inline-block h-4 w-4 mr-2" />{budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
                     {budget.eventLocation && <p className="flex items-start gap-2"><MapPin className="h-4 w-4 mt-1 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>}
                 </CardContent>
                 <CardFooter className="flex justify-between items-center">
@@ -331,4 +331,6 @@ function MyPlansPage() {
 export default MyPlansPage;
 
     
+    
+
     
