@@ -290,58 +290,60 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   }
   
   return (
-    <div className="min-h-screen w-full bg-background font-sans text-foreground">
-      <PageHeader />
-      <main className="container mx-auto p-4 md:p-8">
-        <Greeter />
-        {eventQuote && (
-            <p className="mt-4 text-lg italic text-muted-foreground">{eventQuote}</p>
-        )}
+    <div className="min-h-screen w-full bg-secondary p-4 md:p-8">
+      <div className="bg-background shadow-2xl min-h-full rounded-lg">
+        <PageHeader />
+        <main className="container mx-auto p-4 md:p-8">
+          <Greeter />
+          {eventQuote && (
+              <p className="mt-4 text-lg italic text-muted-foreground">{eventQuote}</p>
+          )}
 
-        {isTemplateMode && (
-          <Card className="mt-4 mb-8 bg-yellow-100 border-yellow-300">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-bold">You are in Preview Mode</h3>
-                  <p className="text-sm text-yellow-800">Your changes won't be saved. <a href="/register" className="underline font-semibold">Register now</a> to save your plan!</p>
+          {isTemplateMode && (
+            <Card className="mt-4 mb-8 bg-yellow-100 border-yellow-300">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold">You are in Preview Mode</h3>
+                    <p className="text-sm text-yellow-800">Your changes won't be saved. <a href="/register" className="underline font-semibold">Register now</a> to save your plan!</p>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8 mt-8">
-          <div className="lg:col-span-3 mb-8">
-            <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8 mt-8">
+            <div className="lg:col-span-3 mb-8">
+              <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
+            </div>
 
-          <div className="lg:col-span-3 mb-8">
-            <BudgetSummary 
-              categories={budgetData}
-              grandTotal={grandTotal}
-            />
-          </div>
-          <div className="lg:col-span-3">
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={budgetData}
-                strategy={verticalListSortingStrategy}
+            <div className="lg:col-span-3 mb-8">
+              <BudgetSummary 
+                categories={budgetData}
+                grandTotal={grandTotal}
+              />
+            </div>
+            <div className="lg:col-span-3">
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
               >
-                <BudgetAccordion 
-                  categories={budgetData}
-                  onItemChange={handleItemChange}
-                  onAddItem={handleAddItem}
-                />
-              </SortableContext>
-            </DndContext>
+                <SortableContext
+                  items={budgetData}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <BudgetAccordion 
+                    categories={budgetData}
+                    onItemChange={handleItemChange}
+                    onAddItem={handleAddItem}
+                  />
+                </SortableContext>
+              </DndContext>
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
