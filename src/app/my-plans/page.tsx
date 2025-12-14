@@ -60,7 +60,10 @@ function MyPlansPage() {
             const newBudgetWithId = { ...newBudget, id: newBudgetId };
             
             // Non-blocking write
-            addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'budgets'), newBudgetWithId);
+            const budgetsCol = collection(firestore, 'users', user.uid, 'budgets');
+            const newDocRef = doc(budgetsCol, newBudgetId);
+            addDocumentNonBlocking(budgetsCol, newBudgetWithId);
+
 
             // Optimistically navigate
             router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
@@ -70,7 +73,7 @@ function MyPlansPage() {
     };
     
     // Show a loading screen while we verify the user's auth state.
-    if (isUserLoading) {
+    if (isUserLoading || (!user && !isUserLoading)) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
                 <p>Loading...</p>
