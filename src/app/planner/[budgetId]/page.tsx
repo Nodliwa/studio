@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useId, useMemo } from 'react';
@@ -342,8 +341,8 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
             </Card>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8 mt-8">
-             <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
+             <div className="lg:col-span-1">
                 <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
              </div>
              <div className="lg:col-span-1 flex items-center">
@@ -353,13 +352,13 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
                 </div>
              </div>
 
-            <div className="lg:col-span-3 my-8">
+            <div className="lg:col-span-2 my-8">
               <BudgetSummary 
                 categories={budgetData}
                 grandTotal={grandTotal}
               />
             </div>
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-2">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -383,3 +382,5 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
+
+    
