@@ -38,6 +38,15 @@ const funeralQuotes = [
     '"To live in hearts we leave behind is not to die." - Thomas Campbell',
 ];
 
+const weddingQuotes = [
+    '"A successful marriage requires falling in love many times, always with the same person." - Mignon McLaughlin',
+    '"The best thing to hold onto in life is each other." - Audrey Hepburn',
+    '"Love doesnt make the world go round. Love is what makes the ride worthwhile." - Franklin P. Jones',
+    '"To love and be loved is to feel the sun from both sides." - David Viscott',
+    '"A great marriage is not when the perfect couple comes together. It is when an imperfect couple learns to enjoy their differences." - Dave Meurer',
+];
+
+
 function calculateTotals(categories: BudgetCategory[]): { categories: BudgetCategory[], grandTotal: number } {
   let newGrandTotal = 0;
   const categoriesWithTotals = categories.map(category => {
@@ -67,7 +76,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   const router = useRouter();
   const [budgetData, setBudgetData] = useState<BudgetCategory[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
-  const [motivationalQuote, setMotivationalQuote] = useState('');
+  const [eventQuote, setEventQuote] = useState('');
   const uniqueId = useId();
   const isTemplateMode = budgetId === 'template';
 
@@ -127,7 +136,10 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   useEffect(() => {
     if (eventType === 'funeral') {
       const randomIndex = Math.floor(Math.random() * funeralQuotes.length);
-      setMotivationalQuote(funeralQuotes[randomIndex]);
+      setEventQuote(funeralQuotes[randomIndex]);
+    } else if (eventType === 'wedding') {
+      const randomIndex = Math.floor(Math.random() * weddingQuotes.length);
+      setEventQuote(weddingQuotes[randomIndex]);
     }
   }, [eventType]);
 
@@ -255,8 +267,8 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
       <PageHeader />
       <main className="container mx-auto p-4 md:p-8">
         <Greeter name={user?.displayName || 'there'} />
-        {eventType === 'funeral' && motivationalQuote && (
-            <p className="mt-4 text-lg italic text-muted-foreground">{motivationalQuote}</p>
+        {eventQuote && (
+            <p className="mt-4 text-lg italic text-muted-foreground">{eventQuote}</p>
         )}
 
         {isTemplateMode && (
@@ -306,5 +318,3 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
-
-    
