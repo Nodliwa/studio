@@ -73,7 +73,8 @@ function MyPlansPage() {
     };
     
     // Show a loading screen while we verify the user's auth state.
-    if (isUserLoading || (!user && !isUserLoading)) {
+    // This is the key fix: it prevents any rendering or redirects until we know the user's status.
+    if (isUserLoading) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
                 <p>Loading...</p>
@@ -82,11 +83,11 @@ function MyPlansPage() {
     }
     
     // If we're done loading and there's no valid user, the redirect is happening.
-    // We can show a loading state or nothing, as the redirect is quick.
+    // Show a message while redirecting.
     if (!user || user.isAnonymous) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-                <p>Redirecting...</p>
+                <p>Redirecting to registration...</p>
             </div>
         );
     }

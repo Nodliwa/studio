@@ -37,8 +37,12 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    if (!isUserLoading && user) {
+    // Wait until the user loading is complete
+    if (!isUserLoading) {
+      // If a registered (non-anonymous) user is found, redirect to their plans
+      if (user && !user.isAnonymous) {
         router.push('/my-plans');
+      }
     }
   }, [user, isUserLoading, router]);
 
@@ -54,6 +58,16 @@ export default function LoginPage() {
       }
     }
   };
+
+  // If the user is loading OR if they are already logged in, show a loading state
+  // to prevent the form from flashing before the redirect.
+  if (isUserLoading || (user && !user.isAnonymous)) {
+    return (
+      <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
+          <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

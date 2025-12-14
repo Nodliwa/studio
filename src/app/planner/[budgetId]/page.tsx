@@ -143,6 +143,13 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     }
   }, [eventType]);
 
+  useEffect(() => {
+    // If in template mode and a registered user logs in, redirect them.
+    if (!isUserLoading && isTemplateMode && user && !user.isAnonymous) {
+      router.push('/my-plans');
+    }
+  }, [isUserLoading, isTemplateMode, user, router]);
+
   const updateStateAndTotals = (newBudgetData: BudgetCategory[]) => {
       const { categories, grandTotal } = calculateTotals(newBudgetData);
       setBudgetData(categories);
@@ -256,9 +263,9 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     );
   }
 
-  if (isTemplateMode && user?.isAnonymous === false) {
-    // A registered user landed on a template page, they should be on their own plans.
-    router.push('/my-plans');
+  // A registered user landed on a template page, they should be on their own plans.
+  // Wait until loading is done to make this check.
+  if (!isUserLoading && isTemplateMode && user && !user.isAnonymous) {
     return <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center"><p>Redirecting...</p></div>;
   }
   
