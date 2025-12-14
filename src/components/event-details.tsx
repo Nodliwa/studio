@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -12,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { DocumentReference } from "firebase/firestore";
-import usePlacesAutocomplete, { getGeocode, getLatLng } from "use-places-autocomplete";
+import usePlacesAutocomplete from "use-places-autocomplete";
 import { useLoadScript } from "@react-google-maps/api";
 import {
   Popover,
@@ -44,9 +43,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(isTemplateMode);
 
-  // --- Start of Consolidated Autocomplete Logic ---
-
-  const { isLoaded, loadError } = useLoadScript({
+  const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     libraries,
   });
@@ -62,8 +59,6 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     debounce: 300,
     disabled: !isLoaded,
   });
-
-  // --- End of Consolidated Autocomplete Logic ---
 
   const {
     control,
@@ -92,7 +87,6 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
         expectedGuests: budget.expectedGuests || 0,
       };
       reset(initialValues);
-      // Also set the value for the autocomplete input
       if (budget.eventLocation) {
         setAutocompleteValue(budget.eventLocation, false);
       }
@@ -129,16 +123,11 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     setIsEditing(false);
   };
 
-  // This is the key function to handle selection
   const handleLocationSelect = (description: string) => {
-      // 1. Update the visual input field for the user
       setAutocompleteValue(description, false); 
-      // 2. CRITICAL: Programmatically update the react-hook-form state
       setFormValue('eventLocation', description, { shouldDirty: true });
-      // 3. Close the suggestions popover
       clearSuggestions();
   }
-
 
   return (
     <Card className="shadow-lg border-border/60">
@@ -161,7 +150,6 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
             />
           </div>
           
-          {/* --- Refactored Location Input --- */}
           <div className="space-y-1">
              <Label htmlFor="eventLocation">Event Location</Label>
               <Popover open={status === 'OK' && autocompleteData.length > 0}>
