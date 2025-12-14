@@ -46,12 +46,9 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setFirebaseError(null);
     try {
-      // Non-blocking call. The onAuthStateChanged listener handles the redirect.
-      initiateEmailSignIn(auth, data.email, data.password);
+      await signInWithEmailAndPassword(auth, data.email, data.password);
+      // The onAuthStateChanged listener in the provider will handle the redirect.
     } catch (error) {
-      // This will only catch synchronous errors, which are rare for this call.
-      // Asynchronous errors (like wrong password) are handled by auth state listeners
-      // or directly within the component if we were to `await` it.
       if (error instanceof FirebaseError) {
         // A more robust implementation might map error.code to user-friendly messages.
         setFirebaseError(error.message);

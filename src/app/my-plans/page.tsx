@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, setDocumentNonBlocking, useAuth } from '@/firebase';
+import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, useAuth } from '@/firebase';
 import { collection, doc, writeBatch, getDocs, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
