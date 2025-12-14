@@ -12,16 +12,21 @@ export default function PlannerRedirectPage() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (!isUserLoading) {
-      if (!user) {
+    if (isUserLoading) {
+        return; // Wait until user status is resolved
+    }
+
+    if (!user) {
+        // If there's no user, initiate anonymous sign-in.
+        // The onAuthStateChanged listener will trigger a re-render, and this effect will run again.
         initiateAnonymousSignIn(auth);
-        // After anonymous sign-in, the auth state will change, and this effect will re-run.
-      } else if (user.isAnonymous) {
+    } else if (user.isAnonymous) {
+        // If user is anonymous, send them to the template editor.
         const eventType = searchParams.get('eventType') || 'other';
         router.replace(`/planner/template?eventType=${eventType}`);
-      } else {
+    } else {
+        // If user is registered, send them to their personal dashboard.
         router.replace('/my-plans');
-      }
     }
   }, [user, isUserLoading, auth, router, searchParams]);
 

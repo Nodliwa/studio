@@ -21,10 +21,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "./ui/button";
-import { PlusCircle, GripVertical, UtensilsCrossed, Wheat, Carrot, Apple, Coffee, Cross, Handshake, Truck, Ring, Gem, Cake, Shirt, Drama } from "lucide-react";
+import { PlusCircle, GripVertical, UtensilsCrossed, Wheat, Carrot, Apple, Coffee, Handshake, Truck, Ring, Gem, Cake, Shirt, Drama } from "lucide-react";
 import React from "react";
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { CrossIcon } from "lucide-react";
 
 interface BudgetAccordionProps {
   categories: BudgetCategory[];
@@ -40,7 +41,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   'cat-3': Carrot, // Vegetables
   'cat-4': Apple, // Fruit
   'cat-5': Coffee, // Refreshments
-  'cat-6': Cross, // Deceased
+  'cat-6': CrossIcon, // Deceased
   'cat-7': Handshake, // Service
   'cat-8': Truck, // Logistics
   // Wedding

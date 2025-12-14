@@ -19,8 +19,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusCircle, PartyPopper, Heart, Cross, Briefcase } from 'lucide-react';
+import { PlusCircle, PartyPopper, Heart, Briefcase } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { CrossIcon } from 'lucide-react';
 
 
 function MyPlansPage() {
@@ -50,7 +51,6 @@ function MyPlansPage() {
                 eventType: eventType,
             };
             
-            const newBudgetDocRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
             await addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'budgets'), { ...newBudget, id: newBudgetId });
             router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
         } else {
@@ -58,7 +58,7 @@ function MyPlansPage() {
         }
     };
 
-    if (isUserLoading || !user || user.isAnonymous) {
+    if (isUserLoading || !user || (user && user.isAnonymous)) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
                 <p>Loading...</p>
@@ -109,7 +109,7 @@ function MyPlansPage() {
                                     Birthday
                                 </Button>
                                 <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
-                                    <Cross />
+                                    <CrossIcon />
                                     Funeral
                                 </Button>
                                 <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('other')}>
@@ -163,7 +163,7 @@ function MyPlansPage() {
                                         Birthday
                                     </Button>
                                     <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
-                                        <Cross />
+                                        <CrossIcon />
                                         Funeral
                                     </Button>
                                     <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('other')}>
