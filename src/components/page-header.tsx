@@ -23,12 +23,12 @@ export default function PageHeader() {
             />
           </Link>
         </div>
-        <nav className="hidden md:flex items-center justify-center gap-4 text-sm absolute left-1/2 -translate-x-1/2">
+        <nav className="hidden md:flex items-center justify-center gap-6 text-lg absolute left-1/2 -translate-x-1/2">
             <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
               Home
             </Link>
             <Link href="/my-plans" className={cn("font-bold transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
-              My Plans
+              MyPlans
             </Link>
         </nav>
         <div className="flex items-center justify-end gap-2">
