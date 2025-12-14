@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,13 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth, useFirestore, initiateEmailSignUp } from '@/firebase';
+import { useAuth, useFirestore, initiateEmailSignUp, useUser } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PageHeader from '@/components/page-header';
-import { onAuthStateChanged } from 'firebase/auth';
 
 const registerSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -31,43 +30,58 @@ export default function RegisterPage() {
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
+  const { user, isUserLoading } = useUser();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
+    getValues,
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: RegisterFormValues) => {
+  useEffect(() => {
+    const processRegistration = async () => {
+      if (user && !user.isAnonymous && isSubmitting) {
+        // A new user has been created and we initiated this.
+        const data = getValues();
+        try {
+          const userDocRef = doc(firestore, 'users', user.uid);
+          await setDoc(userDocRef, {
+            id: user.uid,
+            email: data.email,
+            displayName: `${data.firstName} ${data.lastName}`,
+          });
+          router.push('/my-plans');
+        } catch (error) {
+           if (error instanceof FirebaseError) {
+            setFirebaseError(error.message);
+          } else {
+            setFirebaseError('An unexpected error occurred creating your profile.');
+          }
+          setIsSubmitting(false); // Stop submitting on error
+        }
+      }
+    };
+    processRegistration();
+  }, [user, isUserLoading, router, firestore, getValues, isSubmitting]);
+
+
+  const onSubmit = (data: RegisterFormValues) => {
     setFirebaseError(null);
+    setIsSubmitting(true);
     try {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                unsubscribe(); // Unsubscribe to prevent this from running again
-                
-                // Create user profile in Firestore
-                const userDocRef = doc(firestore, 'users', user.uid);
-                await setDoc(userDocRef, {
-                    id: user.uid,
-                    email: data.email,
-                    displayName: `${data.firstName} ${data.lastName}`,
-                });
-
-                router.push('/my-plans');
-            }
-        });
-
         initiateEmailSignUp(auth, data.email, data.password);
-
     } catch (error) {
       if (error instanceof FirebaseError) {
         setFirebaseError(error.message);
       } else {
         setFirebaseError('An unexpected error occurred.');
       }
+      setIsSubmitting(false);
     }
   };
 
