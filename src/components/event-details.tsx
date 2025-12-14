@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -19,6 +20,7 @@ import {
   PopoverAnchor,
 } from "@/components/ui/popover";
 import { useRouter } from "next/navigation";
+import { MapPin } from "lucide-react";
 
 interface EventDetailsProps {
   budget: Budget | null;
@@ -154,14 +156,18 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
              <Label htmlFor="eventLocation">Event Location</Label>
               <Popover open={status === 'OK' && autocompleteData.length > 0}>
                 <PopoverAnchor>
-                   <Input
-                    id="eventLocation"
-                    value={autocompleteValue}
-                    onChange={(e) => setAutocompleteValue(e.target.value)}
-                    disabled={!isEditing || !isLoaded}
-                    placeholder={isLoaded ? "Start typing your address..." : "Loading location..."}
-                    autoComplete="off"
-                  />
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="eventLocation"
+                      value={autocompleteValue}
+                      onChange={(e) => setAutocompleteValue(e.target.value)}
+                      disabled={!isEditing || !isLoaded}
+                      placeholder={isLoaded ? "Start typing your address..." : "Loading location..."}
+                      autoComplete="off"
+                      className="pl-9"
+                    />
+                   </div>
                 </PopoverAnchor>
                 <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
                   {status === 'OK' && (
