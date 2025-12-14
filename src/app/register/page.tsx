@@ -51,21 +51,15 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     setFirebaseError(null);
     try {
-      // This function now handles creating the auth user and updating their profile.
       const userCredential = await initiateEmailSignUp(auth, data.email, data.password, data.firstName, data.lastName);
       
-      // After the auth user is created and their profile updated, we create their
-      // corresponding document in Firestore.
       if (userCredential?.user) {
         const userRef = doc(firestore, 'users', userCredential.user.uid);
         const displayName = `${data.firstName} ${data.lastName}`;
-        // This explicitly creates the database record with the correct name.
         await setUserData(userRef, userCredential.user.email!, displayName);
+        router.push('/my-plans');
       }
       
-      // Redirect to the plans page. The `onAuthStateChanged` listener will have the correct user info.
-      router.push('/my-plans');
-
     } catch (error) {
       if (error instanceof FirebaseError) {
         setFirebaseError(error.message);
@@ -75,7 +69,6 @@ export default function RegisterPage() {
     }
   };
   
-    // Prevent form flash while loading or redirecting
     if (isUserLoading || (user && !user.isAnonymous)) {
         return (
           <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
@@ -90,7 +83,7 @@ export default function RegisterPage() {
       <main className="container mx-auto flex items-center justify-center p-4 md:p-8">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Create an Account</CardTitle>
+            <CardTitle as="h2">Create an Account</CardTitle>
             <CardDescription>Start planning your celebrations with SimpliPlan.</CardDescription>
           </CardHeader>
           <CardContent>
