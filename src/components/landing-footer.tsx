@@ -23,10 +23,17 @@ const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 export default function LandingFooter() {
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // In a real application, you would handle form submission here.
-    // For now, it just prevents the default form action.
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get('name') as string;
+    const fromEmail = formData.get('email') as string;
+    const message = formData.get('message') as string;
+
+    const subject = `Message from ${name} (${fromEmail})`;
+    const body = encodeURIComponent(message);
+    
+    window.location.href = `mailto:hello@simpliplan.co.za?subject=${encodeURIComponent(subject)}&body=${body}`;
   };
   
   return (
@@ -42,14 +49,14 @@ export default function LandingFooter() {
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Input id="name" placeholder="Your Name" />
+                                        <Input id="name" name="name" placeholder="Your Name" />
                                     </div>
                                     <div className="space-y-2">
-                                        <Input id="email" type="email" placeholder="Your Email" />
+                                        <Input id="email" name="email" type="email" placeholder="Your Email" />
                                     </div>
                                 </div>
                                 <div className="relative">
-                                    <Textarea id="message" placeholder="Your message..." className="pr-20 min-h-[120px]" />
+                                    <Textarea id="message" name="message" placeholder="Your message..." className="pr-20 min-h-[120px]" />
                                     <Button type="submit" size="sm" className="absolute" style={{ bottom: '0.5rem', right: '0.5rem' }}>
                                         Send
                                         <Send className="ml-2 h-4 w-4"/>
