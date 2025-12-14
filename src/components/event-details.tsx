@@ -64,12 +64,6 @@ const LocationInput = ({ field, disabled }: { field: any, disabled: boolean }) =
     field.onChange(description);
   };
 
-  const openGoogleMaps = () => {
-    if (value) {
-      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(value)}`, '_blank');
-    }
-  }
-
   return (
     <Popover open={status === 'OK'}>
       <PopoverTrigger asChild>
@@ -80,11 +74,7 @@ const LocationInput = ({ field, disabled }: { field: any, disabled: boolean }) =
                 onChange={handleInput}
                 disabled={!ready || disabled}
                 placeholder="Start typing your address..."
-                className="pr-10"
             />
-            <Button type="button" variant="ghost" size="icon" onClick={openGoogleMaps} disabled={!value} className="absolute right-0 h-9 w-10 text-muted-foreground hover:text-primary">
-                <MapPin className="h-4 w-4" />
-            </Button>
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
