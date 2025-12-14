@@ -36,7 +36,7 @@ function MyPlansPage() {
 
     const { data: budgets, isLoading: budgetsLoading } = useCollection<Budget>(budgetsCollection);
 
-    useEffect(() => {
+     useEffect(() => {
         if (!isUserLoading) {
             if (!user || user.isAnonymous) {
                 router.push('/register');
@@ -66,21 +66,10 @@ function MyPlansPage() {
         }
     };
     
-    if (isUserLoading || !user) {
+    if (isUserLoading || !user || (user && user.isAnonymous)) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
                 <p>Loading...</p>
-            </div>
-        );
-    }
-    
-    if (user.isAnonymous) {
-        // This should theoretically not be reached if the effect hook above works correctly,
-        // but it's a good failsafe.
-        router.push('/register');
-        return (
-             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-                <p>Redirecting to registration...</p>
             </div>
         );
     }
@@ -94,8 +83,8 @@ function MyPlansPage() {
     }
 
     return (
-        <div className="min-h-screen bg-secondary p-4 md:p-8">
-            <div className="bg-background rounded-lg shadow-lg">
+        <div className="min-h-screen bg-secondary px-6 md:px-12 lg:px-24">
+            <div className="bg-background shadow-lg min-h-screen">
                 <PageHeader />
                 <main className="container mx-auto p-4 md:p-8">
                     <Greeter name={user.displayName || 'there'} />
@@ -254,4 +243,5 @@ function MyPlansPage() {
 
 export default MyPlansPage;
 
+    
     
