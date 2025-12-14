@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PageHeader from '@/components/page-header';
 import { doc } from 'firebase/firestore';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const registerSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -22,6 +23,7 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   cellphone: z.string().optional(),
   password: z.string().min(6, 'Password must be at least 6 characters long'),
+  recaptcha: z.string().min(1, 'Please complete the reCAPTCHA'),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -32,10 +34,12 @@ export default function RegisterPage() {
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -66,6 +70,9 @@ export default function RegisterPage() {
       } else {
         setFirebaseError('An unexpected error occurred during registration.');
       }
+    } finally {
+        recaptchaRef.current?.reset();
+        setValue('recaptcha', '');
     }
   };
   
@@ -114,6 +121,15 @@ export default function RegisterPage() {
                     <Label htmlFor="password">Password</Label>
                     <Input id="password" type="password" {...register('password')} />
                     {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
+                </div>
+                
+                <div className="space-y-2">
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                    onChange={(token) => setValue('recaptcha', token || '', { shouldValidate: true })}
+                  />
+                  {errors.recaptcha && <p className="text-destructive text-sm">{errors.recaptcha.message}</p>}
                 </div>
 
                 {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
