@@ -9,7 +9,7 @@ import { ListChecks, CalendarDays, Wallet, RefreshCw } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import Greeter from '@/components/greeter';
+import LandingFooter from '@/components/landing-footer';
 
 export default function LandingPage() {
   const [isUmemuloFlipped, setIsUmemuloFlipped] = useState(false);
@@ -17,9 +17,9 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen w-full bg-secondary font-sans text-foreground px-4 md:px-10 lg:px-40">
-      <div className="bg-background shadow-2xl min-h-screen">
+      <div className="bg-background shadow-2xl min-h-screen flex flex-col">
           <PageHeader />
-          <main className="container mx-auto p-4 md:p-8">
+          <main className="container mx-auto p-4 md:p-8 flex-grow">
           <div className="p-2 md:p-4 text-center">
             <h1 className="text-4xl md:text-5xl font-bold font-headline text-foreground/90">
               Celebrate Loved Ones. Plan Smart.            </h1>
@@ -151,11 +151,9 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <footer className="mt-24 text-muted-foreground text-sm">
-              <p>&copy; {new Date().getFullYear()} SimpliPlan. All rights reserved.</p>
-            </footer>
           </div>
         </main>
+        <LandingFooter />
       </div>
     </div>
   );
