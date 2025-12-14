@@ -36,7 +36,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, MoreVertical, Menu, MapPin } from 'lucide-react';
+import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Menu, MapPin } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
@@ -123,7 +123,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                     </Link>
                     {budget.eventDate && <CardDescription className="text-white/80 flex items-center gap-2 mt-2"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</CardDescription>}
                 </CardHeader>
-                <CardContent className="flex-grow space-y-1 p-0 mt-0">
+                <CardContent className="flex-grow space-y-1 p-0">
                      <p className="flex items-start gap-2"><Wallet className="inline-block h-4 w-4 mt-1 shrink-0" />{budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
                     {budget.eventLocation && <p className="flex items-start gap-2"><MapPin className="h-4 w-4 mt-1 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>}
                 </CardContent>
