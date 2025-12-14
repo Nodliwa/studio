@@ -17,6 +17,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -217,7 +218,7 @@ function MyPlansPage() {
     
             const batch = writeBatch(firestore);
     
-            for (const categoryDoc of the non-breaking changesnapshot.docs) {
+            for (const categoryDoc of categoriesSnapshot.docs) {
                 const itemsCollectionRef = collection(categoryDoc.ref, 'items');
                 const itemsSnapshot = await getDocs(itemsCollectionRef);
                 itemsSnapshot.forEach(itemDoc => {
@@ -235,7 +236,7 @@ function MyPlansPage() {
         } catch (e) {
             console.error("Error deleting plan:", e);
             toast({ variant: 'destructive', title: "Error", description: "Could not delete plan." });
-            // In a real app, you might want to re-throw or handle the error from the non-breaking changesdelete
+            // In a real app, you might want to re-throw or handle the error from the delete
             deleteDocument(budgetDocRef); 
         }
 
