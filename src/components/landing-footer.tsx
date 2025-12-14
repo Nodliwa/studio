@@ -5,8 +5,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Facebook, Instagram, Linkedin, Twitter } from 'lucide-react';
+import { Facebook, Instagram } from 'lucide-react';
 import Link from 'next/link';
+
+const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
+    </svg>
+);
+
+const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M21 8.25c-1.42 0-2.73.55-3.75 1.55v7.65a3.5 3.5 0 0 1-3.5 3.5h-1a3.5 3.5 0 0 1-3.5-3.5V5.5A3.5 3.5 0 0 1 9.75 2a3.5 3.5 0 0 1 3.5 3.5v9.1c0 .28.22.5.5.5s.5-.22.5-.5V8.25C14.25 4.79 11.46 2 8.25 2S2.25 4.79 2.25 8.25s2.79 6.25 6 6.25v-2.5c-2.07 0-3.75-1.68-3.75-3.75S4.18 4.5 6.25 4.5s3.75 1.68 3.75 3.75v.5h2.5V8.25c0-1.42.55-2.73 1.55-3.75C15.27 3.55 16.58 3 18 3c1.66 0 3 1.34 3 3v2.25Z" />
+    </svg>
+);
+
 
 export default function LandingFooter() {
   const handleSubmit = (e: React.FormEvent) => {
@@ -54,13 +68,13 @@ export default function LandingFooter() {
                             <Facebook className="h-6 w-6" />
                         </Link>
                         <Link href="#" className="text-muted-foreground hover:text-primary">
-                            <Twitter className="h-6 w-6" />
+                            <XIcon className="h-6 w-6" />
                         </Link>
                          <Link href="#" className="text-muted-foreground hover:text-primary">
                             <Instagram className="h-6 w-6" />
                         </Link>
                          <Link href="#" className="text-muted-foreground hover:text-primary">
-                            <Linkedin className="h-6 w-6" />
+                            <TikTokIcon className="h-6 w-6" />
                         </Link>
                     </div>
                 </div>
