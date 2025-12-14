@@ -1,15 +1,13 @@
-
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
+import { useUser } from '@/firebase';
 
-interface GreeterProps {
-    name: string;
-}
-
-const Greeter = ({ name }: GreeterProps) => {
+const Greeter = () => {
+  const { user } = useUser();
   const [mainGreeting, setMainGreeting] = useState('');
   const [subGreeting, setSubGreeting] = useState('');
+  const name = user?.displayName || 'there';
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -30,7 +28,7 @@ const Greeter = ({ name }: GreeterProps) => {
       <h1 className="text-3xl font-bold font-headline text-foreground/90">
         {mainGreeting}
       </h1>
-      {subGreeting && (
+      {subGreeting && name !== 'there' && (
         <p className="mt-2 text-muted-foreground font-bold italic">{subGreeting}</p>
       )}
     </div>

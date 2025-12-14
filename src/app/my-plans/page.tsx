@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, setDocumentNonBlocking } from '@/firebase';
+import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, setDocumentNonBlocking, useStorage, useAuth } from '@/firebase';
 import { collection, doc, writeBatch, getDocs, setDoc, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import type { Budget } from '@/lib/types';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,12 +30,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Trash2, MapPin } from 'lucide-react';
+import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Trash2, Upload, MapPin } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { format } from 'date-fns';
 
 function calculateInitialTotal(categories: any[]): number {
@@ -58,8 +59,34 @@ const eventTypeImages: { [key: string]: string } = {
     umgidi: '/images/umgidi1.jpg',
 };
 
-function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string) => void }) {
-    const imageUrl = budget.eventType ? eventTypeImages[budget.eventType] : undefined;
+function PlanCard({ budget, onDelete, onImageUpload }: { budget: Budget, onDelete: (id: string) => void, onImageUpload: (id: string, url: string) => void }) {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const storage = useStorage();
+    const { user } = useUser();
+    const { toast } = useToast();
+
+    const handleUploadClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file || !user) return;
+
+        const imageRef = storageRef(storage, `users/${user.uid}/budgets/${budget.id}/${file.name}`);
+
+        try {
+            const snapshot = await uploadBytes(imageRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+            onImageUpload(budget.id, downloadURL);
+            toast({ title: "Image uploaded successfully!" });
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            toast({ variant: 'destructive', title: "Error", description: "Could not upload image." });
+        }
+    };
+    
+    const imageUrl = budget.imageUrl || (budget.eventType ? eventTypeImages[budget.eventType] : undefined);
 
     return (
         <Card className="flex flex-col relative overflow-hidden text-white">
@@ -74,39 +101,51 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                     <div className="absolute inset-0 bg-black/50" />
                 </>
             )}
-            <div className="relative z-10 flex flex-col flex-grow">
-                <CardHeader>
+             <div className="absolute top-2 right-2 flex items-center gap-2 z-20">
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept="image/*"
+                />
+                 <Button variant="ghost" size="icon" className="hover:bg-white/20" onClick={handleUploadClick}>
+                    <Upload className="h-4 w-4" />
+                </Button>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="hover:bg-white/20">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your
+                        plan and all of its data.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => onDelete(budget.id)}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
+            <div className="relative z-10 flex flex-col flex-grow p-6">
+                <CardHeader className="p-0">
                     <CardTitle>{budget.name}</CardTitle>
-                    {budget.eventDate && <CardDescription className="text-white/80 flex items-center gap-2"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</CardDescription>}
+                    {budget.eventDate && <CardDescription className="text-white/80 flex items-center gap-2 mt-2"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</CardDescription>}
                 </CardHeader>
-                <CardContent className="flex-grow space-y-2">
-                    <p><Wallet className="inline-block h-4 w-4 mr-2" />{budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
+                <CardContent className="flex-grow space-y-2 p-0 mt-4">
+                     <p className="flex items-start gap-2"><Wallet className="inline-block h-4 w-4 mt-1 shrink-0" />{budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
                     {budget.eventLocation && <p className="flex items-start gap-2"><MapPin className="h-4 w-4 mt-1 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>}
                 </CardContent>
-                <CardFooter className="flex justify-between items-center">
+                <CardFooter className="p-0 mt-4 flex justify-between items-center">
                     <Button asChild variant="link" className="p-0 text-white hover:text-white/80">
                         <Link href={`/planner/${budget.id}`}>View/Edit</Link>
                     </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="hover:bg-white/20">
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete your
-                            plan and all of its data.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => onDelete(budget.id)}>Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
                 </CardFooter>
             </div>
         </Card>
@@ -119,12 +158,19 @@ function MyPlansPage() {
     const router = useRouter();
     const [dialogOpen, setDialogOpen] = useState(false);
     const { toast } = useToast();
+    const [budgets, setBudgets] = useState<Budget[] | null>(null);
 
     const budgetsCollection = useMemoFirebase(() => (
         user && !user.isAnonymous ? collection(firestore, 'users', user.uid, 'budgets') : null
     ), [user, firestore]);
 
-    const { data: budgets, isLoading: budgetsLoading, error } = useCollection<Budget>(budgetsCollection);
+    const { data: initialBudgets, isLoading: budgetsLoading, error } = useCollection<Budget>(budgetsCollection);
+
+     useEffect(() => {
+        if (initialBudgets) {
+            setBudgets(initialBudgets);
+        }
+    }, [initialBudgets]);
 
      useEffect(() => {
         if (isUserLoading) return;
@@ -200,6 +246,21 @@ function MyPlansPage() {
 
     };
 
+    const handleImageUpload = (budgetId: string, imageUrl: string) => {
+        if (user) {
+            const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', budgetId);
+            setDocumentNonBlocking(budgetDocRef, { imageUrl }, { merge: true });
+
+            // Update local state to show image immediately
+            setBudgets(currentBudgets => {
+                if (!currentBudgets) return null;
+                return currentBudgets.map(b => 
+                    b.id === budgetId ? { ...b, imageUrl } : b
+                );
+            });
+        }
+    };
+
     if (isUserLoading || !user || (user && user.isAnonymous)) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
@@ -221,7 +282,7 @@ function MyPlansPage() {
             <div className="bg-background shadow-2xl min-h-screen">
                 <PageHeader />
                 <main className="container mx-auto p-4 md:p-8">
-                    <Greeter name={user.displayName || 'there'} />
+                    <Greeter />
 
                     <div className="flex items-center justify-between my-8">
                         <div>
@@ -233,7 +294,7 @@ function MyPlansPage() {
                     {budgets && budgets.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {budgets.map(budget => (
-                               <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} />
+                               <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} onImageUpload={handleImageUpload} />
                             ))}
                         </div>
                     ) : (

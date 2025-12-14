@@ -293,7 +293,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     <div className="min-h-screen w-full bg-background font-sans text-foreground">
       <PageHeader />
       <main className="container mx-auto p-4 md:p-8">
-        <Greeter name={user?.displayName || 'there'} />
+        <Greeter />
         {eventQuote && (
             <p className="mt-4 text-lg italic text-muted-foreground">{eventQuote}</p>
         )}

@@ -9,6 +9,7 @@ import { ListChecks, CalendarDays, Wallet, RefreshCw } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import Greeter from '@/components/greeter';
 
 export default function LandingPage() {
   const [isUmemuloFlipped, setIsUmemuloFlipped] = useState(false);
