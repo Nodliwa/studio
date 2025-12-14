@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Facebook, Instagram, Send } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 1200 1227" fill="currentColor" aria-hidden="true" {...props}>
@@ -21,50 +22,62 @@ const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
+// This component will only render on the client side
+function ClientOnlyForm() {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const name = formData.get('name') as string;
+        const fromEmail = formData.get('email') as string;
+        const message = formData.get('message') as string;
+
+        const subject = `Message from ${name} (${fromEmail})`;
+        const body = encodeURIComponent(message);
+        
+        window.location.href = `mailto:hello@simpliplan.co.za?subject=${encodeURIComponent(subject)}&body=${body}`;
+    };
+
+    return (
+        <Card>
+            <CardHeader className="text-center">
+                <CardTitle as="h3">We'd love to hear from you...</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Input id="name" name="name" placeholder="Your Name" />
+                        </div>
+                        <div className="space-y-2">
+                            <Input id="email" name="email" type="email" placeholder="Your Email" />
+                        </div>
+                    </div>
+                    <div className="relative">
+                        <Textarea id="message" name="message" placeholder="Your message..." className="pr-20 min-h-[120px]" />
+                        <Button type="submit" size="sm" className="absolute" style={{ bottom: '0.5rem', right: '0.5rem' }}>
+                            Send
+                            <Send className="ml-2 h-4 w-4"/>
+                        </Button>
+                    </div>
+                </form>
+            </CardContent>
+        </Card>
+    );
+}
 
 export default function LandingFooter() {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get('name') as string;
-    const fromEmail = formData.get('email') as string;
-    const message = formData.get('message') as string;
+  const [isClient, setIsClient] = useState(false);
 
-    const subject = `Message from ${name} (${fromEmail})`;
-    const body = encodeURIComponent(message);
-    
-    window.location.href = `mailto:hello@simpliplan.co.za?subject=${encodeURIComponent(subject)}&body=${body}`;
-  };
-  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
     <footer className="w-full mt-24 py-8 bg-secondary border-t">
         <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto items-start">
                 <div>
-                     <Card>
-                        <CardHeader className="text-center">
-                            <CardTitle as="h3">We'd love to hear from you...</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Input id="name" name="name" placeholder="Your Name" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Input id="email" name="email" type="email" placeholder="Your Email" />
-                                    </div>
-                                </div>
-                                <div className="relative">
-                                    <Textarea id="message" name="message" placeholder="Your message..." className="pr-20 min-h-[120px]" />
-                                    <Button type="submit" size="sm" className="absolute" style={{ bottom: '0.5rem', right: '0.5rem' }}>
-                                        Send
-                                        <Send className="ml-2 h-4 w-4"/>
-                                    </Button>
-                                </div>
-                            </form>
-                        </CardContent>
-                    </Card>
+                     {isClient ? <ClientOnlyForm /> : <Card className="h-[268px] animate-pulse bg-muted/50"></Card>}
                 </div>
                 <div className="text-center md:text-center">
                     <h3 className="text-2xl font-headline font-bold">Connect with Us</h3>
