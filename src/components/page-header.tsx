@@ -120,7 +120,7 @@ export default function PageHeader() {
                 {pathname === '/my-plans' && (
                   <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button>
+                      <Button className="px-3">
                         <PlusCircle className="mr-1 h-4 w-4" />
                         Add Plan
                       </Button>
