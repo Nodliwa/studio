@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { UtensilsCrossed, Cake, Handshake, ShoppingCart } from 'lucide-react';
+import { ListChecks, CalendarDays, Wallet, RefreshCw } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -33,19 +33,43 @@ export default function LandingPage() {
 
             <div className="w-full max-w-6xl mx-auto mt-2">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Link href="/planner?eventType=wedding" className="group">
-                  <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1">
-                    <Image src="/images/wedding.jpg" alt="Wedding" width={400} height={300} className="object-cover w-full h-48" />
-                    <CardHeader className="p-1">
-                      <CardTitle className="text-xl font-semibold">Wedding</CardTitle>
-                    </CardHeader>
-                  </Card>
-                </Link>
+                 {/* umGidi Flip Card */}
+                <div className="flip-card group" onClick={() => setIsUmgidiFlipped(!isUmgidiFlipped)}>
+                  <div className={cn("flip-card-inner", { 'is-flipped': isUmgidiFlipped })}>
+                    <div className="flip-card-front">
+                      <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 w-full h-full">
+                        <div className="relative w-full h-48">
+                            <Image src="/images/umgidi1.jpg" alt="umGidi" layout="fill" objectFit="cover" />
+                        </div>
+                        <CardHeader className="p-1 text-center">
+                          <CardTitle className="text-xl font-semibold">umGidi</CardTitle>
+                        </CardHeader>
+                      </Card>
+                    </div>
+                     <div className="flip-card-back flex items-center justify-center p-0 overflow-hidden">
+                       <Image src="/images/boy.jpg" alt="umGidi Background" fill className="object-cover" />
+                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <div className="text-center text-white p-4">
+                                <h3 className="text-2xl font-bold">Ndisakhula!</h3>
+                                <p className="text-lg">Coming Soon!</p>
+                            </div>
+                       </div>
+                    </div>
+                  </div>
+                </div>
                 <Link href="/planner?eventType=funeral" className="group">
                   <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1">
                     <Image src="/images/funeral2.png" alt="Funeral" width={400} height={300} className="object-cover w-full h-48" />
                     <CardHeader className="p-1">
                       <CardTitle className="text-xl font-semibold">Funeral</CardTitle>
+                    </CardHeader>
+                  </Card>
+                </Link>
+                <Link href="/planner?eventType=wedding" className="group">
+                  <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1">
+                    <Image src="/images/wedding.jpg" alt="Wedding" width={400} height={300} className="object-cover w-full h-48" />
+                    <CardHeader className="p-1">
+                      <CardTitle className="text-xl font-semibold">Wedding</CardTitle>
                     </CardHeader>
                   </Card>
                 </Link>
@@ -55,7 +79,9 @@ export default function LandingPage() {
                   <div className={cn("flip-card-inner", { 'is-flipped': isUmemuloFlipped })}>
                     <div className="flip-card-front">
                       <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 w-full h-full">
-                         <Image src="/images/umemulo.jpg" alt="uMemulo" width={400} height={300} className="object-cover w-full h-48" />
+                         <div className="relative w-full h-48">
+                            <Image src="/images/umemulo.jpg" alt="uMemulo" layout="fill" objectFit="cover" />
+                         </div>
                         <CardHeader className="p-1 text-center">
                           <CardTitle className="text-xl font-semibold">uMemulo</CardTitle>
                         </CardHeader>
@@ -73,29 +99,6 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* umGidi Flip Card */}
-                <div className="flip-card group" onClick={() => setIsUmgidiFlipped(!isUmgidiFlipped)}>
-                  <div className={cn("flip-card-inner", { 'is-flipped': isUmgidiFlipped })}>
-                    <div className="flip-card-front">
-                      <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 w-full h-full">
-                         <Image src="/images/umgidi1.jpg" alt="umGidi" width={400} height={300} className="object-cover w-full h-48" />
-                        <CardHeader className="p-1 text-center">
-                          <CardTitle className="text-xl font-semibold">umGidi</CardTitle>
-                        </CardHeader>
-                      </Card>
-                    </div>
-                     <div className="flip-card-back flex items-center justify-center p-0 overflow-hidden">
-                       <Image src="/images/boy.jpg" alt="umGidi Background" fill className="object-cover" />
-                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                            <div className="text-center text-white p-4">
-                                <h3 className="text-2xl font-bold">Ndisakhula!</h3>
-                                <p className="text-lg">Coming Soon!</p>
-                            </div>
-                       </div>
-                    </div>
-                  </div>
-                </div>
-
               </div>
             </div>
 
@@ -105,7 +108,7 @@ export default function LandingPage() {
                 <Card>
                   <CardHeader className="p-4">
                     <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                      <ShoppingCart className="h-6 w-6 text-primary" />
+                      <ListChecks className="h-6 w-6 text-primary" />
                       <span>Don’t forget a thing</span>
                     </CardTitle>
                   </CardHeader>
@@ -116,7 +119,7 @@ export default function LandingPage() {
                 <Card>
                   <CardHeader className="p-4">
                     <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                      <Cake className="h-6 w-6 text-primary" />
+                      <CalendarDays className="h-6 w-6 text-primary" />
                       <span>Planning That Fits Your Life</span>
                     </CardTitle>
                   </CardHeader>
@@ -127,7 +130,7 @@ export default function LandingPage() {
                 <Card>
                   <CardHeader className="p-4">
                     <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                      <UtensilsCrossed className="h-6 w-6 text-primary" />
+                      <Wallet className="h-6 w-6 text-primary" />
                       <span>Effortless Budgeting</span>
                     </CardTitle>
                   </CardHeader>
@@ -138,7 +141,7 @@ export default function LandingPage() {
                 <Card>
                   <CardHeader className="p-4">
                     <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                      <Handshake className="h-6 w-6 text-primary" />
+                      <RefreshCw className="h-6 w-6 text-primary" />
                       <span>Real-Time Updates</span>
                     </CardTitle>
                   </CardHeader>
