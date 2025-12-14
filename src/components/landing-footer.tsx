@@ -2,9 +2,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Facebook, Instagram, Send } from 'lucide-react';
 import Link from 'next/link';
@@ -33,11 +32,11 @@ export default function LandingFooter() {
   return (
     <footer className="w-full mt-24 py-8 bg-secondary border-t">
         <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto items-start">
                 <div>
                      <Card>
                         <CardHeader className="text-center">
-                            <CardTitle as="h3">Contact Us</CardTitle>
+                            <CardTitle as="h3">We'd love to hear from you...</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <form onSubmit={handleSubmit} className="space-y-4">
