@@ -19,8 +19,8 @@ import ReCAPTCHA from 'react-google-recaptcha';
 import { Separator } from '@/components/ui/separator';
 
 const registerSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
+  firstName: z.string().min(1, 'Known as is required'),
+  lastName: z.string().min(1, 'Surname is required'),
   email: z.string().email('Invalid email address'),
   cellphone: z.string().optional(),
   password: z.string().min(6, 'Password must be at least 6 characters long'),
@@ -151,12 +151,12 @@ export default function RegisterPage() {
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                            <Label htmlFor="firstName">First Name</Label>
+                            <Label htmlFor="firstName">Known as</Label>
                             <Input id="firstName" {...register('firstName')} />
                             {errors.firstName && <p className="text-destructive text-sm">{errors.firstName.message}</p>}
                             </div>
                             <div className="space-y-2">
-                            <Label htmlFor="lastName">Last Name</Label>
+                            <Label htmlFor="lastName">Surname</Label>
                             <Input id="lastName" {...register('lastName')} />
                             {errors.lastName && <p className="text-destructive text-sm">{errors.lastName.message}</p>}
                             </div>
@@ -209,3 +209,5 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+    
