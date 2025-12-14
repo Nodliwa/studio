@@ -246,15 +246,7 @@ function MyPlansPage() {
             </div>
         );
     }
-
-    if (budgetsLoading) {
-        return (
-            <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-                <p>Loading plans...</p>
-            </div>
-        );
-    }
-
+    
     return (
         <div className="min-h-screen bg-secondary flex flex-col">
             <div className="bg-background shadow-2xl container mx-auto flex flex-col flex-grow">
@@ -269,7 +261,7 @@ function MyPlansPage() {
                                 <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
                                     <div>
                                         <h3 className="text-xl font-bold font-headline">
-                                            {budgets && budgets.length > 0 ? `You have ${budgets.length} active plan(s).` : "You have no active plans."}
+                                            {!budgetsLoading && budgets ? (budgets.length > 0 ? `You have ${budgets.length} active plan(s).` : "You have no active plans.") : "Loading plans..."}
                                         </h3>
                                         <p className="text-muted-foreground">Ready to start planning your next celebration?</p>
                                     </div>
@@ -310,13 +302,19 @@ function MyPlansPage() {
                             </DialogContent>
                         </Dialog>
 
-                        {budgets && budgets.length > 0 ? (
+                        {budgetsLoading && (
+                             <div className="text-center py-16">
+                                <p className="text-lg text-muted-foreground">Loading your plans...</p>
+                            </div>
+                        )}
+
+                        {!budgetsLoading && budgets && budgets.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
                                 {budgets.map(budget => (
                                 <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} />
                                 ))}
                             </div>
-                        ) : (
+                        ) : !budgetsLoading && (
                             <div className="text-center py-16">
                                 <p className="text-lg text-muted-foreground">
                                     Click "Add New Plan" above to create your first celebration budget.
