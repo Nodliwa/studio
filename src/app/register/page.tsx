@@ -51,11 +51,11 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     setFirebaseError(null);
     try {
-      // This function is non-blocking. It starts the sign-up process,
-      // and the onAuthStateChanged listener in the FirebaseProvider
-      // will handle creating the user doc and redirecting.
-      initiateEmailSignUp(auth, data.email, data.password, data.firstName, data.lastName);
-
+      // This function now handles creating the auth user, updating their profile,
+      // and creating the firestore document. The onAuthStateChanged listener will
+      // then pick up the fully formed user.
+      await initiateEmailSignUp(auth, data.email, data.password, data.firstName, data.lastName);
+      // The useEffect above will handle the redirect once the user state changes.
     } catch (error) {
       if (error instanceof FirebaseError) {
         setFirebaseError(error.message);

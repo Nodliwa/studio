@@ -6,7 +6,6 @@ import { FirebaseApp } from 'firebase/app';
 import { Firestore, doc, getDoc } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-import { setUserData } from '@/firebase';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -78,18 +77,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
     const unsubscribe = onAuthStateChanged(
       auth,
-      async (firebaseUser) => { // Auth state determined
-        if (firebaseUser && !firebaseUser.isAnonymous) {
-          // Check if a user document exists in Firestore.
-          const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-          const userDocSnap = await getDoc(userDocRef);
-
-          // If the document doesn't exist, create it.
-          // This handles the case for a newly registered user.
-          if (!userDocSnap.exists()) {
-            setUserData(firebaseUser);
-          }
-        }
+      (firebaseUser) => { // Auth state determined
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
       },
       (error) => { // Auth listener error
