@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useId, useMemo } from 'react';
@@ -31,6 +30,14 @@ import Greeter from '@/components/greeter';
 import { Card, CardContent } from '@/components/ui/card';
 import { v4 as uuidv4 } from 'uuid';
 
+const funeralQuotes = [
+    '"Blessed are those who mourn, for they will be comforted." - Matthew 5:4',
+    '"The Lord is close to the brokenhearted and saves those who are crushed in spirit." - Psalm 34:18',
+    '"Grief is the price we pay for love." - Queen Elizabeth II',
+    '"What is lovely never dies, but passes into other loveliness." - Thomas Bailey Aldrich',
+    '"To live in hearts we leave behind is not to die." - Thomas Campbell',
+];
+
 function calculateTotals(categories: BudgetCategory[]): { categories: BudgetCategory[], grandTotal: number } {
   let newGrandTotal = 0;
   const categoriesWithTotals = categories.map(category => {
@@ -60,6 +67,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   const router = useRouter();
   const [budgetData, setBudgetData] = useState<BudgetCategory[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
+  const [motivationalQuote, setMotivationalQuote] = useState('');
   const uniqueId = useId();
   const isTemplateMode = budgetId === 'template';
 
@@ -74,6 +82,8 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   ), [user, firestore, budgetId, isTemplateMode]);
 
   const { data: fetchedCategories, isLoading: categoriesLoading } = useCollection<BudgetCategory>(categoriesCollection);
+
+  const eventType = isTemplateMode ? searchParams.get('eventType') : budget?.eventType;
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -114,6 +124,12 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
       }
   }, [isTemplateMode, searchParams, fetchedCategories, categoriesLoading, budgetLoading, user, firestore, budgetId, budget]);
 
+  useEffect(() => {
+    if (eventType === 'funeral') {
+      const randomIndex = Math.floor(Math.random() * funeralQuotes.length);
+      setMotivationalQuote(funeralQuotes[randomIndex]);
+    }
+  }, [eventType]);
 
   const updateStateAndTotals = (newBudgetData: BudgetCategory[]) => {
       const { categories, grandTotal } = calculateTotals(newBudgetData);
@@ -239,6 +255,9 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
       <PageHeader />
       <main className="container mx-auto p-4 md:p-8">
         <Greeter name={user?.displayName || 'there'} />
+        {eventType === 'funeral' && motivationalQuote && (
+            <p className="mt-4 text-lg italic text-muted-foreground">{motivationalQuote}</p>
+        )}
 
         {isTemplateMode && (
           <Card className="mt-4 mb-8 bg-yellow-100 border-yellow-300">
@@ -287,3 +306,5 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
+
+    
