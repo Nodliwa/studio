@@ -17,7 +17,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -248,113 +247,114 @@ function MyPlansPage() {
         <div className="min-h-screen bg-secondary flex flex-col">
             <div className="bg-background shadow-2xl container mx-auto flex flex-col flex-grow">
                 <PageHeader />
-                <main className="container mx-auto px-4 flex-grow">
-                    <Greeter />
-                    <MotivationalQuote />
+                <main className="container mx-auto px-4 flex-grow flex flex-col">
+                    <div>
+                        <Greeter />
+                        <MotivationalQuote />
 
-                    <div className="flex items-center justify-between mt-16 mb-8">
-                        <div>
-                            <h3 className="text-3xl font-bold font-headline">Check your plans below</h3>
-                            <p className="text-muted-foreground">Click a plan to edit or review</p>
+                        <div className="flex items-center justify-between mt-16 mb-8">
+                            <div>
+                                <h3 className="text-3xl font-bold font-headline">Check your plans below</h3>
+                                <p className="text-muted-foreground">Click a plan to edit or review</p>
+                            </div>
+                        </div>
+
+                        {budgets && budgets.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {budgets.map(budget => (
+                                <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-16">
+                                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                                    <p className="text-lg text-muted-foreground">
+                                        You currently do not have an active plan,{' '}
+                                        <DialogTrigger asChild>
+                                            <button className="font-bold text-primary hover:underline focus:outline-none">add plan</button>
+                                        </DialogTrigger>
+                                    </p>
+                                    <DialogContent className="sm:max-w-[425px]">
+                                        <DialogHeader>
+                                            <DialogTitle>Create a new plan</DialogTitle>
+                                            <DialogDescription>
+                                                Select an event type to get started with a template.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                                            <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('wedding')}>
+                                                <Heart />
+                                                Wedding
+                                            </Button>
+                                            <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
+                                                <CrossIcon />
+                                                Funeral
+                                            </Button>
+                                            <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
+                                                <ListChecks />
+                                                uMemulo
+                                            </Button>
+                                            <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
+                                                <Wallet />
+                                                umGidi
+                                            </Button>
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex-grow"></div>
+                    <div className="mt-12 w-full max-w-6xl mx-auto">
+                        <h2 className="text-3xl font-bold font-headline text-center">Features</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+                            <Card>
+                            <CardHeader className="p-4">
+                                <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
+                                <ListChecks className="h-6 w-6 text-primary" />
+                                <span>Don’t forget a thing</span>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4 pt-0">
+                                <p className="text-sm text-muted-foreground text-center">We give you a handy list of items to think about for your event, so nothing slips through the cracks.</p>
+                            </CardContent>
+                            </Card>
+                            <Card>
+                            <CardHeader className="p-4">
+                                <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
+                                <CalendarDays className="h-6 w-6 text-primary" />
+                                <span>Planning That Fits Your Life</span>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4 pt-0">
+                                <p className="text-sm text-muted-foreground text-center">Plan anywhere, with anyone, whenever it suits you — simple, flexible, and stress-free.</p>
+                            </CardContent>
+                            </Card>
+                            <Card>
+                            <CardHeader className="p-4">
+                                <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
+                                <Wallet className="h-6 w-6 text-primary" />
+                                <span>Effortless Budgeting</span>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4 pt-0">
+                                <p className="text-sm text-muted-foreground text-center">Forget diaries & spreadsheets - Organise your spending and see where your money goes, all in one place</p>
+                            </CardContent>
+                            </Card>
+                            <Card>
+                            <CardHeader className="p-4">
+                                <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
+                                <RefreshCw className="h-6 w-6 text-primary" />
+                                <span>Real-Time Updates</span>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4 pt-0">
+                                <p className="text-sm text-muted-foreground text-center">See your grand total update instantly as you adjust quantities and prices. No surprises.</p>
+                            </CardContent>
+                            </Card>
                         </div>
                     </div>
-
-                    {budgets && budgets.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {budgets.map(budget => (
-                               <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} />
-                            ))}
-                        </div>
-                    ) : (
-                         <div className="text-center py-16">
-                            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                                <p className="text-lg text-muted-foreground">
-                                    You currently do not have an active plan,{' '}
-                                    <DialogTrigger asChild>
-                                        <button className="font-bold text-primary hover:underline focus:outline-none">add plan</button>
-                                    </DialogTrigger>
-                                </p>
-                                <DialogContent className="sm:max-w-[425px]">
-                                    <DialogHeader>
-                                        <DialogTitle>Create a new plan</DialogTitle>
-                                        <DialogDescription>
-                                            Select an event type to get started with a template.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('wedding')}>
-                                            <Heart />
-                                            Wedding
-                                        </Button>
-                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
-                                            <CrossIcon />
-                                            Funeral
-                                        </Button>
-                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
-                                            <ListChecks />
-                                            uMemulo
-                                        </Button>
-                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
-                                            <Wallet />
-                                            umGidi
-                                        </Button>
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
-                    )}
                 </main>
-            </div>
-            <div className="container mx-auto">
-                <div className="mt-12 w-full max-w-6xl mx-auto">
-                    <h2 className="text-3xl font-bold font-headline text-center">Features</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-                        <Card>
-                        <CardHeader className="p-4">
-                            <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                            <ListChecks className="h-6 w-6 text-primary" />
-                            <span>Don’t forget a thing</span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                            <p className="text-sm text-muted-foreground text-center">We give you a handy list of items to think about for your event, so nothing slips through the cracks.</p>
-                        </CardContent>
-                        </Card>
-                        <Card>
-                        <CardHeader className="p-4">
-                            <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                            <CalendarDays className="h-6 w-6 text-primary" />
-                            <span>Planning That Fits Your Life</span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                            <p className="text-sm text-muted-foreground text-center">Plan anywhere, with anyone, whenever it suits you — simple, flexible, and stress-free.</p>
-                        </CardContent>
-                        </Card>
-                        <Card>
-                        <CardHeader className="p-4">
-                            <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                            <Wallet className="h-6 w-6 text-primary" />
-                            <span>Effortless Budgeting</span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                            <p className="text-sm text-muted-foreground text-center">Forget diaries & spreadsheets - Organise your spending and see where your money goes, all in one place</p>
-                        </CardContent>
-                        </Card>
-                        <Card>
-                        <CardHeader className="p-4">
-                            <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                            <RefreshCw className="h-6 w-6 text-primary" />
-                            <span>Real-Time Updates</span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                            <p className="text-sm text-muted-foreground text-center">See your grand total update instantly as you adjust quantities and prices. No surprises.</p>
-                        </CardContent>
-                        </Card>
-                    </div>
-                </div>
             </div>
         </div>
     );
