@@ -17,7 +17,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -30,7 +29,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Trash2, MapPin } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, MoreVertical } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
@@ -60,8 +65,7 @@ const eventTypeImages: { [key: string]: string } = {
 };
 
 function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string) => void }) {
-    const { toast } = useToast();
-    
+    const router = useRouter();
     const imageUrl = budget.eventType ? eventTypeImages[budget.eventType] : undefined;
 
     return (
@@ -77,42 +81,52 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                     <div className="absolute inset-0 bg-black/50" />
                 </>
             )}
-             <div className="absolute top-2 right-2 flex items-center gap-2 z-20">
+             <div className="absolute top-2 right-2 z-20">
                 <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="hover:bg-white/20">
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                    </AlertDialogTrigger>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="hover:bg-white/20">
+                                <MoreVertical className="h-5 w-5 text-white" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="bg-background/80 backdrop-blur text-foreground">
+                            <DropdownMenuItem onClick={() => router.push(`/planner/${budget.id}`)}>
+                                View/Edit
+                            </DropdownMenuItem>
+                             <AlertDialogTrigger asChild>
+                                <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                                    Delete
+                                </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete your
-                        plan and all of its data.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => onDelete(budget.id)}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your
+                            plan and all of its data.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => onDelete(budget.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
             </div>
             <div className="relative z-10 flex flex-col flex-grow p-6">
                 <CardHeader className="p-0">
-                    <CardTitle>{budget.name}</CardTitle>
+                    <Link href={`/planner/${budget.id}`} className="hover:underline">
+                        <CardTitle>{budget.name}</CardTitle>
+                    </Link>
                     {budget.eventDate && <CardDescription className="text-white/80 flex items-center gap-2 mt-2"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</CardDescription>}
                 </CardHeader>
                 <CardContent className="flex-grow space-y-2 p-0 mt-4">
                      <p className="flex items-start gap-2"><Wallet className="inline-block h-4 w-4 mt-1 shrink-0" />{budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
-                    {budget.eventLocation && <p className="flex items-start gap-2"><MapPin className="h-4 w-4 mt-1 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>}
+                    {budget.eventLocation && <p className="flex items-start gap-2"><MoreVertical className="h-4 w-4 mt-1 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>}
                 </CardContent>
-                <CardFooter className="p-0 mt-4 flex justify-between items-center">
-                    <Button asChild variant="link" className="p-0 text-white hover:text-white/80">
-                        <Link href={`/planner/${budget.id}`}>View/Edit</Link>
-                    </Button>
-                </CardFooter>
+                <CardFooter className="p-0 mt-4 flex justify-between items-center" />
             </div>
         </Card>
     );
@@ -336,6 +350,8 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
+
+    
 
     
 
