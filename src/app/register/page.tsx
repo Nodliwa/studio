@@ -74,7 +74,7 @@ export default function RegisterPage() {
     setFirebaseError(null);
     setIsSubmitting(true);
     try {
-        initiateEmailSignUp(auth, data.email, data.password);
+        initiateEmailSignUp(auth, data.email, data.password, data.firstName, data.lastName);
     } catch (error) {
       if (error instanceof FirebaseError) {
         setFirebaseError(error.message);

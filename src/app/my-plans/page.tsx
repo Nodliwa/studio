@@ -2,7 +2,7 @@
 'use client';
 
 import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, setDocumentNonBlocking } from '@/firebase';
-import { collection, doc, writeBatch, getDocs, setDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch, getDocs, setDoc, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { Budget } from '@/lib/types';
