@@ -131,64 +131,71 @@ export default function RegisterPage() {
                 <CardDescription>Start planning your celebrations with SimpliPlan.</CardDescription>
             </CardHeader>
             <CardContent>
-                <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
-                    <GoogleIcon className="mr-2" />
-                    Sign up with Google
-                </Button>
-
-                <div className="my-4 flex items-center">
-                    <Separator className="flex-grow" />
-                    <span className="mx-2 text-xs text-muted-foreground">OR CONTINUE WITH</span>
-                    <Separator className="flex-grow" />
-                </div>
-
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input id="firstName" {...register('firstName')} />
-                    {errors.firstName && <p className="text-destructive text-sm">{errors.firstName.message}</p>}
+                <div className="space-y-4">
+                    <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+                        <GoogleIcon className="mr-2" />
+                        Sign up with Google
+                    </Button>
+                    
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-card px-2 text-muted-foreground">
+                            Or continue with
+                            </span>
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input id="lastName" {...register('lastName')} />
-                    {errors.lastName && <p className="text-destructive text-sm">{errors.lastName.message}</p>}
-                    </div>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" {...register('email')} />
-                    {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="cellphone">Cellphone (Optional)</Label>
-                    <Input id="cellphone" type="tel" {...register('cellphone')} />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" {...register('password')} />
-                    {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
-                </div>
-                
-                <div className="space-y-2">
-                  {siteKey ? (
-                    <ReCAPTCHA
-                      ref={recaptchaRef}
-                      sitekey={siteKey}
-                      onChange={(token) => setValue('recaptcha', token || '', { shouldValidate: true })}
-                    />
-                  ) : (
-                    <p className="text-destructive text-sm">reCAPTCHA site key is not configured.</p>
-                  )}
-                  {errors.recaptcha && <p className="text-destructive text-sm">{errors.recaptcha.message}</p>}
-                </div>
 
-                {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                            <Label htmlFor="firstName">First Name</Label>
+                            <Input id="firstName" {...register('firstName')} />
+                            {errors.firstName && <p className="text-destructive text-sm">{errors.firstName.message}</p>}
+                            </div>
+                            <div className="space-y-2">
+                            <Label htmlFor="lastName">Last Name</Label>
+                            <Input id="lastName" {...register('lastName')} />
+                            {errors.lastName && <p className="text-destructive text-sm">{errors.lastName.message}</p>}
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input id="email" type="email" {...register('email')} />
+                            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="cellphone">Cellphone (Optional)</Label>
+                            <Input id="cellphone" type="tel" {...register('cellphone')} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="password">Password</Label>
+                            <Input id="password" type="password" {...register('password')} />
+                            {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
+                        </div>
+                        
+                        <div className="space-y-2">
+                        {siteKey ? (
+                            <ReCAPTCHA
+                            ref={recaptchaRef}
+                            sitekey={siteKey}
+                            onChange={(token) => setValue('recaptcha', token || '', { shouldValidate: true })}
+                            />
+                        ) : (
+                            <p className="text-destructive text-sm">reCAPTCHA site key is not configured.</p>
+                        )}
+                        {errors.recaptcha && <p className="text-destructive text-sm">{errors.recaptcha.message}</p>}
+                        </div>
 
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Creating Account...' : 'Sign Up'}
-                </Button>
-                </form>
+                        {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
+
+                        <Button type="submit" className="w-full" disabled={isSubmitting}>
+                            {isSubmitting ? 'Creating Account...' : 'Sign Up'}
+                        </Button>
+                    </form>
+                </div>
                 <div className="mt-4 text-center text-sm">
                     Already have an account?{' '}
                     <Link href="/login" className="underline">

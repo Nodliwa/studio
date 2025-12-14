@@ -111,35 +111,42 @@ export default function LoginPage() {
                 <CardDescription>Access your celebration plans.</CardDescription>
             </CardHeader>
             <CardContent>
-                <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
-                    <GoogleIcon className="mr-2" />
-                    Sign in with Google
-                </Button>
+                <div className="space-y-4">
+                    <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+                        <GoogleIcon className="mr-2" />
+                        Sign in with Google
+                    </Button>
 
-                <div className="my-4 flex items-center">
-                    <Separator className="flex-grow" />
-                    <span className="mx-2 text-xs text-muted-foreground">OR CONTINUE WITH</span>
-                    <Separator className="flex-grow" />
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-card px-2 text-muted-foreground">
+                            Or continue with
+                            </span>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleSubmit(onEmailSubmit)} className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input id="email" type="email" {...register('email')} />
+                        {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <Input id="password" type="password" {...register('password')} />
+                        {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
+                    </div>
+
+                    {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
+
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                        {isSubmitting ? 'Logging in...' : 'Login'}
+                    </Button>
+                    </form>
                 </div>
-
-                <form onSubmit={handleSubmit(onEmailSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" {...register('email')} />
-                    {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" {...register('password')} />
-                    {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
-                </div>
-
-                {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
-
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Logging in...' : 'Login'}
-                </Button>
-                </form>
                 <div className="mt-4 text-center text-sm">
                     Don't have an account?{' '}
                     <Link href="/register" className="underline">
