@@ -62,15 +62,10 @@ export default function LandingPage() {
                         </CardHeader>
                       </Card>
                     </div>
-                    <div className="flip-card-back">
-                      <div className="relative w-full h-full rounded-lg overflow-hidden">
-                        <Image src="/images/umemulo-back.jpg" alt="Coming Soon" fill={true} className="object-cover" />
-                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                          <div className="text-center text-white p-4">
-                            <h3 className="text-2xl font-bold">Ngisakula!</h3>
-                            <p className="text-lg">Coming Soon!</p>
-                          </div>
-                        </div>
+                    <div className="flip-card-back flex items-center justify-center">
+                      <div className="text-center text-white p-4">
+                        <h3 className="text-2xl font-bold">Ngisakula!</h3>
+                        <p className="text-lg">Coming Soon!</p>
                       </div>
                     </div>
                   </div>
@@ -87,15 +82,10 @@ export default function LandingPage() {
                         </CardHeader>
                       </Card>
                     </div>
-                    <div className="flip-card-back">
-                      <div className="relative w-full h-full rounded-lg overflow-hidden">
-                        <Image src="/images/umgidi-back.jpg" alt="Coming Soon" fill={true} className="object-cover" />
-                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                          <div className="text-center text-white p-4">
-                            <h3 className="text-2xl font-bold">Ndisakhula!</h3>
-                            <p className="text-lg">Coming Soon!</p>
-                          </div>
-                        </div>
+                    <div className="flip-card-back flex items-center justify-center">
+                      <div className="text-center text-white p-4">
+                        <h3 className="text-2xl font-bold">Ndisakhula!</h3>
+                        <p className="text-lg">Coming Soon!</p>
                       </div>
                     </div>
                   </div>
