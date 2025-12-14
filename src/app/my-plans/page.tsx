@@ -229,7 +229,7 @@ function MyPlansPage() {
 
                     <div className="flex items-center justify-between my-8">
                         <div>
-                            <h2 className="text-3xl font-bold font-headline">Check your plans below</h2>
+                            <h1 className="text-3xl font-bold font-headline">Check your plans below</h1>
                             <p className="text-muted-foreground">Click a plan to edit or review</p>
                         </div>
                     </div>

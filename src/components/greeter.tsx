@@ -29,9 +29,9 @@ const Greeter = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold font-headline text-foreground/90">
+      <h2 className="text-3xl font-bold font-headline text-foreground/90">
         {mainGreeting}
-      </h1>
+      </h2>
       {subGreeting && name !== 'there' && (
         <p className="mt-2 text-muted-foreground font-bold italic">{subGreeting}</p>
       )}
