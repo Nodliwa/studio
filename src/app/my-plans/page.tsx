@@ -245,10 +245,10 @@ function MyPlansPage() {
     }
 
     return (
-        <div className="min-h-screen bg-secondary">
-            <div className="bg-background shadow-2xl min-h-full container mx-auto">
+        <div className="min-h-screen bg-secondary flex flex-col">
+            <div className="bg-background shadow-2xl container mx-auto flex flex-col flex-grow">
                 <PageHeader />
-                <main className="container mx-auto px-4">
+                <main className="container mx-auto px-4 flex-grow">
                     <Greeter />
                     <MotivationalQuote />
 
