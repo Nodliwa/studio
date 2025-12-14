@@ -46,7 +46,9 @@ export default function RootLayout({
       >
         <PlacesAutocompleteProvider>
           <FirebaseClientProvider>
-            <main className="flex-grow">{children}</main>
+            <div className="flex flex-col flex-grow">
+              {children}
+            </div>
             <LandingFooter />
           </FirebaseClientProvider>
         </PlacesAutocompleteProvider>

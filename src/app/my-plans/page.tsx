@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, useAuth } from '@/firebase';
@@ -251,7 +250,7 @@ function MyPlansPage() {
     }
     
     return (
-        <div className="min-h-screen bg-secondary flex flex-col">
+        <div className="min-h-full bg-secondary flex flex-col">
             <div className="bg-background shadow-2xl container mx-auto flex flex-col flex-grow">
                 <PageHeader />
                 <main className="container mx-auto px-4 flex-grow flex flex-col">
