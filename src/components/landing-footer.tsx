@@ -37,8 +37,7 @@ export default function LandingFooter() {
                 <div>
                      <Card>
                         <CardHeader className="text-center">
-                            <CardTitle as="h3">Suggestions / Comments / Queries</CardTitle>
-                            <CardDescription>We'd love to hear from you. Drop us a message below.</CardDescription>
+                            <CardTitle as="h3">Contact Us</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <form onSubmit={handleSubmit} className="space-y-4">
