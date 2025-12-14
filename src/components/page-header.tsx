@@ -162,10 +162,10 @@ export default function PageHeader() {
             <>
               {pathname === '/' && (
                 <>
-                    <Button asChild variant="outline">
+                    <Button asChild variant="outline" size="sm">
                         <Link href="/login" className="text-lg">Login</Link>
                     </Button>
-                    <Button asChild>
+                    <Button asChild size="sm">
                         <Link href="/register" className="text-lg">Sign Up</Link>
                     </Button>
                 </>
