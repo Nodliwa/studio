@@ -28,7 +28,7 @@ const Greeter = () => {
   const name = user?.displayName || 'there';
 
   return (
-    <div>
+    <div className="mt-8">
       <h2 className="text-3xl font-bold font-headline text-foreground/90">
         {mainGreeting}
       </h2>
