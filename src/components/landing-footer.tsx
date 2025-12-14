@@ -44,16 +44,13 @@ export default function LandingFooter() {
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="name">Name</Label>
                                         <Input id="name" placeholder="Your Name" />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="email">Email</Label>
                                         <Input id="email" type="email" placeholder="Your Email" />
                                     </div>
                                 </div>
                                 <div className="relative">
-                                    <Label htmlFor="message">Message</Label>
                                     <Textarea id="message" placeholder="Your message..." className="pr-20 min-h-[120px]" />
                                     <Button type="submit" size="sm" className="absolute bottom-2 right-2">
                                         Send
