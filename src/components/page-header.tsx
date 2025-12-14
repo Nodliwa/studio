@@ -8,7 +8,13 @@ import { Button } from "./ui/button";
 import { useUser, useFirestore } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { LogOut, PlusCircle, Heart, ListChecks, Wallet, CrossIcon } from 'lucide-react';
+import { LogOut, PlusCircle, Heart, ListChecks, Wallet, CrossIcon, Menu } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose,
+} from "@/components/ui/sheet";
 import {
   Dialog,
   DialogContent,
@@ -147,7 +153,7 @@ export default function PageHeader() {
                     </DialogContent>
                   </Dialog>
                 )}
-                 <Button variant="ghost" onClick={handleLogout} className="text-lg font-bold text-foreground/60 hover:text-foreground/80">
+                 <Button variant="ghost" onClick={handleLogout} className="hidden md:flex text-lg font-bold text-foreground/60 hover:text-foreground/80">
                     <LogOut className="mr-2 h-5 w-5" />
                     Logout
                  </Button>
@@ -166,6 +172,34 @@ export default function PageHeader() {
               )}
             </>
           )}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Toggle Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right">
+              <nav className="flex flex-col gap-6 text-lg font-medium mt-8">
+                <SheetClose asChild>
+                    <Link href="/" className={cn("transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
+                    Home
+                    </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                    <Link href="/my-plans" className={cn("transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
+                        MyPlans
+                    </Link>
+                </SheetClose>
+                 {user && !user.isAnonymous && (
+                    <Button variant="ghost" onClick={handleLogout} className="justify-start p-0 text-lg font-bold text-foreground/60 hover:text-foreground/80">
+                        <LogOut className="mr-2 h-5 w-5" />
+                        Logout
+                    </Button>
+                 )}
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
