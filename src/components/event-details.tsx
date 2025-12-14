@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -130,6 +129,11 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
       clearSuggestions();
   }
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAutocompleteValue(e.target.value);
+    setFormValue("eventLocation", e.target.value, { shouldDirty: true });
+  };
+
   return (
     <Card className="shadow-lg border-border/60">
       <CardHeader className="flex flex-row items-center justify-between p-4">
@@ -158,7 +162,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
                   <Input
                     id="eventLocation"
                     value={autocompleteValue}
-                    onChange={(e) => setAutocompleteValue(e.target.value)}
+                    onChange={handleInputChange}
                     disabled={!isEditing || !isLoaded}
                     placeholder={isLoaded ? "Start typing your address..." : "Loading location..."}
                     autoComplete="off"
