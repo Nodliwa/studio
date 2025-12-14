@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -40,7 +41,7 @@ export function DatePicker({ date, setDate, disabled }: DatePickerProps) {
         <Calendar
           mode="single"
           selected={date}
-          onSelect={(day) => setDate(day)}
+          onSelect={setDate}
           initialFocus
         />
       </PopoverContent>

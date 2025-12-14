@@ -156,13 +156,9 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
 
   useEffect(() => {
     if (eventType === 'funeral') {
-        const quotes = funeralQuotes;
-        const randomIndex = Math.floor(Math.random() * quotes.length);
-        setEventQuote(quotes[randomIndex]);
+        setEventQuote(funeralQuotes[Math.floor(Math.random() * funeralQuotes.length)]);
     } else if (eventType === 'wedding') {
-        const quotes = weddingQuotes;
-        const randomIndex = Math.floor(Math.random() * quotes.length);
-        setEventQuote(quotes[randomIndex]);
+        setEventQuote(weddingQuotes[Math.floor(Math.random() * weddingQuotes.length)]);
     }
   }, [eventType]);
 

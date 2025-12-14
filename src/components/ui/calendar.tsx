@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -24,19 +25,6 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
-  const handleYearChange = (
-    value: string,
-    onChange: (year: number) => void
-  ) => {
-    onChange(Number(value))
-  }
-  
-  const handleMonthChange = (
-    value: string,
-    onChange: (month: number) => void
-  ) => {
-    onChange(Number(value))
-  }
   
   return (
     <DayPicker
@@ -78,12 +66,8 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ className, ...props }) => (
-          <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
-        ),
-        IconRight: ({ className, ...props }) => (
-          <ChevronRight className={cn("h-4 w-4", className)} {...props} />
-        ),
+        IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
+        IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
         Dropdown: ({ value, onChange, children, ...props }: DropdownProps) => {
           const options = React.Children.toArray(
             children
@@ -102,7 +86,7 @@ function Calendar({
                 handleChange(value)
               }}
             >
-              <SelectTrigger className="h-8 w-[110px] text-sm">
+              <SelectTrigger className="h-8 w-[110px] text-sm pr-1.5">
                 <SelectValue>{selected?.props?.children}</SelectValue>
               </SelectTrigger>
               <SelectContent>
