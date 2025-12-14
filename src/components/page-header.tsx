@@ -8,15 +8,7 @@ import { Button } from "./ui/button";
 import { useUser, useFirestore } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
 import { doc, setDoc } from 'firebase/firestore';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { User as UserIcon, LogOut, PlusCircle, Heart, ListChecks, Wallet } from 'lucide-react';
+import { LogOut, PlusCircle, Heart, ListChecks, Wallet, CrossIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -28,7 +20,6 @@ import {
 import { useState } from "react";
 import type { Budget, BudgetCategory } from "@/lib/types";
 import { v4 as uuidv4 } from 'uuid';
-import { CrossIcon } from "lucide-react";
 import { budgetTemplates } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 
