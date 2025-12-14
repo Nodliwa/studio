@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useUser, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
+import { useUser, useCollection, useMemoFirebase, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -19,7 +19,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusCircle, PartyPopper, Heart, Cross } from 'lucide-react';
+import { PlusCircle, PartyPopper, Heart, Cross, Briefcase } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
+
 
 function MyPlansPage() {
     const { user, isUserLoading } = useUser();
@@ -57,8 +59,28 @@ function MyPlansPage() {
     }
 
 
-    const handleNewPlan = (eventType: string) => {
-        router.push(`/planner?eventType=${eventType}`);
+    const handleNewPlan = async (eventType: string) => {
+        if (!user) return;
+        
+        const newBudgetId = uuidv4();
+        const newBudget: Omit<Budget, 'id'> = {
+            name: `${eventType.charAt(0).toUpperCase() + eventType.slice(1)} Plan`,
+            grandTotal: 0,
+            userId: user.uid,
+            eventType: eventType,
+        };
+        
+        // Non-blocking write to create the budget document first
+        const budgetDocRef = addDocumentNonBlocking(
+            collection(firestore, 'users', user.uid, 'budgets'),
+            newBudget
+        );
+
+        // We don't have the ID immediately, so we'll navigate and let the planner page handle seeding
+        // For simplicity, let's create a doc with a known ID
+        await addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'budgets'), { ...newBudget, id: newBudgetId });
+
+        router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
     }
 
     return (
@@ -100,7 +122,7 @@ function MyPlansPage() {
                                     Funeral
                                 </Button>
                                 <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('other')}>
-                                    <PlusCircle />
+                                    <Briefcase />
                                     Other
                                 </Button>
                             </div>
@@ -154,7 +176,7 @@ function MyPlansPage() {
                                         Funeral
                                     </Button>
                                     <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('other')}>
-                                        <PlusCircle />
+                                        <Briefcase />
                                         Other
                                     </Button>
                                 </div>
