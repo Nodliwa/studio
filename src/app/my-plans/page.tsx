@@ -196,6 +196,9 @@ function MyPlansPage() {
                 grandTotal: initialTotal,
                 userId: user.uid,
                 eventType: eventType,
+                eventDate: '',
+                eventLocation: '',
+                expectedGuests: 0
             };
             
             const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
@@ -248,7 +251,7 @@ function MyPlansPage() {
 
     };
 
-    if (isUserLoading || !user || (user && user.isAnonymous)) {
+    if (isUserLoading || !user || (user && user.isAnonymous) || (budgetsLoading && budgets === null)) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
                 <p>Loading...</p>

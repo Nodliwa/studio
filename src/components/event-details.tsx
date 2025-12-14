@@ -161,8 +161,9 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
       router.push('/register');
       return;
     }
-    if (!budgetRef || !isDirty) return;
+    if (!budgetRef) return;
     
+    // Always save if the button is clicked, don't rely on isDirty
     const budgetUpdate = {
         ...data,
     }
@@ -213,7 +214,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
               name="expectedGuests"
               control={control}
               render={({ field }) => (
-                <Input id="expectedGuests" type="number" {...field} disabled={!isEditing} />
+                <Input id="expectedGuests" type="number" {...field} disabled={!isEditing} value={field.value || 0} />
               )}
             />
           </div>
@@ -222,11 +223,18 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
             <div className="md:col-span-2 lg:col-span-4 flex justify-end gap-2 mt-4">
                {!isTemplateMode && (
                 <Button type="button" variant="ghost" onClick={() => {
-                  reset(); // Revert changes
+                  if (budget) {
+                    reset({
+                        name: budget.name || DEFAULT_BUDGET_NAME,
+                        eventLocation: budget.eventLocation || "",
+                        eventDate: budget.eventDate || "",
+                        expectedGuests: budget.expectedGuests || 0,
+                    });
+                  }
                   setIsEditing(false);
                 }}>Cancel</Button>
                )}
-              <Button type="submit" disabled={!isTemplateMode && (!isDirty || isSubmitting)}>
+              <Button type="submit" disabled={isSubmitting}>
                 {isTemplateMode ? 'Sign Up to Save' : 'Save Changes'}
               </Button>
             </div>
