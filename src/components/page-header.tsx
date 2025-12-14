@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { useUser, useFirestore, addDocumentNonBlocking } from "@/firebase";
+import { useUser, useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
 import {
   DropdownMenu,
@@ -27,7 +27,7 @@ import {
 import { useState } from "react";
 import type { Budget, BudgetCategory } from "@/lib/types";
 import { v4 as uuidv4 } from 'uuid';
-import { collection } from "firebase/firestore";
+import { collection, doc } from "firebase/firestore";
 import { CrossIcon } from "lucide-react";
 import { budgetTemplates } from "@/lib/data";
 
@@ -64,17 +64,16 @@ export default function PageHeader() {
       const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
       const initialTotal = calculateInitialTotal(template as BudgetCategory[]);
 
-      const newBudget: Omit<Budget, 'id'> = {
+      const newBudget: Budget = {
+        id: newBudgetId,
         name: `${eventType.charAt(0).toUpperCase() + eventType.slice(1)} Plan`,
         grandTotal: initialTotal,
         userId: user.uid,
         eventType: eventType,
       };
 
-      const newBudgetWithId = { ...newBudget, id: newBudgetId };
-
-      const budgetsCol = collection(firestore, 'users', user.uid, 'budgets');
-      addDocumentNonBlocking(budgetsCol, newBudgetWithId);
+      const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
+      setDocumentNonBlocking(budgetDocRef, newBudget, {});
 
       router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
     } else {

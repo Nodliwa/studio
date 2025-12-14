@@ -1,3 +1,4 @@
+
 'use client';
     
 import {
@@ -8,6 +9,7 @@ import {
   CollectionReference,
   DocumentReference,
   SetOptions,
+  writeBatch,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import {FirestorePermissionError} from '@/firebase/errors';
@@ -76,7 +78,7 @@ export function updateDocumentNonBlocking(docRef: DocumentReference, data: any) 
  * Does NOT await the write operation internally.
  */
 export function deleteDocument(docRef: DocumentReference) {
-  deleteDoc(docRef)
+  const promise = deleteDoc(docRef)
     .catch(error => {
       errorEmitter.emit(
         'permission-error',
@@ -86,6 +88,6 @@ export function deleteDocument(docRef: DocumentReference) {
         })
       )
     });
+  return promise;
 }
-
     

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useUser, useCollection, useMemoFirebase, useFirestore, addDocumentNonBlocking, deleteDocument } from '@/firebase';
+import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc, writeBatch, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -75,17 +75,16 @@ function MyPlansPage() {
             const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
             const initialTotal = calculateInitialTotal(template as BudgetCategory[]);
 
-            const newBudget: Omit<Budget, 'id'> = {
+            const newBudget: Budget = {
+                id: newBudgetId,
                 name: `${eventType.charAt(0).toUpperCase() + eventType.slice(1)} Plan`,
                 grandTotal: initialTotal,
                 userId: user.uid,
                 eventType: eventType,
             };
             
-            const newBudgetWithId = { ...newBudget, id: newBudgetId };
-            
-            const budgetsCol = collection(firestore, 'users', user.uid, 'budgets');
-            addDocumentNonBlocking(budgetsCol, newBudgetWithId);
+            const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
+            setDocumentNonBlocking(budgetDocRef, newBudget, {});
 
             router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
         } else {
@@ -114,8 +113,9 @@ function MyPlansPage() {
             // Delete the category itself
             batch.delete(categoryDoc.ref);
         }
-
+        
         // After subcollections are handled in the batch, delete the main budget doc
+        batch.delete(budgetDocRef);
         await batch.commit();
         deleteDocument(budgetDocRef);
     };
