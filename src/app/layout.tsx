@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase';
 import { PlacesAutocompleteProvider } from '@/components/places-autocomplete-provider';
+import LandingFooter from '@/components/landing-footer';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -45,7 +46,10 @@ export default function RootLayout({
       >
         <PlacesAutocompleteProvider>
           <FirebaseClientProvider>
-            {children}
+            <div className="flex flex-col min-h-screen">
+              <main className="flex-grow">{children}</main>
+              <LandingFooter />
+            </div>
           </FirebaseClientProvider>
         </PlacesAutocompleteProvider>
         <Toaster />

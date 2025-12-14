@@ -9,7 +9,6 @@ import { ListChecks, CalendarDays, Wallet, RefreshCw } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import LandingFooter from '@/components/landing-footer';
 
 export default function LandingPage() {
   const [isUmemuloFlipped, setIsUmemuloFlipped] = useState(false);
@@ -153,7 +152,6 @@ export default function LandingPage() {
 
           </div>
         </main>
-        <LandingFooter />
       </div>
     </div>
   );
