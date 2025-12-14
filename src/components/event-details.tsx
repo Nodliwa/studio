@@ -12,10 +12,7 @@ import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { DocumentReference } from "firebase/firestore";
-import usePlacesAutocomplete, {
-  getGeocode,
-  getLatLng,
-} from "use-places-autocomplete";
+import usePlacesAutocomplete from "use-places-autocomplete";
 import {
   Popover,
   PopoverContent,
@@ -39,7 +36,6 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const DEFAULT_BUDGET_NAME = "My Celebration Plan";
-
 
 export function EventDetails({ budget, budgetRef, isTemplateMode = false }: EventDetailsProps) {
   const { user } = useUser();
@@ -72,7 +68,6 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
   } = usePlacesAutocomplete({
     requestOptions: { /* Define search scope here */ },
     debounce: 300,
-    defaultValue: watch('eventLocation'),
   });
 
   useEffect(() => {
@@ -152,7 +147,8 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
                         {...field}
                         value={autocompleteValue}
                         onChange={(e) => {
-                           field.onChange(e);
+                           // This now correctly updates both react-hook-form and use-places-autocomplete
+                           field.onChange(e.target.value);
                            setAutocompleteValue(e.target.value);
                         }}
                         disabled={!ready || !isEditing}
