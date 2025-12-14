@@ -17,6 +17,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -85,7 +86,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                     <div className="absolute inset-0 bg-black/50" />
                 </div>
             )}
-
+            
             <div className="absolute top-2 right-2 z-20">
                 <AlertDialog>
                     <DropdownMenu>
@@ -248,7 +249,7 @@ function MyPlansPage() {
             <div className="bg-background shadow-2xl container mx-auto flex flex-col flex-grow">
                 <PageHeader />
                 <main className="container mx-auto px-4 flex-grow flex flex-col">
-                    <div>
+                    <div className="flex-grow">
                         <Greeter />
                         <MotivationalQuote />
 
@@ -304,7 +305,7 @@ function MyPlansPage() {
                             </div>
                         )}
                     </div>
-                    <div className="flex-grow"></div>
+                    
                     <div className="mt-12 w-full max-w-6xl mx-auto">
                         <h2 className="text-3xl font-bold font-headline text-center">Features</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
