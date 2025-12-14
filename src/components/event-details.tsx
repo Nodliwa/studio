@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -50,7 +51,6 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
 
   const {
     ready,
-    value: autocompleteValue,
     suggestions: { status, data: autocompleteData },
     setValue: setAutocompleteValue,
     clearSuggestions,
@@ -129,9 +129,9 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
       clearSuggestions();
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, fieldOnChange: (value: any) => void) => {
     setAutocompleteValue(e.target.value);
-    setFormValue("eventLocation", e.target.value, { shouldDirty: true });
+    fieldOnChange(e.target.value);
   };
 
   return (
@@ -157,45 +157,51 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
           
           <div className="space-y-1">
              <Label htmlFor="eventLocation">Event Location</Label>
-              <Popover open={status === 'OK' && autocompleteData.length > 0}>
-                <PopoverAnchor>
-                  <Input
-                    id="eventLocation"
-                    value={autocompleteValue}
-                    onChange={handleInputChange}
-                    disabled={!isEditing || !isLoaded}
-                    placeholder={isLoaded ? "Start typing your address..." : "Loading location..."}
-                    autoComplete="off"
-                  />
-                </PopoverAnchor>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                  {status === 'OK' && (
-                     <div className="flex flex-col gap-2 p-2">
-                       {autocompleteData.map((suggestion) => {
-                         const {
-                           place_id,
-                           structured_formatting: { main_text, secondary_text },
-                           description
-                         } = suggestion;
-                         return (
-                           <Button
-                             key={place_id}
-                             variant="ghost"
-                             className="justify-start h-auto text-left"
-                             onClick={() => handleLocationSelect(description)}
-                           >
-                             <div>
-                               <strong>{main_text}</strong>
-                               <br />
-                               <small className="text-muted-foreground">{secondary_text}</small>
-                             </div>
-                           </Button>
-                         );
-                       })}
-                     </div>
-                  )}
-                </PopoverContent>
-             </Popover>
+              <Controller
+                name="eventLocation"
+                control={control}
+                render={({ field }) => (
+                    <Popover open={status === 'OK' && autocompleteData.length > 0}>
+                        <PopoverAnchor>
+                        <Input
+                            id="eventLocation"
+                            {...field}
+                            onChange={(e) => handleInputChange(e, field.onChange)}
+                            disabled={!isEditing || !isLoaded}
+                            placeholder={isLoaded ? "Start typing your address..." : "Loading location..."}
+                            autoComplete="off"
+                        />
+                        </PopoverAnchor>
+                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                        {status === 'OK' && (
+                            <div className="flex flex-col gap-2 p-2">
+                            {autocompleteData.map((suggestion) => {
+                                const {
+                                place_id,
+                                structured_formatting: { main_text, secondary_text },
+                                description
+                                } = suggestion;
+                                return (
+                                <Button
+                                    key={place_id}
+                                    variant="ghost"
+                                    className="justify-start h-auto text-left"
+                                    onClick={() => handleLocationSelect(description)}
+                                >
+                                    <div>
+                                    <strong>{main_text}</strong>
+                                    <br />
+                                    <small className="text-muted-foreground">{secondary_text}</small>
+                                    </div>
+                                </Button>
+                                );
+                            })}
+                            </div>
+                        )}
+                        </PopoverContent>
+                    </Popover>
+                )}
+              />
           </div>
 
           <div className="space-y-1">
