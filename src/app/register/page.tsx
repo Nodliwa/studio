@@ -19,7 +19,7 @@ import { doc } from 'firebase/firestore';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { Separator } from '@/components/ui/separator';
 
-const registerSchema = z.object({
+const emailRegisterSchema = z.object({
   firstName: z.string().min(1, 'Known as is required'),
   lastName: z.string().min(1, 'Surname is required'),
   email: z.string().email('Invalid email address'),
@@ -31,7 +31,18 @@ const registerSchema = z.object({
   }),
 });
 
-type RegisterFormValues = z.infer<typeof registerSchema>;
+const baseSchema = z.object({
+    firstName: z.string().min(1, 'Known as is required'),
+    lastName: z.string().min(1, 'Surname is required'),
+    email: z.string().email('Invalid email address'),
+    cellphone: z.string().optional(),
+    password: z.string().min(6, 'Password must be at least 6 characters long'),
+    recaptcha: z.string().optional(),
+    consent: z.boolean().optional(),
+});
+
+
+type RegisterFormValues = z.infer<typeof baseSchema>;
 
 const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
@@ -59,7 +70,7 @@ export default function RegisterPage() {
     control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(baseSchema),
     defaultValues: {
       consent: false,
     }
@@ -74,6 +85,22 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormValues) => {
     setFirebaseError(null);
+
+    const validationResult = emailRegisterSchema.safeParse(data);
+    if (!validationResult.success) {
+        // This can happen if the form state is manipulated outside the standard flow.
+        // We will manually set the errors to make them visible.
+        if (recaptchaRef.current) recaptchaRef.current.reset();
+        setValue('recaptcha', undefined);
+        const { formErrors } = validationResult.error;
+        if (formErrors.recaptcha) {
+             setFirebaseError("Please complete the reCAPTCHA.");
+        } else if (formErrors.consent) {
+             setFirebaseError("You must accept the terms and conditions.");
+        }
+        return; 
+    }
+    
     try {
       const displayName = `${data.firstName} ${data.lastName}`;
       const userCredential = await initiateEmailSignUp(auth, data.email, data.password, displayName);
@@ -94,7 +121,7 @@ export default function RegisterPage() {
         if (recaptchaRef.current) {
             recaptchaRef.current.reset();
         }
-        setValue('recaptcha', '');
+        setValue('recaptcha', undefined);
     }
   };
 
@@ -185,7 +212,7 @@ export default function RegisterPage() {
                         </div>
                         
                          <div className="items-top flex space-x-2">
-                            <Checkbox id="consent" onCheckedChange={(checked) => setValue('consent', checked as boolean, { shouldValidate: true })} />
+                            <Checkbox id="consent" {...register('consent')} onCheckedChange={(checked) => setValue('consent', checked as boolean, { shouldValidate: true })} />
                             <div className="grid gap-1.5 leading-none">
                                 <label
                                 htmlFor="consent"
@@ -200,9 +227,9 @@ export default function RegisterPage() {
                         <div className="space-y-2">
                         {siteKey ? (
                             <ReCAPTCHA
-                            ref={recaptchaRef}
-                            sitekey={siteKey}
-                            onChange={(token) => setValue('recaptcha', token || '', { shouldValidate: true })}
+                                ref={recaptchaRef}
+                                sitekey={siteKey}
+                                onChange={(token) => setValue('recaptcha', token || '', { shouldValidate: true })}
                             />
                         ) : (
                             <p className="text-destructive text-sm">reCAPTCHA site key is not configured.</p>
@@ -239,3 +266,5 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+    
