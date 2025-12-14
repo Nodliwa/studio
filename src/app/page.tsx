@@ -26,7 +26,7 @@ export default function LandingPage() {
               SimpliPlan helps you budget for life's most important moments. From Weddings to uMemulo, and more, plan your celebration with ease and confidence.
             </p>
             <Link href="/planner" className="inline-block">
-              <Button size="lg" className="font-semibold text-lg py-6 px-4">
+              <Button size="lg" className="font-semibold text-lg py-4 px-4">
                 Plan your Event
               </Button>
             </Link>
