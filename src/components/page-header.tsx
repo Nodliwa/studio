@@ -121,7 +121,7 @@ export default function PageHeader() {
                   <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
                       <Button>
-                        <PlusCircle className="mr-2 h-4 w-4" />
+                        <PlusCircle className="mr-1 h-4 w-4" />
                         Add Plan
                       </Button>
                     </DialogTrigger>
@@ -154,7 +154,7 @@ export default function PageHeader() {
                   </Dialog>
                 )}
                  <Button variant="ghost" onClick={handleLogout} className="hidden md:flex text-lg font-bold text-foreground/60 hover:text-foreground/80">
-                    <LogOut className="mr-2 h-5 w-5" />
+                    <LogOut className="mr-1 h-5 w-5" />
                     Logout
                  </Button>
             </div>
@@ -193,7 +193,7 @@ export default function PageHeader() {
                 </SheetClose>
                  {user && !user.isAnonymous && (
                     <Button variant="ghost" onClick={handleLogout} className="justify-start p-0 text-lg font-bold text-foreground/60 hover:text-foreground/80">
-                        <LogOut className="mr-2 h-5 w-5" />
+                        <LogOut className="mr-1 h-5 w-5" />
                         Logout
                     </Button>
                  )}
