@@ -31,6 +31,7 @@ export interface Budget {
   eventType?: string;
   grandTotal: number;
   userId: string;
+  imageUrl?: string;
 }
 
 export interface User {
