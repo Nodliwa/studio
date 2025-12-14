@@ -127,7 +127,12 @@ export default function RegisterPage() {
         <main className="container mx-auto flex items-center justify-center px-4 flex-grow mb-16">
             <Card className="w-full max-w-md">
             <CardHeader>
-                <CardTitle as="h2">Create an Account</CardTitle>
+                <CardTitle as="div" className="flex justify-between items-baseline">
+                    <h2 className='text-2xl font-semibold leading-none tracking-tight'>Create Account</h2>
+                    <Link href="/login" className="text-sm font-medium text-primary hover:underline">
+                        Login
+                    </Link>
+                </CardTitle>
                 <CardDescription>Start planning your celebrations with SimpliPlan.</CardDescription>
             </CardHeader>
             <CardContent>
