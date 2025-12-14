@@ -1,10 +1,10 @@
 'use client';
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { useUser } from "@/firebase/provider";
+import { useUser, useFirestore, addDocumentNonBlocking } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
 import {
   DropdownMenu,
@@ -14,17 +14,56 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { User as UserIcon, LogOut } from 'lucide-react';
+import { User as UserIcon, LogOut, PlusCircle, PartyPopper, Heart, Briefcase } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useState } from "react";
+import type { Budget } from "@/lib/types";
+import { v4 as uuidv4 } from 'uuid';
+import { collection } from "firebase/firestore";
+import { CrossIcon } from "lucide-react";
 
 
 export default function PageHeader() {
   const pathname = usePathname();
   const { user, isUserLoading } = useUser();
   const auth = getAuth();
+  const router = useRouter();
+  const firestore = useFirestore();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleLogout = () => {
     signOut(auth);
   };
+  
+  const handleNewPlan = async (eventType: string) => {
+    setDialogOpen(false);
+    if (user && !user.isAnonymous) {
+      const newBudgetId = uuidv4();
+      const newBudget: Omit<Budget, 'id'> = {
+        name: `${eventType.charAt(0).toUpperCase() + eventType.slice(1)} Plan`,
+        grandTotal: 0,
+        userId: user.uid,
+        eventType: eventType,
+      };
+
+      const newBudgetWithId = { ...newBudget, id: newBudgetId };
+
+      const budgetsCol = collection(firestore, 'users', user.uid, 'budgets');
+      addDocumentNonBlocking(budgetsCol, newBudgetWithId);
+
+      router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
+    } else {
+      router.push(`/planner/template?eventType=${eventType}`);
+    }
+  };
+
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm px-[30px] py-3 shadow-sm">
@@ -52,22 +91,60 @@ export default function PageHeader() {
           {isUserLoading ? (
             <div className="w-24 h-10 bg-muted rounded-md animate-pulse" />
           ) : user && !user.isAnonymous ? (
-             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <UserIcon className="h-4 w-4" />
-                  <span>{user.displayName || 'My Account'}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Logout</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2">
+                {pathname === '/my-plans' && (
+                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Plan
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Create a new plan</DialogTitle>
+                        <DialogDescription>
+                          Select an event type to get started with a template.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('wedding')}>
+                          <Heart />
+                          Wedding
+                        </Button>
+                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('birthday')}>
+                          <PartyPopper />
+                          Birthday
+                        </Button>
+                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
+                          <CrossIcon />
+                          Funeral
+                        </Button>
+                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('other')}>
+                          <Briefcase />
+                          Other
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
+                 <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <UserIcon className="h-4 w-4" />
+                      <span>{user.displayName || 'My Account'}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Logout</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
           ) : (
             <>
               <Button asChild variant="outline">

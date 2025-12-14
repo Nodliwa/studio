@@ -96,40 +96,6 @@ function MyPlansPage() {
                             <h2 className="text-3xl font-bold font-headline">Check your plans below</h2>
                             <p className="text-muted-foreground">Click a plan to edit or review</p>
                         </div>
-                        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button>
-                                    <PlusCircle className="mr-2 h-4 w-4" />
-                                    Add Plan
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[425px]">
-                                <DialogHeader>
-                                    <DialogTitle>Create a new plan</DialogTitle>
-                                    <DialogDescription>
-                                        Select an event type to get started with a template.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-                                    <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('wedding')}>
-                                        <Heart />
-                                        Wedding
-                                    </Button>
-                                    <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('birthday')}>
-                                        <PartyPopper />
-                                        Birthday
-                                    </Button>
-                                    <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
-                                        <CrossIcon />
-                                        Funeral
-                                    </Button>
-                                    <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('other')}>
-                                        <Briefcase />
-                                        Other
-                                    </Button>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
                     </div>
 
                     {budgets && budgets.length > 0 ? (
