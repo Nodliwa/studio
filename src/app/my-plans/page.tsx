@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Trash2 } from 'lucide-react';
+import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Trash2, MapPin } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
@@ -76,10 +76,11 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
             <div className="relative z-10 flex flex-col flex-grow">
                 <CardHeader>
                     <CardTitle>{budget.name}</CardTitle>
-                    {budget.eventDate && <CardDescription className="text-white/80">{new Date(budget.eventDate).toLocaleDateString()}</CardDescription>}
+                    {budget.eventDate && <CardDescription className="text-white/80 flex items-center gap-2"><CalendarDays className="h-4 w-4" /> {new Date(budget.eventDate).toLocaleDateString()}</CardDescription>}
                 </CardHeader>
-                <CardContent className="flex-grow">
-                    <p>Total: {budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
+                <CardContent className="flex-grow space-y-2">
+                    <p><Wallet className="inline-block h-4 w-4 mr-2" />Total: {budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
+                    {budget.eventLocation && <p className="flex items-start gap-2"><MapPin className="h-4 w-4 mt-1 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>}
                 </CardContent>
                 <CardFooter className="flex justify-between items-center">
                     <Button asChild variant="link" className="p-0 text-white hover:text-white/80">
@@ -329,4 +330,5 @@ function MyPlansPage() {
 
 export default MyPlansPage;
 
+    
     
