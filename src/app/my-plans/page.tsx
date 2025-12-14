@@ -3,9 +3,8 @@
 
 import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc, writeBatch, getDocs, setDoc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import type { Budget } from '@/lib/types';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,13 +30,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Trash2, Upload } from 'lucide-react';
+import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Trash2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
-import Image from 'next/image';
 
 function calculateInitialTotal(categories: any[]): number {
     let grandTotal = 0;
@@ -52,99 +49,41 @@ function calculateInitialTotal(categories: any[]): number {
     return grandTotal;
 }
 
-function PlanCard({ budget, onDelete, onImageUpload }: { budget: Budget, onDelete: (id: string) => void, onImageUpload: (budgetId: string, imageUrl: string) => void }) {
-    const { user } = useUser();
-    const firestore = useFirestore();
-    const storage = getStorage();
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const { toast } = useToast();
-
-    const handleUploadClick = () => {
-        fileInputRef.current?.click();
-    };
-
-    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (!event.target.files || event.target.files.length === 0 || !user) {
-            return;
-        }
-
-        const file = event.target.files[0];
-        const storageRef = ref(storage, `users/${user.uid}/budgets/${budget.id}/${file.name}`);
-
-        try {
-            toast({ title: 'Uploading image...' });
-            await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(storageRef);
-
-            const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', budget.id);
-            setDocumentNonBlocking(budgetDocRef, { imageUrl: downloadURL }, { merge: true });
-
-            onImageUpload(budget.id, downloadURL);
-            toast({ title: 'Image uploaded successfully!' });
-        } catch (error) {
-            console.error("Error uploading image: ", error);
-            toast({ variant: 'destructive', title: 'Upload failed', description: 'Could not upload image.' });
-        }
-    };
-
+function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string) => void }) {
     return (
-        <Card className="flex flex-col relative overflow-hidden">
-            {budget.imageUrl && (
-                <Image
-                    src={budget.imageUrl}
-                    alt={budget.name}
-                    fill
-                    className="object-cover z-0"
-                />
-            )}
-             <div className={cn("absolute inset-0 z-10", budget.imageUrl ? 'bg-black/40' : 'bg-card')} />
-
-            <div className="relative z-20 flex flex-col flex-grow">
-                <CardHeader>
-                    <CardTitle className={cn(budget.imageUrl && 'text-white')}>{budget.name}</CardTitle>
-                    {budget.eventDate && <CardDescription className={cn(budget.imageUrl && 'text-gray-300')}>{new Date(budget.eventDate).toLocaleDateString()}</CardDescription>}
-                </CardHeader>
-                <CardContent className="flex-grow">
-                    <p className={cn(budget.imageUrl && 'text-gray-200')}>Total: {budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
-                </CardContent>
-                <CardFooter className="flex justify-between items-center">
-                    <Button asChild variant="link" className={cn("p-0", budget.imageUrl && 'text-primary-foreground hover:text-primary-foreground/80')}>
-                        <Link href={`/planner/${budget.id}`}>View/Edit</Link>
+        <Card className="flex flex-col">
+            <CardHeader>
+                <CardTitle>{budget.name}</CardTitle>
+                {budget.eventDate && <CardDescription>{new Date(budget.eventDate).toLocaleDateString()}</CardDescription>}
+            </CardHeader>
+            <CardContent className="flex-grow">
+                <p>Total: {budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
+            </CardContent>
+            <CardFooter className="flex justify-between items-center">
+                <Button asChild variant="link" className="p-0">
+                    <Link href={`/planner/${budget.id}`}>View/Edit</Link>
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
-                    <div className="flex items-center gap-1">
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
-                            className="hidden"
-                            accept="image/*"
-                        />
-                        <Button variant="ghost" size="icon" onClick={handleUploadClick}>
-                           <Upload className={cn("h-4 w-4", budget.imageUrl ? 'text-white hover:text-white/80' : 'text-muted-foreground')} />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <Trash2 className={cn("h-4 w-4", budget.imageUrl ? 'text-red-400 hover:text-red-300' : 'text-destructive')} />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete your
-                                plan and all of its data.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => onDelete(budget.id)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                    </div>
-                </CardFooter>
-            </div>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your
+                        plan and all of its data.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onDelete(budget.id)}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+            </CardFooter>
         </Card>
     );
 }
@@ -160,15 +99,7 @@ function MyPlansPage() {
         user && !user.isAnonymous ? collection(firestore, 'users', user.uid, 'budgets') : null
     ), [user, firestore]);
 
-    const { data: initialBudgets, isLoading: budgetsLoading, error } = useCollection<Budget>(budgetsCollection);
-    const [budgets, setBudgets] = useState<Budget[] | null>(null);
-
-    useEffect(() => {
-        if (initialBudgets) {
-            setBudgets(initialBudgets);
-        }
-    }, [initialBudgets]);
-
+    const { data: budgets, isLoading: budgetsLoading, error } = useCollection<Budget>(budgetsCollection);
 
      useEffect(() => {
         if (isUserLoading) return;
@@ -244,15 +175,6 @@ function MyPlansPage() {
 
     };
 
-    const handleImageUpload = (budgetId: string, imageUrl: string) => {
-        setBudgets(currentBudgets => {
-            if (!currentBudgets) return null;
-            return currentBudgets.map(b => 
-                b.id === budgetId ? { ...b, imageUrl } : b
-            );
-        });
-    };
-    
     if (isUserLoading || !user || (user && user.isAnonymous)) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
@@ -286,7 +208,7 @@ function MyPlansPage() {
                     {budgets && budgets.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {budgets.map(budget => (
-                               <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} onImageUpload={handleImageUpload} />
+                               <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} />
                             ))}
                         </div>
                     ) : (
@@ -383,5 +305,3 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
-
-    

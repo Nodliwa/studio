@@ -23,7 +23,7 @@ export interface BudgetCategory {
 }
 
 export interface Budget {
-  id: string;
+  id:string;
   name: string;
   eventDate?: string;
   eventLocation?: string;
@@ -31,7 +31,6 @@ export interface Budget {
   eventType?: string;
   grandTotal: number;
   userId: string;
-  imageUrl?: string;
 }
 
 export interface User {
