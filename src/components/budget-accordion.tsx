@@ -185,7 +185,7 @@ const SortableCategory = ({ category, onItemChange, onAddItem, categoryPath = []
 
 export function BudgetAccordion({ categories, onItemChange, onAddItem, categoryPath = [] }: BudgetAccordionProps) {
   return (
-    <Accordion type="multiple" defaultValue={categories.map(c => c.id)} className="w-full space-y-4">
+    <Accordion type="multiple" className="w-full space-y-4">
       {categories.map((category) => (
         <SortableCategory 
           key={category.id} 
