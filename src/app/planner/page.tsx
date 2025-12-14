@@ -2,13 +2,13 @@
 "use client";
 
 import { useState, useEffect, useId } from 'react';
+import { useSearchParams } from 'next/navigation';
 import type { BudgetItem, BudgetCategory } from "@/lib/types";
-import { initialBudgetData } from "@/lib/data";
+import { budgetTemplates } from "@/lib/data";
 import PageHeader from "@/components/page-header";
 import { BudgetAccordion } from "@/components/budget-accordion";
 import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
-import { UtensilsCrossed } from "lucide-react";
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn, setDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import {
@@ -32,6 +32,7 @@ export default function PlannerPage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const firestore = useFirestore();
+  const searchParams = useSearchParams();
   const [budgetData, setBudgetData] = useState<BudgetCategory[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
   const uniqueId = useId();
@@ -85,9 +86,12 @@ export default function PlannerPage() {
         setBudgetData(categoriesWithTotals);
         setGrandTotal(newGrandTotal);
       } else if (fetchedCategories?.length === 0) {
-        // No categories, so seed the initial data
+        // No categories, so seed the initial data based on eventType
+        const eventType = searchParams.get('eventType') || 'other';
+        const initialData = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
+        
         const batch = writeBatch(firestore);
-        initialBudgetData.forEach((category, index) => {
+        initialData.forEach((category, index) => {
           const categoryDocRef = doc(firestore, 'users', user.uid, 'budgets', 'main-budget', 'categories', category.id);
           const { icon, ...categoryData } = category;
           batch.set(categoryDocRef, { ...categoryData, order: index });
@@ -95,7 +99,7 @@ export default function PlannerPage() {
         batch.commit();
       }
     }
-  }, [fetchedCategories, categoriesLoading, budgetLoading, user, firestore]);
+  }, [fetchedCategories, categoriesLoading, budgetLoading, user, firestore, searchParams]);
 
 
   const handleItemChange = (
