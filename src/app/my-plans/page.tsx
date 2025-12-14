@@ -19,9 +19,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusCircle, PartyPopper, Heart, Briefcase, ListChecks, CalendarDays, Wallet, RefreshCw } from 'lucide-react';
+import { PlusCircle, Heart, ListChecks, Wallet, RefreshCw } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 
 
 function MyPlansPage() {
@@ -135,17 +136,17 @@ function MyPlansPage() {
                                             <Heart />
                                             Wedding
                                         </Button>
-                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('birthday')}>
-                                            <PartyPopper />
-                                            Birthday
-                                        </Button>
                                         <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
                                             <CrossIcon />
                                             Funeral
                                         </Button>
-                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('other')}>
-                                            <Briefcase />
-                                            Other
+                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('umemulo')}>
+                                            <ListChecks />
+                                            uMemulo
+                                        </Button>
+                                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('umgidi')}>
+                                            <Wallet />
+                                            umGidi
                                         </Button>
                                     </div>
                                 </DialogContent>

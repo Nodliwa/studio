@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { User as UserIcon, LogOut, PlusCircle, PartyPopper, Heart, Briefcase } from 'lucide-react';
+import { User as UserIcon, LogOut, PlusCircle, Heart, ListChecks, Wallet } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -112,17 +112,17 @@ export default function PageHeader() {
                           <Heart />
                           Wedding
                         </Button>
-                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('birthday')}>
-                          <PartyPopper />
-                          Birthday
-                        </Button>
                         <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
                           <CrossIcon />
                           Funeral
                         </Button>
-                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('other')}>
-                          <Briefcase />
-                          Other
+                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('umemulo')}>
+                          <ListChecks />
+                          uMemulo
+                        </Button>
+                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('umgidi')}>
+                          <Wallet />
+                          umGidi
                         </Button>
                       </div>
                     </DialogContent>
