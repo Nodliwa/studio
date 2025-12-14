@@ -68,6 +68,14 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
     const router = useRouter();
     const imageUrl = budget.eventType ? eventTypeImages[budget.eventType] : undefined;
 
+    const formattedDate = budget.eventDate 
+        ? new Date(budget.eventDate).toLocaleDateString('en-ZA', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+        : null;
+
     return (
         <Card className="overflow-hidden group relative h-72 w-full">
             <Link href={`/planner/${budget.id}`} className="block w-full h-full">
@@ -130,6 +138,11 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
             <div className="absolute bottom-0 left-0 right-0 p-4 text-white flex justify-between items-end">
                 <div className="space-y-1">
                     <h3 className="text-xl font-bold">{budget.name}</h3>
+                     {formattedDate ? (
+                        <p className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4 shrink-0" /> {formattedDate}</p>
+                    ) : (
+                        <p className="flex items-center gap-2 text-sm text-white/70 italic"><CalendarDays className="h-4 w-4 shrink-0" /> No date set</p>
+                    )}
                     {budget.eventLocation ? (
                         <p className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
                     ) : (

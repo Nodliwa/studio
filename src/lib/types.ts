@@ -28,6 +28,7 @@ export interface Budget {
   eventLocation?: string;
   expectedGuests?: number;
   eventType?: string;
+  eventDate?: string;
   grandTotal: number;
   userId: string;
 }

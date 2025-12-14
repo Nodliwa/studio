@@ -27,6 +27,11 @@
           "type": "string",
           "description": "The type of event (e.g., Wedding, Birthday, Funeral)."
         },
+        "eventDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date of the event."
+        },
         "grandTotal": {
           "type": "number",
           "description": "The overall grand total of the budget."
