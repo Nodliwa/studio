@@ -77,7 +77,7 @@ function PlanCard({ budget, onDelete, onImageUpload }: { budget: Budget, onDelet
             const downloadURL = await getDownloadURL(storageRef);
 
             const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', budget.id);
-            await setDoc(budgetDocRef, { imageUrl: downloadURL }, { merge: true });
+            setDocumentNonBlocking(budgetDocRef, { imageUrl: downloadURL }, { merge: true });
 
             onImageUpload(budget.id, downloadURL);
             toast({ title: 'Image uploaded successfully!' });
@@ -165,7 +165,7 @@ function MyPlansPage() {
 
     useEffect(() => {
         if (initialBudgets) {
-            setBudgets(initial-budgets);
+            setBudgets(initialBudgets);
         }
     }, [initialBudgets]);
 
