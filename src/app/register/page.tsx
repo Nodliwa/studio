@@ -132,7 +132,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-secondary">
       <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
         <PageHeader />
-        <main className="container mx-auto flex items-center justify-center px-4 flex-grow mb-16">
+        <main className="container mx-auto flex flex-col items-center justify-center px-4 flex-grow mb-16">
             <Card className="w-full max-w-md">
             <CardHeader>
                 <CardTitle as="div" className="flex justify-between items-center">
@@ -225,6 +225,15 @@ export default function RegisterPage() {
                 </div>
             </CardContent>
             </Card>
+            <div className="mt-8 max-w-md w-full text-center p-4 rounded-lg bg-muted/50 border">
+                <h3 className="text-base font-semibold font-headline">Our Commitment to Your Privacy</h3>
+                <p className="text-xs text-muted-foreground mt-2">
+                    We collect only what's needed to create your account and save your plans. Your data is yours—we will never sell it. Everything is securely stored using Google's trusted services, and you are always in control of your information.
+                </p>
+                <p className="text-xs mt-2">
+                    For full details, please read our <Link href="/privacy" className="underline">Privacy Policy</Link>.
+                </p>
+            </div>
         </main>
         </div>
     </div>
