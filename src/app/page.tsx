@@ -20,9 +20,9 @@ export default function LandingPage() {
           <PageHeader />
           <main className="container mx-auto p-4 md:p-8">
           <div className="p-2 md:p-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold font-headline text-foreground/90 mt-4">
+            <h1 className="text-4xl md:text-5xl font-bold font-headline text-foreground/90">
               Celebrate Loved Ones. Plan Smart.            </h1>
-            <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
+            <p className="mt-4 mb-8 max-w-2xl mx-auto text-lg text-muted-foreground">
               SimpliPlan helps you budget for life's most important moments. From Weddings to uMemulo, and more, plan your celebration with ease and confidence.
             </p>
             <Link href="/planner" className="inline-block">
