@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, useAuth } from '@/firebase';
@@ -36,7 +37,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Menu, MapPin, Users } from 'lucide-react';
+import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Menu, MapPin, Users, MessageSquare } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
@@ -86,6 +87,8 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                     <div className="h-full w-full bg-gradient-to-t from-primary/80 to-primary/40" />
                 )}
             </Link>
+
+            <MessageSquare className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-32 w-32 text-white/10" />
             
             {/* Top Right Menu */}
             <div className="absolute top-2 right-2 z-30">
