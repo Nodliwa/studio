@@ -56,7 +56,9 @@ export default function PageHeader() {
   const { toast } = useToast();
 
   const handleLogout = () => {
-    signOut(auth);
+    signOut(auth).then(() => {
+        router.push('/');
+    });
   };
   
   const handleNewPlan = async (eventType: string) => {
@@ -109,9 +111,11 @@ export default function PageHeader() {
             <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
               Home
             </Link>
-            <Link href="/my-plans" className={cn("font-bold transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
-              MyPlans
-            </Link>
+            {(user && !user.isAnonymous) && (
+                 <Link href="/my-plans" className={cn("font-bold transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
+                    MyPlans
+                </Link>
+            )}
         </nav>
         <div className="flex items-center justify-end gap-2">
           {isUserLoading ? (
@@ -161,12 +165,16 @@ export default function PageHeader() {
             </div>
           ) : (
             <>
-              <Button asChild variant="outline">
-                  <Link href="/login" className="text-lg">Login</Link>
-              </Button>
-              <Button asChild>
-                  <Link href="/register" className="text-lg">Sign Up</Link>
-              </Button>
+              {pathname === '/' && (
+                <>
+                    <Button asChild variant="outline">
+                        <Link href="/login" className="text-lg">Login</Link>
+                    </Button>
+                    <Button asChild>
+                        <Link href="/register" className="text-lg">Sign Up</Link>
+                    </Button>
+                </>
+              )}
             </>
           )}
         </div>
