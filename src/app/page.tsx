@@ -21,10 +21,9 @@ export default function LandingPage() {
           <PageHeader />
           <div className="p-2 md:p-4 text-center">
             <h1 className="text-4xl md:text-5xl font-bold font-headline text-foreground/90 mt-4">
-              Celebrate Life, Simplified
-            </h1>
+              Celebrate Loved Ones. Plan Smart.            </h1>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-              SimpliPlan helps you budget for life's most important moments. From weddings to birthdays, plan your celebration with ease and confidence.
+              SimpliPlan helps you budget for life's most important moments. From Weddings to uMemulo, and more, plan your celebration with ease and confidence.
             </p>
             <Link href="/planner" className="inline-block">
               <Button size="lg" className="font-semibold text-lg py-6 px-8">
@@ -106,23 +105,34 @@ export default function LandingPage() {
                 <Card>
                   <CardHeader className="p-4">
                     <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                      <UtensilsCrossed className="h-6 w-6 text-primary" />
-                      <span>Effortless Budgeting</span>
+                      <ShoppingCart className="h-6 w-6 text-primary" />
+                      <span>Don’t forget a thing</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
-                    <p className="text-sm text-muted-foreground">Organize your expenses by category and track every detail with our intuitive interface.</p>
+                    <p className="text-sm text-muted-foreground">We give you a handy list of items to think about for your event, so nothing slips through the cracks.</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="p-4">
                     <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
                       <Cake className="h-6 w-6 text-primary" />
-                      <span>Plan Any Event</span>
+                      <span>Planning That Fits Your Life</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
-                    <p className="text-sm text-muted-foreground">Whether it's a wedding, funeral, or birthday, our flexible tool adapts to your needs.</p>
+                    <p className="text-sm text-muted-foreground">Plan anywhere, with anyone, whenever it suits you — simple, flexible, and stress-free.</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="p-4">
+                    <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
+                      <UtensilsCrossed className="h-6 w-6 text-primary" />
+                      <span>Effortless Budgeting</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <p className="text-sm text-muted-foreground">Forget diaries & spreadsheets - Organise your spending and see where your money goes, all in one place</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -134,17 +144,6 @@ export default function LandingPage() {
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
                     <p className="text-sm text-muted-foreground">See your grand total update instantly as you adjust quantities and prices. No surprises.</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="p-4">
-                    <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                      <ShoppingCart className="h-6 w-6 text-primary" />
-                      <span>Shopping List Ready</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <p className="text-sm text-muted-foreground">Your budget automatically becomes your shopping list, making your store trips a breeze.</p>
                   </CardContent>
                 </Card>
               </div>
