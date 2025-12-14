@@ -16,14 +16,18 @@ const motivationalQuotes = [
   "Great things never come from comfort zones."
 ];
 
-const MotivationalQuote = () => {
+const MotivationalQuote = ({ quote: propQuote }: { quote?: string }) => {
   const [quote, setQuote] = useState('');
 
   useEffect(() => {
-    // This code runs only on the client, after hydration
-    const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
-    setQuote(motivationalQuotes[randomIndex]);
-  }, []); // Empty dependency array means it runs once on mount
+    if (propQuote) {
+        setQuote(propQuote);
+    } else {
+        // This code runs only on the client, after hydration
+        const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
+        setQuote(motivationalQuotes[randomIndex]);
+    }
+  }, [propQuote]); // Rerun if the prop changes
 
   if (!quote) {
     // Render a placeholder or nothing on the server and during initial client render
@@ -38,7 +42,3 @@ const MotivationalQuote = () => {
 };
 
 export default MotivationalQuote;
-
-    
-
-    

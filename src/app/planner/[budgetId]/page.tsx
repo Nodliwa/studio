@@ -30,6 +30,7 @@ import {
 import Greeter from '@/components/greeter';
 import { Card, CardContent } from '@/components/ui/card';
 import { v4 as uuidv4 } from 'uuid';
+import MotivationalQuote from '@/components/motivational-quote';
 
 const funeralQuotes = [
     '"Blessed are those who mourn, for they will be comforted." - Matthew 5:4',
@@ -155,11 +156,13 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
 
   useEffect(() => {
     if (eventType === 'funeral') {
-      const randomIndex = Math.floor(Math.random() * funeralQuotes.length);
-      setEventQuote(funeralQuotes[randomIndex]);
+        const quotes = funeralQuotes;
+        const randomIndex = Math.floor(Math.random() * quotes.length);
+        setEventQuote(quotes[randomIndex]);
     } else if (eventType === 'wedding') {
-      const randomIndex = Math.floor(Math.random() * weddingQuotes.length);
-      setEventQuote(weddingQuotes[randomIndex]);
+        const quotes = weddingQuotes;
+        const randomIndex = Math.floor(Math.random() * quotes.length);
+        setEventQuote(quotes[randomIndex]);
     }
   }, [eventType]);
 
@@ -291,12 +294,13 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   
   return (
     <div className="min-h-screen w-full bg-secondary">
-      <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
+       <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
         <PageHeader />
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
           <Greeter />
+          
           {eventQuote && (
-              <p className="mt-4 text-lg italic text-muted-foreground">{eventQuote}</p>
+              <MotivationalQuote quote={eventQuote} />
           )}
 
           {isTemplateMode && (
