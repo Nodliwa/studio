@@ -1,13 +1,12 @@
-
 'use client';
 
-import { useUser, useCollection, useMemoFirebase, useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useUser, useCollection, useMemoFirebase, useFirestore, addDocumentNonBlocking, deleteDocument } from '@/firebase';
+import { collection, doc, writeBatch, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import type { Budget } from '@/lib/types';
+import type { Budget, BudgetCategory } from '@/lib/types';
 import PageHeader from '@/components/page-header';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Greeter from '@/components/greeter';
@@ -19,7 +18,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Trash2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 
@@ -64,6 +74,33 @@ function MyPlansPage() {
              router.push(`/planner/template?eventType=${eventType}`);
         }
     };
+
+    const handleDeletePlan = async (budgetId: string) => {
+        if (!user || !firestore) return;
+        
+        const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', budgetId);
+        
+        // Recursively delete subcollections
+        const categoriesCollectionRef = collection(budgetDocRef, 'categories');
+        const categoriesSnapshot = await getDocs(categoriesCollectionRef);
+
+        const batch = writeBatch(firestore);
+
+        for (const categoryDoc of categoriesSnapshot.docs) {
+            // Delete items within each category
+            const itemsCollectionRef = collection(categoryDoc.ref, 'items');
+            const itemsSnapshot = await getDocs(itemsCollectionRef);
+            itemsSnapshot.forEach(itemDoc => {
+                batch.delete(itemDoc.ref);
+            });
+            // Delete the category itself
+            batch.delete(categoryDoc.ref);
+        }
+
+        // After subcollections are handled in the batch, delete the main budget doc
+        await batch.commit();
+        deleteDocument(budgetDocRef);
+    };
     
     if (isUserLoading || !user || (user && user.isAnonymous)) {
         return (
@@ -98,17 +135,39 @@ function MyPlansPage() {
                     {budgets && budgets.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {budgets.map(budget => (
-                                <Card key={budget.id}>
+                                <Card key={budget.id} className="flex flex-col">
                                     <CardHeader>
                                         <CardTitle>{budget.name}</CardTitle>
                                         {budget.eventDate && <CardDescription>{new Date(budget.eventDate).toLocaleDateString()}</CardDescription>}
                                     </CardHeader>
-                                    <CardContent>
+                                    <CardContent className="flex-grow">
                                         <p>Total: {budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
-                                        <Button asChild variant="link" className="p-0 mt-4">
+                                    </CardContent>
+                                    <CardFooter className="flex justify-between items-center">
+                                        <Button asChild variant="link" className="p-0">
                                             <Link href={`/planner/${budget.id}`}>View Details</Link>
                                         </Button>
-                                    </CardContent>
+                                        <AlertDialog>
+                                          <AlertDialogTrigger asChild>
+                                            <Button variant="ghost" size="icon">
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                          </AlertDialogTrigger>
+                                          <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                              <AlertDialogDescription>
+                                                This action cannot be undone. This will permanently delete your
+                                                plan and all of its data.
+                                              </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                              <AlertDialogAction onClick={() => handleDeletePlan(budget.id)}>Delete</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                          </AlertDialogContent>
+                                        </AlertDialog>
+                                    </CardFooter>
                                 </Card>
                             ))}
                         </div>

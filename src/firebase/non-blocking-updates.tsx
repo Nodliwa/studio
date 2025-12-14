@@ -75,7 +75,7 @@ export function updateDocumentNonBlocking(docRef: DocumentReference, data: any) 
  * Initiates a deleteDoc operation for a document reference.
  * Does NOT await the write operation internally.
  */
-export function deleteDocumentNonBlocking(docRef: DocumentReference) {
+export function deleteDocument(docRef: DocumentReference) {
   deleteDoc(docRef)
     .catch(error => {
       errorEmitter.emit(
@@ -87,3 +87,5 @@ export function deleteDocumentNonBlocking(docRef: DocumentReference) {
       )
     });
 }
+
+    
