@@ -75,17 +75,21 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                 <span className="sr-only">View Plan</span>
             </Link>
 
-            {imageUrl && (
-                <div className="relative w-full h-48">
-                    <Image
-                        src={imageUrl}
-                        alt={budget.name}
-                        layout="fill"
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-black/50" />
-                </div>
-            )}
+            <div className="relative w-full h-48 bg-muted">
+                {imageUrl ? (
+                    <>
+                        <Image
+                            src={imageUrl}
+                            alt={budget.name}
+                            layout="fill"
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-black/50" />
+                    </>
+                ) : (
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-primary/40" />
+                )}
+            </div>
             
             <div className="absolute top-2 right-2 z-20">
                 <AlertDialog>
@@ -125,15 +129,22 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                 </AlertDialog>
             </div>
 
-            <div className="relative z-20 flex flex-col flex-grow p-6">
-                 {!imageUrl && <div className="flex-grow"></div>}
-                <CardHeader className="p-0 mb-4">
-                    <CardTitle className="group-hover:underline">{budget.name}</CardTitle>
-                    {budget.eventDate && <CardDescription className="text-white/80 flex items-center gap-2 mt-2"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</CardDescription>}
+            <div className="absolute inset-0 flex flex-col justify-end p-6 z-10 pointer-events-none">
+                <CardHeader className="p-0">
+                    <CardTitle className="text-xl font-bold group-hover:underline">{budget.name}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-1 p-0">
-                     <p className="flex items-start gap-2"><Wallet className="inline-block h-4 w-4 mt-1 shrink-0" />{budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
-                    {budget.eventLocation && <p className="flex items-start gap-2"><MapPin className="h-4 w-4 mt-1 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>}
+                <CardContent className="space-y-1 p-0 mt-2">
+                     {budget.eventDate ? (
+                        <p className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</p>
+                     ) : (
+                         <p className="flex items-center gap-2 text-sm text-white/80 italic"><CalendarDays className="h-4 w-4" /> No date set</p>
+                     )}
+                     <p className="flex items-start gap-2 text-sm"><Wallet className="inline-block h-4 w-4 mt-0.5 shrink-0" />{new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal)}</p>
+                     {budget.eventLocation ? (
+                        <p className="flex items-start gap-2 text-sm"><MapPin className="h-4 w-4 mt-0.5 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
+                     ) : (
+                        <p className="flex items-start gap-2 text-sm text-white/80 italic"><MapPin className="h-4 w-4 mt-0.5 shrink-0" /> No location set</p>
+                     )}
                 </CardContent>
                 <CardFooter className="p-0 mt-4 flex justify-between items-center" />
             </div>
@@ -363,4 +374,6 @@ function MyPlansPage() {
 
 export default MyPlansPage;
     
+    
+
     
