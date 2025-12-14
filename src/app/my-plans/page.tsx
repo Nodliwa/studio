@@ -70,80 +70,80 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
     const imageUrl = budget.eventType ? eventTypeImages[budget.eventType] : undefined;
 
     return (
-        <Card className="flex flex-col relative overflow-hidden group">
-            <div className="relative">
-                <Link href={`/planner/${budget.id}`} aria-label={`View ${budget.name}`}>
+        <Card className="overflow-hidden group relative">
+             <Link href={`/planner/${budget.id}`} className="block">
+                <div className="relative w-full h-64">
                     {imageUrl ? (
-                        <div className="relative">
+                        <>
                             <Image
                                 src={imageUrl}
                                 alt={budget.name || 'Event image'}
-                                width={400}
-                                height={300}
-                                className="object-cover w-full h-auto group-hover:scale-105 transition-transform duration-300"
+                                layout="fill"
+                                objectFit="cover"
+                                className="transition-transform duration-300 group-hover:scale-105"
                             />
-                             <div className="absolute inset-0 bg-black/50" />
-                        </div>
+                            <div className="absolute inset-0 bg-black/50" />
+                        </>
                     ) : (
-                        <div className="h-48 w-full bg-gradient-to-t from-primary/80 to-primary/40" />
+                        <div className="h-full w-full bg-gradient-to-t from-primary/80 to-primary/40" />
                     )}
-                </Link>
 
-                <div className="absolute top-2 right-2 z-30">
-                    <AlertDialog>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="relative h-8 w-8 hover:bg-white/20 text-white">
-                                    <Menu className="h-5 w-5" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-background/80 backdrop-blur text-foreground">
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/planner/${budget.id}`); }}>
-                                    View/Edit
-                                </DropdownMenuItem>
-                                <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem 
-                                        className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        Delete
-                                    </DropdownMenuItem>
-                                </AlertDialogTrigger>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete your plan and all of its data.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => onDelete(budget.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                    <div className="absolute inset-0 flex flex-col justify-end p-4 text-white">
+                        <CardHeader className="p-0">
+                             <CardTitle className="text-xl font-bold">{budget.name}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-1 p-0 mt-2">
+                             {budget.eventDate ? (
+                                <p className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</p>
+                            ) : (
+                                <p className="flex items-center gap-2 text-sm text-white/70 italic"><CalendarDays className="h-4 w-4" /> No date set</p>
+                            )}
+                            <p className="flex items-start gap-2 text-sm"><Wallet className="inline-block h-4 w-4 mt-0.5 shrink-0" />{new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal)}</p>
+                            {budget.eventLocation ? (
+                                <p className="flex items-start gap-2 text-sm"><MapPin className="h-4 w-4 mt-0.5 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
+                            ) : (
+                                <p className="flex items-start gap-2 text-sm text-white/70 italic"><MapPin className="h-4 w-4 mt-0.5 shrink-0" /> No location set</p>
+                            )}
+                        </CardContent>
+                    </div>
                 </div>
-            </div>
+            </Link>
 
-            <div className="p-4 bg-card text-card-foreground">
-                <CardHeader className="p-0">
-                    <CardTitle className="text-xl font-bold">{budget.name}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-1 p-0 mt-2">
-                    {budget.eventDate ? (
-                        <p className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</p>
-                    ) : (
-                        <p className="flex items-center gap-2 text-sm text-muted-foreground italic"><CalendarDays className="h-4 w-4" /> No date set</p>
-                    )}
-                    <p className="flex items-start gap-2 text-sm"><Wallet className="inline-block h-4 w-4 mt-0.5 shrink-0" />{new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal)}</p>
-                    {budget.eventLocation ? (
-                        <p className="flex items-start gap-2 text-sm"><MapPin className="h-4 w-4 mt-0.5 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
-                    ) : (
-                        <p className="flex items-start gap-2 text-sm text-muted-foreground italic"><MapPin className="h-4 w-4 mt-0.5 shrink-0" /> No location set</p>
-                    )}
-                </CardContent>
+            <div className="absolute top-2 right-2 z-30">
+                <AlertDialog>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="relative h-8 w-8 hover:bg-white/20 text-white">
+                                <Menu className="h-5 w-5" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="bg-background/80 backdrop-blur text-foreground">
+                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/planner/${budget.id}`); }}>
+                                View/Edit
+                            </DropdownMenuItem>
+                            <AlertDialogTrigger asChild>
+                                <DropdownMenuItem 
+                                    className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    Delete
+                                </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your plan and all of its data.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => onDelete(budget.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         </Card>
     );
@@ -372,8 +372,6 @@ function MyPlansPage() {
 
 export default MyPlansPage;
     
-    
-
     
 
     
