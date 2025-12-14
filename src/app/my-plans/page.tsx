@@ -71,15 +71,15 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
 
     return (
         <Card className="overflow-hidden group relative h-72">
-             <Link href={`/planner/${budget.id}`} className="block w-full h-full">
+            <Link href={`/planner/${budget.id}`} className="block w-full h-full">
                 {imageUrl ? (
                     <>
                         <Image
                             src={imageUrl}
                             alt={budget.name || 'Event image'}
-                            fill
-                            objectFit="cover"
-                            className="transition-transform duration-300 group-hover:scale-105"
+                            width={400}
+                            height={300}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-black/50" />
                     </>
@@ -88,30 +88,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                 )}
             </Link>
             
-            {/* Bottom Content Area */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 text-white flex justify-between items-end">
-                <div className="space-y-1">
-                    <h3 className="text-xl font-bold">{budget.name}</h3>
-                     {budget.eventDate ? (
-                        <p className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</p>
-                    ) : (
-                        <p className="flex items-center gap-2 text-sm text-white/70 italic"><CalendarDays className="h-4 w-4" /> No date set</p>
-                    )}
-                    {budget.eventLocation ? (
-                        <p className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
-                    ) : (
-                        <p className="flex items-center gap-2 text-sm text-white/70 italic"><MapPin className="h-4 w-4 shrink-0" /> No location set</p>
-                    )}
-                    {budget.expectedGuests ? (
-                        <p className="flex items-center gap-2 text-sm"><Users className="h-4 w-4 shrink-0" /> {budget.expectedGuests} guests</p>
-                    ) : (
-                        <p className="flex items-center gap-2 text-sm text-white/70 italic"><Users className="h-4 w-4 shrink-0" /> No guests set</p>
-                    )}
-                </div>
-
-                <p className="flex items-start gap-2 text-lg font-bold"><Wallet className="inline-block h-5 w-5 mt-0.5 shrink-0" />{new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal)}</p>
-            </div>
-
+            {/* Top Right Menu */}
             <div className="absolute top-2 right-2 z-30">
                 <AlertDialog>
                      <DropdownMenu>
@@ -147,6 +124,30 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+            </div>
+
+            {/* Bottom Content Area */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 text-white flex justify-between items-end">
+                <div className="space-y-1">
+                    <h3 className="text-xl font-bold">{budget.name}</h3>
+                     {budget.eventDate ? (
+                        <p className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</p>
+                    ) : (
+                        <p className="flex items-center gap-2 text-sm text-white/70 italic"><CalendarDays className="h-4 w-4" /> No date set</p>
+                    )}
+                    {budget.eventLocation ? (
+                        <p className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
+                    ) : (
+                        <p className="flex items-center gap-2 text-sm text-white/70 italic"><MapPin className="h-4 w-4 shrink-0" /> No location set</p>
+                    )}
+                    {budget.expectedGuests ? (
+                        <p className="flex items-center gap-2 text-sm"><Users className="h-4 w-4 shrink-0" /> {budget.expectedGuests} guests</p>
+                    ) : (
+                        <p className="flex items-center gap-2 text-sm text-white/70 italic"><Users className="h-4 w-4 shrink-0" /> No guests set</p>
+                    )}
+                </div>
+
+                <p className="flex items-start gap-2 text-lg font-bold"><Wallet className="inline-block h-5 w-5 mt-0.5 shrink-0" />{new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(budget.grandTotal)}</p>
             </div>
         </Card>
     );
@@ -375,6 +376,8 @@ function MyPlansPage() {
 
 export default MyPlansPage;
     
+    
+
     
 
     
