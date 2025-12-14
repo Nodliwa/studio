@@ -17,6 +17,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -69,13 +70,13 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
     const imageUrl = budget.eventType ? eventTypeImages[budget.eventType] : undefined;
 
     return (
-        <Card className="flex flex-col relative overflow-hidden text-white group">
+        <Card className="flex flex-col relative overflow-hidden group text-white">
             <Link href={`/planner/${budget.id}`} className="absolute inset-0 z-10" aria-label={`View ${budget.name}`}>
                 <span className="sr-only">View Plan</span>
             </Link>
 
             <div className="absolute inset-0">
-                {imageUrl ? (
+                {imageUrl && (
                     <>
                         <Image
                             src={imageUrl}
@@ -85,13 +86,12 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                         />
                         <div className="absolute inset-0 bg-black/50" />
                     </>
-                ) : (
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-primary/40" />
                 )}
+                 {!imageUrl && <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-primary/40" />}
             </div>
             
-            <div className="relative z-20 flex flex-col justify-between h-full p-6">
-                <div className="flex justify-end">
+            <div className="relative z-20 flex flex-col h-full">
+                <div className="p-6 pb-0 flex justify-end">
                     <AlertDialog>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -129,7 +129,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                     </AlertDialog>
                 </div>
                 
-                <div className="pointer-events-none mt-auto">
+                <div className="p-6 pt-0 mt-auto pointer-events-none">
                     <CardHeader className="p-0">
                         <CardTitle className="text-xl font-bold group-hover:underline">{budget.name}</CardTitle>
                     </CardHeader>
@@ -376,6 +376,8 @@ function MyPlansPage() {
 
 export default MyPlansPage;
     
+    
+
     
 
     
