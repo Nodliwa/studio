@@ -153,6 +153,17 @@ export default function LoginPage() {
                         Sign up
                     </Link>
                 </div>
+                <div className="mt-6 text-center text-xs text-muted-foreground">
+                  By continuing, you agree to our{' '}
+                  <Link href="/terms" className="underline hover:text-primary">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" className="underline hover:text-primary">
+                    Privacy Policy
+                  </Link>
+                  .
+                </div>
             </CardContent>
             </Card>
         </main>
