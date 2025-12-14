@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useId, useMemo } from 'react';
@@ -9,7 +10,7 @@ import PageHeader from "@/components/page-header";
 import { BudgetAccordion } from "@/components/budget-accordion";
 import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
-import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn, setDocumentNonBlocking, useDoc } from '@/firebase';
+import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn, setDocumentNonBlocking, useDoc, addDocumentNonBlocking } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import {
   DndContext,
@@ -27,6 +28,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import Greeter from '@/components/greeter';
+import { Card, CardContent } from '@/components/ui/card';
+import { v4 as uuidv4 } from 'uuid';
 
 function calculateTotals(categories: BudgetCategory[]): { categories: BudgetCategory[], grandTotal: number } {
   let newGrandTotal = 0;
@@ -49,7 +52,7 @@ function calculateTotals(categories: BudgetCategory[]): { categories: BudgetCate
   return { categories: categoriesWithTotals, grandTotal: newGrandTotal };
 }
 
-export default function PlannerPage({ params }: { params: { budgetId: string } }) {
+export default function PlannerPage({ params: { budgetId } }: { params: { budgetId: string } }) {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const firestore = useFirestore();
@@ -58,7 +61,6 @@ export default function PlannerPage({ params }: { params: { budgetId: string } }
   const [budgetData, setBudgetData] = useState<BudgetCategory[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
   const uniqueId = useId();
-  const { budgetId } = params;
   const isTemplateMode = budgetId === 'template';
 
   const budgetDocRef = useMemoFirebase(() => (
@@ -100,26 +102,26 @@ export default function PlannerPage({ params }: { params: { budgetId: string } }
               setBudgetData(categories);
               setGrandTotal(grandTotal);
           } else if (fetchedCategories?.length === 0) {
-              const eventType = searchParams.get('eventType') || 'other';
+              const eventType = budget?.eventType || searchParams.get('eventType') || 'other';
               const initialData = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
               const batch = writeBatch(firestore);
               initialData.forEach((category, index) => {
-                  const categoryDocRef = doc(collection(firestore, 'users', user.uid, 'budgets', budgetId, 'categories'));
-                  const { icon, ...categoryData } = category;
-                   // When seeding, explicitly give it the ID from the template
                   const seededCategoryRef = doc(firestore, 'users', user.uid, 'budgets', budgetId, 'categories', category.id);
-                  batch.set(seededCategoryRef, { ...categoryData, order: index });
+                  batch.set(seededCategoryRef, { ...category, order: index });
               });
               batch.commit();
           }
       }
-  }, [isTemplateMode, searchParams, fetchedCategories, categoriesLoading, budgetLoading, user, firestore, budgetId]);
+  }, [isTemplateMode, searchParams, fetchedCategories, categoriesLoading, budgetLoading, user, firestore, budgetId, budget]);
 
 
   const updateStateAndTotals = (newBudgetData: BudgetCategory[]) => {
       const { categories, grandTotal } = calculateTotals(newBudgetData);
       setBudgetData(categories);
       setGrandTotal(grandTotal);
+      if (budgetDocRef) {
+        setDocumentNonBlocking(budgetDocRef, { grandTotal }, { merge: true });
+      }
   };
   
   const handleItemChange = (
@@ -131,10 +133,12 @@ export default function PlannerPage({ params }: { params: { budgetId: string } }
     const updatedBudgetData = JSON.parse(JSON.stringify(budgetData));
     let currentLevel = updatedBudgetData;
     let categoryToUpdate: BudgetCategory | undefined;
+    let parentCategory: BudgetCategory | undefined;
 
     for (const id of categoryPath) {
         const foundCategory = currentLevel.find(c => c.id === id);
         if (foundCategory) {
+            parentCategory = categoryToUpdate;
             categoryToUpdate = foundCategory;
             currentLevel = foundCategory.subCategories || [];
         }
@@ -150,12 +154,12 @@ export default function PlannerPage({ params }: { params: { budgetId: string } }
         categoryToUpdate.items[itemIndex] = updatedItem;
 
         if (!isTemplateMode && user && !user.isAnonymous && budgetId) {
-            const categoryId = categoryPath[categoryPath.length - 1];
-            const categoryDocRef = doc(firestore, 'users', user.uid, 'budgets', budgetId, 'categories', categoryId);
-            const parentCategoryData = budgetData.find(c => c.id === categoryId); // simplistic, needs recursion for nested
-            if (parentCategoryData) {
-                setDocumentNonBlocking(categoryDocRef, { ...parentCategoryData, items: categoryToUpdate.items }, { merge: true });
-            }
+             const rootCategoryId = categoryPath[0];
+             const rootCategoryToUpdate = updatedBudgetData.find(c => c.id === rootCategoryId);
+             const categoryDocRef = doc(firestore, 'users', user.uid, 'budgets', budgetId, 'categories', rootCategoryId);
+             if (rootCategoryToUpdate) {
+                setDocumentNonBlocking(categoryDocRef, rootCategoryToUpdate, { merge: true });
+             }
         }
         updateStateAndTotals(updatedBudgetData);
     }
@@ -182,9 +186,12 @@ export default function PlannerPage({ params }: { params: { budgetId: string } }
         categoryToUpdate.items = [...(categoryToUpdate.items || []), newItem];
 
         if (!isTemplateMode && user && !user.isAnonymous && budgetId) {
-            const categoryId = categoryPath[categoryPath.length-1];
-            const categoryDocRef = doc(firestore, 'users', user.uid, 'budgets', budgetId, 'categories', categoryId);
-            setDocumentNonBlocking(categoryDocRef, { items: categoryToUpdate.items }, { merge: true });
+            const rootCategoryId = categoryPath[0];
+            const rootCategoryToUpdate = updatedBudgetData.find(c => c.id === rootCategoryId);
+            const categoryDocRef = doc(firestore, 'users', user.uid, 'budgets', budgetId, 'categories', rootCategoryId);
+            if(rootCategoryToUpdate) {
+                setDocumentNonBlocking(categoryDocRef, rootCategoryToUpdate, { merge: true });
+            }
         }
         updateStateAndTotals(updatedBudgetData);
     }
