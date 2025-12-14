@@ -4,7 +4,7 @@ import { useUser, useCollection, useMemoFirebase, useFirestore, addDocumentNonBl
 import { collection, doc, writeBatch, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import type { Budget, BudgetCategory } from '@/lib/types';
+import type { Budget } from '@/lib/types';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -145,7 +145,7 @@ function MyPlansPage() {
                                     </CardContent>
                                     <CardFooter className="flex justify-between items-center">
                                         <Button asChild variant="link" className="p-0">
-                                            <Link href={`/planner/${budget.id}`}>View Details</Link>
+                                            <Link href={`/planner/${budget.id}`}>View/Edit</Link>
                                         </Button>
                                         <AlertDialog>
                                           <AlertDialogTrigger asChild>
@@ -265,5 +265,3 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
-
-    
