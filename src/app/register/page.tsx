@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth, initiateEmailSignUp, useUser, setUserData, useFirestore, initiateGoogleSignIn } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
@@ -25,6 +26,9 @@ const registerSchema = z.object({
   cellphone: z.string().optional(),
   password: z.string().min(6, 'Password must be at least 6 characters long'),
   recaptcha: z.string().min(1, 'Please complete the reCAPTCHA'),
+  consent: z.boolean().refine(value => value === true, {
+    message: "You must accept the terms and conditions.",
+  }),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -52,9 +56,13 @@ export default function RegisterPage() {
     register,
     handleSubmit,
     setValue,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      consent: false,
+    }
   });
 
   useEffect(() => {
@@ -176,6 +184,19 @@ export default function RegisterPage() {
                             {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
                         </div>
                         
+                         <div className="items-top flex space-x-2">
+                            <Checkbox id="consent" onCheckedChange={(checked) => setValue('consent', checked as boolean, { shouldValidate: true })} />
+                            <div className="grid gap-1.5 leading-none">
+                                <label
+                                htmlFor="consent"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                >
+                                I agree to the <Link href="/terms" className="underline">Terms & Conditions</Link> and <Link href="/privacy" className="underline">Privacy Policy</Link>.
+                                </label>
+                                {errors.consent && <p className="text-destructive text-sm">{errors.consent.message}</p>}
+                            </div>
+                        </div>
+
                         <div className="space-y-2">
                         {siteKey ? (
                             <ReCAPTCHA
@@ -209,5 +230,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-
-    
