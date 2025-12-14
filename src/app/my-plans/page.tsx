@@ -36,7 +36,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, MoreVertical } from 'lucide-react';
+import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, MoreVertical, Menu } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
@@ -87,7 +87,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="hover:bg-white/20">
-                                <MoreVertical className="h-5 w-5 text-white" />
+                                <Menu className="h-5 w-5 text-white" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-background/80 backdrop-blur text-foreground">
@@ -351,11 +351,3 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
-
-    
-
-    
-
-    
-
-    
