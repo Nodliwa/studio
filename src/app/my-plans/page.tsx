@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, useAuth } from '@/firebase';
@@ -71,7 +72,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
 
     return (
         <Card className="overflow-hidden group relative">
-             <Link href={`/planner/${budget.id}`} className="block">
+             <Link href={`/planner/${budget.id}`} className="block w-full h-full">
                 <div className="relative w-full h-64">
                     {imageUrl ? (
                         <>
@@ -88,7 +89,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                         <div className="h-full w-full bg-gradient-to-t from-primary/80 to-primary/40" />
                     )}
 
-                    <div className="absolute inset-0 flex flex-col justify-end p-4 text-white">
+                    <div className="absolute inset-0 flex flex-col justify-start p-4 text-white">
                         <CardHeader className="p-0">
                              <CardTitle className="text-xl font-bold">{budget.name}</CardTitle>
                         </CardHeader>
@@ -372,6 +373,8 @@ function MyPlansPage() {
 
 export default MyPlansPage;
     
+    
+
     
 
     
