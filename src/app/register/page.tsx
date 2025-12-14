@@ -127,11 +127,11 @@ export default function RegisterPage() {
         <main className="container mx-auto flex items-center justify-center px-4 flex-grow mb-16">
             <Card className="w-full max-w-md">
             <CardHeader>
-                <CardTitle as="div" className="flex justify-between items-baseline">
+                <CardTitle as="div" className="flex justify-between items-center">
                     <h2 className='text-2xl font-semibold leading-none tracking-tight'>Create Account</h2>
-                    <Link href="/login" className="text-sm font-medium text-primary hover:underline">
-                        Login
-                    </Link>
+                    <Button asChild variant="outline" size="sm">
+                        <Link href="/login" className="font-bold">Login</Link>
+                    </Button>
                 </CardTitle>
                 <CardDescription>Start planning your celebrations with SimpliPlan.</CardDescription>
             </CardHeader>
@@ -209,3 +209,5 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+    
