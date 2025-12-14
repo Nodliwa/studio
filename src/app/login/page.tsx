@@ -71,7 +71,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-secondary">
        <div className="bg-background shadow-2xl min-h-full container mx-auto">
         <PageHeader />
-        <main className="flex items-center justify-center mx-auto px-4">
+        <main className="container mx-auto flex items-center justify-center px-4">
             <Card className="w-full max-w-md">
             <CardHeader>
                 <CardTitle>Login</CardTitle>
