@@ -40,79 +40,6 @@ type FormData = z.infer<typeof formSchema>;
 
 const DEFAULT_BUDGET_NAME = "My Celebration Plan";
 
-const LocationInput = ({ field, disabled }: { field: any, disabled: boolean }) => {
-  const {
-    ready,
-    value,
-    suggestions: { status, data },
-    setValue,
-    clearSuggestions,
-  } = usePlacesAutocomplete({
-    requestOptions: { /* Define search scope here */ },
-    debounce: 300,
-    defaultValue: field.value,
-  });
-
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
-    field.onChange(e.target.value);
-  };
-
-  const handleSelect = ({ description }: { description: string }) => () => {
-    setValue(description, false);
-    clearSuggestions();
-    field.onChange(description);
-
-    getGeocode({ address: description }).then((results) => {
-      const { lat, lng } = getLatLng(results[0]);
-      console.log("📍 Coordinates: ", { lat, lng });
-    });
-  };
-
-  return (
-    <Popover open={status === 'OK'}>
-      <PopoverTrigger asChild>
-        <div className="relative flex items-center">
-            <Input
-                {...field}
-                value={value}
-                onChange={handleInput}
-                disabled={!ready || disabled}
-                placeholder="Start typing your address..."
-                autoComplete="off"
-            />
-        </div>
-      </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-        {status === "OK" && (
-          <div className="flex flex-col gap-2 p-2">
-            {data.map((suggestion) => {
-              const {
-                place_id,
-                structured_formatting: { main_text, secondary_text },
-              } = suggestion;
-              return (
-                <Button
-                  key={place_id}
-                  variant="ghost"
-                  className="justify-start h-auto text-left"
-                  onClick={handleSelect(suggestion)}
-                >
-                  <div>
-                    <strong>{main_text}</strong>
-                    <br />
-                    <small className="text-muted-foreground">{secondary_text}</small>
-                  </div>
-                </Button>
-              );
-            })}
-          </div>
-        )}
-      </PopoverContent>
-    </Popover>
-  );
-};
-
 
 export function EventDetails({ budget, budgetRef, isTemplateMode = false }: EventDetailsProps) {
   const { user } = useUser();
@@ -123,6 +50,8 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     control,
     handleSubmit,
     reset,
+    setValue: setFormValue,
+    watch,
     formState: { isDirty, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -134,27 +63,44 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     },
   });
 
+  const {
+    ready,
+    value: autocompleteValue,
+    suggestions: { status, data: autocompleteData },
+    setValue: setAutocompleteValue,
+    clearSuggestions,
+  } = usePlacesAutocomplete({
+    requestOptions: { /* Define search scope here */ },
+    debounce: 300,
+    defaultValue: watch('eventLocation'),
+  });
+
   useEffect(() => {
     if (isTemplateMode) {
       setIsEditing(true);
     } else if (budget) {
-      reset({
+      const initialValues = {
         name: budget.name || DEFAULT_BUDGET_NAME,
         eventLocation: budget.eventLocation || "",
         eventDate: budget.eventDate || "",
         expectedGuests: budget.expectedGuests || 0,
-      });
-       setIsEditing(budget.name === DEFAULT_BUDGET_NAME && !budget.eventLocation);
+      };
+      reset(initialValues);
+      setAutocompleteValue(initialValues.eventLocation, false); // Sync autocomplete
+      setIsEditing(!budget.name || budget.name === DEFAULT_BUDGET_NAME && !budget.eventLocation);
     } else if (user && budgetRef) {
         const initialBudget: Omit<Budget, 'id'> = {
             name: DEFAULT_BUDGET_NAME,
             grandTotal: 0,
             userId: user.uid,
+            eventLocation: "",
+            eventDate: "",
+            expectedGuests: 0,
         };
         setDocumentNonBlocking(budgetRef, initialBudget, {});
         setIsEditing(true);
     }
-  }, [budget, reset, user, budgetRef, isTemplateMode]);
+  }, [budget, reset, user, budgetRef, isTemplateMode, setAutocompleteValue]);
 
   const onSubmit = (data: FormData) => {
     if (isTemplateMode) {
@@ -163,15 +109,16 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     }
     if (!budgetRef) return;
     
-    // Always save if the button is clicked, don't rely on isDirty
-    const budgetUpdate = {
-        ...data,
-    }
-
-    setDocumentNonBlocking(budgetRef, budgetUpdate, { merge: true });
+    setDocumentNonBlocking(budgetRef, data, { merge: true });
     setIsEditing(false);
   };
   
+  const handleLocationSelect = (description: string) => {
+      setAutocompleteValue(description, false);
+      setFormValue('eventLocation', description, { shouldDirty: true });
+      clearSuggestions();
+  }
+
   return (
     <Card className="shadow-lg border-border/60">
       <CardHeader className="flex flex-row items-center justify-between p-4">
@@ -193,12 +140,54 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="eventLocation">Event Location</Label>
-            <Controller
-              name="eventLocation"
-              control={control}
-              render={({ field }) => <LocationInput field={field} disabled={!isEditing} />}
-            />
+             <Label htmlFor="eventLocation">Event Location</Label>
+             <Popover open={status === 'OK' && autocompleteData.length > 0}>
+                <PopoverTrigger asChild>
+                    <Controller
+                    name="eventLocation"
+                    control={control}
+                    render={({ field }) => (
+                        <Input
+                        id="eventLocation"
+                        {...field}
+                        value={autocompleteValue}
+                        onChange={(e) => {
+                           field.onChange(e);
+                           setAutocompleteValue(e.target.value);
+                        }}
+                        disabled={!ready || !isEditing}
+                        placeholder="Start typing your address..."
+                        autoComplete="off"
+                        />
+                    )}
+                    />
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                    <div className="flex flex-col gap-2 p-2">
+                        {autocompleteData.map((suggestion) => {
+                        const {
+                            place_id,
+                            structured_formatting: { main_text, secondary_text },
+                            description
+                        } = suggestion;
+                        return (
+                            <Button
+                            key={place_id}
+                            variant="ghost"
+                            className="justify-start h-auto text-left"
+                            onClick={() => handleLocationSelect(description)}
+                            >
+                            <div>
+                                <strong>{main_text}</strong>
+                                <br />
+                                <small className="text-muted-foreground">{secondary_text}</small>
+                            </div>
+                            </Button>
+                        );
+                        })}
+                    </div>
+                </PopoverContent>
+            </Popover>
           </div>
           <div className="space-y-1">
             <Label htmlFor="eventDate">Event Date</Label>
@@ -224,12 +213,14 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
                {!isTemplateMode && (
                 <Button type="button" variant="ghost" onClick={() => {
                   if (budget) {
-                    reset({
+                    const initialValues = {
                         name: budget.name || DEFAULT_BUDGET_NAME,
                         eventLocation: budget.eventLocation || "",
                         eventDate: budget.eventDate || "",
                         expectedGuests: budget.expectedGuests || 0,
-                    });
+                    };
+                    reset(initialValues);
+                    setAutocompleteValue(initialValues.eventLocation, false);
                   }
                   setIsEditing(false);
                 }}>Cancel</Button>
