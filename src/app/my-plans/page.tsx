@@ -4,7 +4,7 @@
 import { useUser, useCollection, useMemoFirebase, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { Budget } from '@/lib/types';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +28,7 @@ function MyPlansPage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const router = useRouter();
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     const budgetsCollection = useMemoFirebase(() => (
         user && !user.isAnonymous ? collection(firestore, 'users', user.uid, 'budgets') : null
@@ -36,12 +37,17 @@ function MyPlansPage() {
     const { data: budgets, isLoading: budgetsLoading } = useCollection<Budget>(budgetsCollection);
 
     useEffect(() => {
-        if (!isUserLoading && (!user || user.isAnonymous)) {
-            router.push('/register');
+        // Wait until the user loading is finished
+        if (!isUserLoading) {
+            // If there's no user or the user is anonymous, redirect to register
+            if (!user || user.isAnonymous) {
+                router.push('/register');
+            }
         }
     }, [user, isUserLoading, router]);
 
     const handleNewPlan = async (eventType: string) => {
+        setDialogOpen(false); // Close the dialog first
         if (user && !user.isAnonymous) {
             const newBudgetId = uuidv4();
             const newBudget: Omit<Budget, 'id'> = {
@@ -51,14 +57,20 @@ function MyPlansPage() {
                 eventType: eventType,
             };
             
-            await addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'budgets'), { ...newBudget, id: newBudgetId });
+            const newBudgetWithId = { ...newBudget, id: newBudgetId };
+            
+            // Non-blocking write
+            addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'budgets'), newBudgetWithId);
+
+            // Optimistically navigate
             router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
         } else {
              router.push(`/planner/template?eventType=${eventType}`);
         }
     };
-
-    if (isUserLoading || !user || (user && user.isAnonymous)) {
+    
+    // Show a loading screen while we verify the user's auth state.
+    if (isUserLoading) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
                 <p>Loading...</p>
@@ -66,6 +78,16 @@ function MyPlansPage() {
         );
     }
     
+    // If we're done loading and there's no valid user, the redirect is happening.
+    // We can show a loading state or nothing, as the redirect is quick.
+    if (!user || user.isAnonymous) {
+        return (
+            <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
+                <p>Redirecting...</p>
+            </div>
+        );
+    }
+
     if (budgetsLoading) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
@@ -85,7 +107,7 @@ function MyPlansPage() {
                         <h2 className="text-3xl font-bold font-headline">Check your plans below</h2>
                         <p className="text-muted-foreground">Click a plan to edit or review</p>
                     </div>
-                    <Dialog>
+                    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                         <DialogTrigger asChild>
                             <Button>
                                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -142,7 +164,7 @@ function MyPlansPage() {
                     <div className="text-center py-16 border-2 border-dashed rounded-lg">
                         <h2 className="text-xl font-semibold">No plans yet!</h2>
                         <p className="text-muted-foreground mt-2">Get started by creating your first celebration plan.</p>
-                        <Dialog>
+                        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                             <DialogTrigger asChild>
                                 <Button className="mt-4">Create a Plan</Button>
                             </DialogTrigger>
