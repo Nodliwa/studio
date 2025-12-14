@@ -40,8 +40,6 @@ export default function RegisterPage() {
   });
 
   useEffect(() => {
-    // If the user is fully loaded and is no longer anonymous, it means
-    // they have successfully logged in or registered. Redirect them.
     if (!isUserLoading && user && !user.isAnonymous) {
       router.push('/my-plans');
     }
@@ -51,11 +49,9 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     setFirebaseError(null);
     try {
-      // This function now handles creating the auth user, updating their profile,
-      // and creating the firestore document. The onAuthStateChanged listener will
-      // then pick up the fully formed user.
       await initiateEmailSignUp(auth, data.email, data.password, data.firstName, data.lastName);
-      // The useEffect above will handle the redirect once the user state changes.
+      // Force a redirect to ensure the user object with displayName is loaded.
+      router.push('/my-plans');
     } catch (error) {
       if (error instanceof FirebaseError) {
         setFirebaseError(error.message);

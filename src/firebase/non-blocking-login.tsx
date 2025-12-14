@@ -28,11 +28,12 @@ export async function initiateEmailSignUp(authInstance: Auth, email: string, pas
     const user = userCredential.user;
     const displayName = `${firstName} ${lastName}`;
 
-    // 2. Update the user's profile in Firebase Auth
+    // 2. Update the user's profile in Firebase Auth and wait for it to complete.
     await updateProfile(user, { displayName });
 
     // 3. Create the user's document in Firestore.
-    // We pass the newly updated user object to ensure the displayName is included.
+    // By this point, the `user` object from the credential might not yet have the updated displayName.
+    // It's safer to pass the auth user object and let setUserData handle the details.
     setUserData(user);
 
   } catch (error) {
