@@ -57,6 +57,16 @@
   }
 }
 
+@layer components {
+  .bg-background.shadow-lg,
+  .bg-background:not(body) {
+    background-color: hsl(var(--primary));
+    background-image: radial-gradient(hsl(var(--primary) / 0.8) 1px, transparent 1px);
+    background-size: 5px 5px;
+  }
+}
+
+
 /* Flip card styles */
 @layer components {
   .flip-card {
