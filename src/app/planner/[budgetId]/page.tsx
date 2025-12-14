@@ -106,7 +106,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   
   useEffect(() => {
     // Check if it's a new plan when the budget data loads
-    if (!budgetLoading && budget && !budget.eventDate) {
+    if (!budgetLoading && budget && !budget.name) {
         setIsNewPlan(true);
     } else if (!budgetLoading && budget) {
         setIsNewPlan(false);

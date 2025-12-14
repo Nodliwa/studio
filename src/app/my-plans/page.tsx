@@ -42,7 +42,6 @@ import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { format } from 'date-fns';
 import MotivationalQuote from '@/components/motivational-quote';
 
 function calculateInitialTotal(categories: any[]): number {
@@ -89,7 +88,6 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
 
             <MessageSquare className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-32 w-32 text-white/10" />
             
-            {/* Top Right Menu */}
              <AlertDialog>
                 <div className="absolute top-2 right-2 z-30">
                     <DropdownMenu>
@@ -132,11 +130,6 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
             <div className="absolute bottom-0 left-0 right-0 p-4 text-white flex justify-between items-end">
                 <div className="space-y-1">
                     <h3 className="text-xl font-bold">{budget.name}</h3>
-                     {budget.eventDate ? (
-                        <p className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</p>
-                    ) : (
-                        <p className="flex items-center gap-2 text-sm text-white/70 italic"><CalendarDays className="h-4 w-4" /> No date set</p>
-                    )}
                     {budget.eventLocation ? (
                         <p className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
                     ) : (
@@ -251,7 +244,7 @@ function MyPlansPage() {
     }
     
     return (
-        <div className="min-h-full bg-secondary flex flex-col">
+        <div className="min-h-screen bg-secondary flex flex-col">
             <div className="bg-background shadow-2xl container mx-auto flex flex-col flex-grow">
                 <PageHeader />
                 <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
@@ -383,8 +376,6 @@ function MyPlansPage() {
 
 export default MyPlansPage;
     
-    
-
     
 
     

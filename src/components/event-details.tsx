@@ -8,7 +8,6 @@ import { setDocumentNonBlocking, useUser } from "@/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -33,7 +32,6 @@ interface EventDetailsProps {
 
 const formSchema = z.object({
   name: z.string().min(1, "Plan name is required"),
-  eventDate: z.date().optional(),
   eventLocation: z.string().optional(),
   expectedGuests: z.coerce.number().int().min(0).optional(),
 });
@@ -143,11 +141,10 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     } else if (budget) {
       reset({
         name: budget.name || DEFAULT_BUDGET_NAME,
-        eventDate: budget.eventDate ? new Date(budget.eventDate) : undefined,
         eventLocation: budget.eventLocation || "",
         expectedGuests: budget.expectedGuests || 0,
       });
-       setIsEditing(budget.name === DEFAULT_BUDGET_NAME && !budget.eventDate);
+       setIsEditing(budget.name === DEFAULT_BUDGET_NAME && !budget.eventLocation);
     } else if (user && budgetRef) {
         const initialBudget: Omit<Budget, 'id'> = {
             name: DEFAULT_BUDGET_NAME,
@@ -168,7 +165,6 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     
     const budgetUpdate = {
         ...data,
-        eventDate: data.eventDate ? data.eventDate.toISOString() : undefined,
     }
 
     setDocumentNonBlocking(budgetRef, budgetUpdate, { merge: true });
@@ -186,27 +182,13 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
         )}
       </CardHeader>
       <CardContent className="p-4">
-        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-1 md:col-span-2 lg:col-span-1">
             <Label htmlFor="name">My-Plan Name</Label>
             <Controller
               name="name"
               control={control}
               render={({ field }) => <Input id="name" {...field} disabled={!isEditing} />}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="eventDate">Event Date</Label>
-            <Controller
-              name="eventDate"
-              control={control}
-              render={({ field }) => (
-                <DatePicker 
-                    date={field.value} 
-                    setDate={field.onChange}
-                    disabled={!isEditing}
-                />
-              )}
             />
           </div>
           <div className="space-y-1 md:col-span-2 lg:col-span-1">
@@ -229,7 +211,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
           </div>
           
           {isEditing && (
-            <div className="md:col-span-2 lg:col-span-4 flex justify-end gap-2 mt-4">
+            <div className="md:col-span-2 lg:col-span-3 flex justify-end gap-2 mt-4">
                {!isTemplateMode && (
                 <Button type="button" variant="ghost" onClick={() => {
                   reset(); // Revert changes

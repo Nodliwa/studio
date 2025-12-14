@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Budget": {
@@ -13,11 +14,6 @@
         "name": {
           "type": "string",
           "description": "Name of the plan or budget (e.g., 'Elkay's Wedding Plan')."
-        },
-        "eventDate": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The date of the event."
         },
         "eventLocation": {
           "type": "string",

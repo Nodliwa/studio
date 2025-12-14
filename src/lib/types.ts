@@ -25,7 +25,6 @@ export interface BudgetCategory {
 export interface Budget {
   id:string;
   name: string;
-  eventDate?: string;
   eventLocation?: string;
   expectedGuests?: number;
   eventType?: string;
