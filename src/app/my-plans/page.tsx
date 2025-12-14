@@ -229,7 +229,7 @@ function MyPlansPage() {
                     <Greeter />
                     <MotivationalQuote />
 
-                    <div className="flex items-center justify-between my-8">
+                    <div className="flex items-center justify-between mt-16 mb-8">
                         <div>
                             <h3 className="text-3xl font-bold font-headline">Check your plans below</h3>
                             <p className="text-muted-foreground">Click a plan to edit or review</p>
@@ -336,5 +336,7 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
+
+    
 
     
