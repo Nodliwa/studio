@@ -33,7 +33,7 @@ export default function LandingFooter() {
   return (
     <footer className="w-full mt-24 py-8 bg-secondary border-t">
         <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
                 <div>
                      <Card>
                         <CardHeader className="text-center">
@@ -64,9 +64,9 @@ export default function LandingFooter() {
                         </CardContent>
                     </Card>
                 </div>
-                <div className="text-center md:text-left">
+                <div className="text-center">
                     <h3 className="text-2xl font-headline font-bold">Connect with Us</h3>
-                    <div className="flex justify-center md:justify-start items-center gap-4 mt-4">
+                    <div className="flex justify-center items-center gap-4 mt-4">
                         <Link href="#" className="text-muted-foreground hover:text-primary">
                             <Facebook className="h-6 w-6" />
                         </Link>
