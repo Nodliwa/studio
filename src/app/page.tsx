@@ -55,9 +55,9 @@ export default function LandingPage() {
                 <div className="flip-card group" onClick={() => setIsUmemuloFlipped(!isUmemuloFlipped)}>
                   <div className={cn("flip-card-inner", { 'is-flipped': isUmemuloFlipped })}>
                     <div className="flip-card-front">
-                      <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 w-full h-full flex flex-col items-center justify-center">
+                      <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 w-full h-full">
                          <Image src="/images/umemulo.jpg" alt="uMemulo" width={400} height={300} className="object-cover w-full h-48" />
-                        <CardHeader className="p-1">
+                        <CardHeader className="p-1 text-center">
                           <CardTitle className="text-xl font-semibold">uMemulo</CardTitle>
                         </CardHeader>
                       </Card>
@@ -78,9 +78,9 @@ export default function LandingPage() {
                 <div className="flip-card group" onClick={() => setIsUmgidiFlipped(!isUmgidiFlipped)}>
                   <div className={cn("flip-card-inner", { 'is-flipped': isUmgidiFlipped })}>
                     <div className="flip-card-front">
-                      <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 w-full h-full flex flex-col items-center justify-center">
+                      <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 w-full h-full">
                          <Image src="/images/umgidi1.jpg" alt="umGidi" width={400} height={300} className="object-cover w-full h-48" />
-                        <CardHeader className="p-1">
+                        <CardHeader className="p-1 text-center">
                           <CardTitle className="text-xl font-semibold">umGidi</CardTitle>
                         </CardHeader>
                       </Card>
