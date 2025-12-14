@@ -35,6 +35,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 function calculateInitialTotal(categories: any[]): number {
     let grandTotal = 0;
@@ -49,41 +50,63 @@ function calculateInitialTotal(categories: any[]): number {
     return grandTotal;
 }
 
+const eventTypeImages: { [key: string]: string } = {
+    wedding: '/images/wedding.jpg',
+    funeral: '/images/funeral2.png',
+    umemulo: '/images/umemulo.jpg',
+    umgidi: '/images/umgidi1.jpg',
+};
+
 function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string) => void }) {
+    const imageUrl = budget.eventType ? eventTypeImages[budget.eventType] : undefined;
+
     return (
-        <Card className="flex flex-col">
-            <CardHeader>
-                <CardTitle>{budget.name}</CardTitle>
-                {budget.eventDate && <CardDescription>{new Date(budget.eventDate).toLocaleDateString()}</CardDescription>}
-            </CardHeader>
-            <CardContent className="flex-grow">
-                <p>Total: {budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
-            </CardContent>
-            <CardFooter className="flex justify-between items-center">
-                <Button asChild variant="link" className="p-0">
-                    <Link href={`/planner/${budget.id}`}>View/Edit</Link>
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4 text-destructive" />
+        <Card className="flex flex-col relative overflow-hidden text-white">
+            {imageUrl && (
+                <>
+                    <Image
+                        src={imageUrl}
+                        alt={budget.name}
+                        fill
+                        className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/50" />
+                </>
+            )}
+            <div className="relative z-10 flex flex-col flex-grow">
+                <CardHeader>
+                    <CardTitle>{budget.name}</CardTitle>
+                    {budget.eventDate && <CardDescription className="text-white/80">{new Date(budget.eventDate).toLocaleDateString()}</CardDescription>}
+                </CardHeader>
+                <CardContent className="flex-grow">
+                    <p>Total: {budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
+                </CardContent>
+                <CardFooter className="flex justify-between items-center">
+                    <Button asChild variant="link" className="p-0 text-white hover:text-white/80">
+                        <Link href={`/planner/${budget.id}`}>View/Edit</Link>
                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete your
-                        plan and all of its data.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onDelete(budget.id)}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-            </CardFooter>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="hover:bg-white/20">
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your
+                            plan and all of its data.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDelete(budget.id)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                </CardFooter>
+            </div>
         </Card>
     );
 }
@@ -305,3 +328,5 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
+
+    
