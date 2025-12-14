@@ -21,7 +21,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface EventDetailsProps {
@@ -62,6 +61,13 @@ const LocationInput = ({ field, disabled }: { field: any, disabled: boolean }) =
     setValue(description, false);
     clearSuggestions();
     field.onChange(description);
+
+    // Get latitude and longitude to prove geocoding is working.
+    // In a real app, you might save these coordinates.
+    getGeocode({ address: description }).then((results) => {
+      const { lat, lng } = getLatLng(results[0]);
+      console.log("📍 Coordinates: ", { lat, lng });
+    });
   };
 
   return (
@@ -74,6 +80,7 @@ const LocationInput = ({ field, disabled }: { field: any, disabled: boolean }) =
                 onChange={handleInput}
                 disabled={!ready || disabled}
                 placeholder="Start typing your address..."
+                autoComplete="off"
             />
         </div>
       </PopoverTrigger>
@@ -89,11 +96,13 @@ const LocationInput = ({ field, disabled }: { field: any, disabled: boolean }) =
                 <Button
                   key={place_id}
                   variant="ghost"
-                  className="justify-start"
+                  className="justify-start h-auto text-left"
                   onClick={handleSelect(suggestion)}
                 >
                   <div>
-                    <strong>{main_text}</strong> <small>{secondary_text}</small>
+                    <strong>{main_text}</strong>
+                    <br />
+                    <small className="text-muted-foreground">{secondary_text}</small>
                   </div>
                 </Button>
               );
