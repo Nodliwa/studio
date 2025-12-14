@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { useUser, useFirestore } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
-import { setDoc, doc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import {
   DropdownMenu,
   DropdownMenuContent,
