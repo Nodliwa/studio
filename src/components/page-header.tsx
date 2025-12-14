@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { useUser, useFirestore } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc } from "firebase/firestore";
 import { LogOut, PlusCircle, Heart, ListChecks, Wallet, CrossIcon } from 'lucide-react';
 import {
   Dialog,
@@ -102,11 +102,9 @@ export default function PageHeader() {
             <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
               Home
             </Link>
-            {(user && !user.isAnonymous) && (
-                 <Link href="/my-plans" className={cn("font-bold transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
-                    MyPlans
-                </Link>
-            )}
+            <Link href="/my-plans" className={cn("font-bold transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
+                MyPlans
+            </Link>
         </nav>
         <div className="flex items-center justify-end gap-2">
           {isUserLoading ? (
