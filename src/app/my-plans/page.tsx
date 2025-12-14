@@ -70,16 +70,15 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
     const imageUrl = budget.eventType ? eventTypeImages[budget.eventType] : undefined;
 
     return (
-        <Card className="overflow-hidden group relative h-72">
+        <Card className="overflow-hidden group relative h-72 w-full">
             <Link href={`/planner/${budget.id}`} className="block w-full h-full">
                 {imageUrl ? (
                     <>
                         <Image
                             src={imageUrl}
                             alt={budget.name || 'Event image'}
-                            width={400}
-                            height={300}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            fill
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-black/50" />
                     </>
@@ -123,8 +122,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                             <AlertDialogAction onClick={() => onDelete(budget.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
-                </AlertDialog>
-            </div>
+                </div>
 
             {/* Bottom Content Area */}
             <div className="absolute bottom-0 left-0 right-0 p-4 text-white flex justify-between items-end">
@@ -235,7 +233,6 @@ function MyPlansPage() {
         } catch (e) {
             console.error("Error deleting plan:", e);
             toast({ variant: 'destructive', title: "Error", description: "Could not delete plan." });
-            // In a real app, you might want to re-throw or handle the error from the delete
             deleteDocument(budgetDocRef); 
         }
 
@@ -266,55 +263,63 @@ function MyPlansPage() {
                         <Greeter />
                         <MotivationalQuote />
 
-                        <div className="flex items-center justify-between mt-16 mb-8">
-                            <div>
-                                <h3 className="text-3xl font-bold font-headline">Check your plans below</h3>
-                                <p className="text-muted-foreground">Click a plan to edit or review</p>
-                            </div>
-                        </div>
+                        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                            <Card className="mt-8">
+                                <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                                    <div>
+                                        <h3 className="text-xl font-bold font-headline">
+                                            {budgets && budgets.length > 0 ? `You have ${budgets.length} active plan(s).` : "You have no active plans."}
+                                        </h3>
+                                        <p className="text-muted-foreground">Ready to start planning your next celebration?</p>
+                                    </div>
+                                    <DialogTrigger asChild>
+                                        <Button size="lg">
+                                            <PlusCircle className="mr-2 h-5 w-5" />
+                                            Add New Plan
+                                        </Button>
+                                    </DialogTrigger>
+                                </CardContent>
+                            </Card>
+
+                            <DialogContent className="sm:max-w-[425px]">
+                                <DialogHeader>
+                                    <DialogTitle>Create a new plan</DialogTitle>
+                                    <DialogDescription>
+                                        Select an event type to get started with a template.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                                    <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('wedding')}>
+                                        <Heart />
+                                        Wedding
+                                    </Button>
+                                    <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
+                                        <CrossIcon />
+                                        Funeral
+                                    </Button>
+                                    <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
+                                        <ListChecks />
+                                        uMemulo
+                                    </Button>
+                                    <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
+                                        <Wallet />
+                                        umGidi
+                                    </Button>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
 
                         {budgets && budgets.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
                                 {budgets.map(budget => (
                                 <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} />
                                 ))}
                             </div>
                         ) : (
                             <div className="text-center py-16">
-                                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                                    <p className="text-lg text-muted-foreground">
-                                        You currently do not have an active plan,{' '}
-                                        <DialogTrigger asChild>
-                                            <button className="font-bold text-primary hover:underline focus:outline-none">add plan</button>
-                                        </DialogTrigger>
-                                    </p>
-                                    <DialogContent className="sm:max-w-[425px]">
-                                        <DialogHeader>
-                                            <DialogTitle>Create a new plan</DialogTitle>
-                                            <DialogDescription>
-                                                Select an event type to get started with a template.
-                                            </DialogDescription>
-                                        </DialogHeader>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-                                            <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('wedding')}>
-                                                <Heart />
-                                                Wedding
-                                            </Button>
-                                            <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
-                                                <CrossIcon />
-                                                Funeral
-                                            </Button>
-                                            <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
-                                                <ListChecks />
-                                                uMemulo
-                                            </Button>
-                                            <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
-                                                <Wallet />
-                                                umGidi
-                                            </Button>
-                                        </div>
-                                    </DialogContent>
-                                </Dialog>
+                                <p className="text-lg text-muted-foreground">
+                                    Click "Add New Plan" above to create your first celebration budget.
+                                </p>
                             </div>
                         )}
                     </div>
