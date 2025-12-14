@@ -79,9 +79,9 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-secondary p-4 md:p-8">
-      <div className="bg-background shadow-2xl min-h-full rounded-lg mx-auto">
+      <div className="bg-background shadow-2xl min-h-full rounded-lg container mx-auto">
         <PageHeader />
-        <main className="flex items-center justify-center mx-auto px-40">
+        <main className="flex items-center justify-center mx-auto px-4">
             <Card className="w-full max-w-md">
             <CardHeader>
                 <CardTitle as="h2">Create an Account</CardTitle>

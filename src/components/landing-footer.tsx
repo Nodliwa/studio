@@ -31,7 +31,7 @@ export default function LandingFooter() {
   
   return (
     <footer className="w-full mt-24 py-8 bg-secondary border-t">
-        <div className="mx-auto px-40">
+        <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto items-start">
                 <div>
                      <Card>
