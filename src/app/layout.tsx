@@ -39,7 +39,7 @@ export default function RootLayout({
       </head>
       <body
         className={cn(
-          "min-h-screen bg-background font-body antialiased flex flex-col",
+          "min-h-screen bg-secondary font-body antialiased flex flex-col",
           ptSans.variable,
           merriweather.variable
         )}

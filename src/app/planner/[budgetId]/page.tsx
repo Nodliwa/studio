@@ -290,8 +290,8 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   }
   
   return (
-    <div className="min-h-screen w-full bg-secondary p-4 md:p-8">
-      <div className="bg-background shadow-2xl min-h-full rounded-lg container mx-auto">
+    <div className="min-h-screen w-full bg-secondary">
+      <div className="bg-background shadow-2xl min-h-full container mx-auto">
         <PageHeader />
         <main className="mx-auto px-4">
           <Greeter />

@@ -15,8 +15,8 @@ export default function LandingPage() {
   const [isUmgidiFlipped, setIsUmgidiFlipped] = useState(false);
 
   return (
-    <div className="min-h-screen w-full bg-secondary p-4 md:p-8">
-      <div className="bg-background shadow-2xl min-h-full rounded-lg container mx-auto flex flex-col">
+    <div className="min-h-screen w-full bg-secondary">
+      <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
           <PageHeader />
           <main className="mx-auto px-4 flex-grow">
           <div className="p-2 md:p-4 text-center">
