@@ -36,7 +36,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Menu, MapPin } from 'lucide-react';
+import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Menu, MapPin, Users } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
@@ -70,55 +70,60 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
     const imageUrl = budget.eventType ? eventTypeImages[budget.eventType] : undefined;
 
     return (
-        <Card className="overflow-hidden group relative">
-            <Link href={`/planner/${budget.id}`} className="block w-full h-full">
-                <div className="relative w-full h-64">
-                    {imageUrl ? (
-                        <>
-                            <Image
-                                src={imageUrl}
-                                alt={budget.name || 'Event image'}
-                                layout="fill"
-                                objectFit="cover"
-                                className="transition-transform duration-300 group-hover:scale-105"
-                            />
-                            <div className="absolute inset-0 bg-black/50" />
-                        </>
-                    ) : (
-                        <div className="h-full w-full bg-gradient-to-t from-primary/80 to-primary/40" />
-                    )}
-
-                    {/* Top Content Area */}
-                    <div className="absolute top-0 left-0 right-0 p-4 text-white">
-                        <div className="flex items-center justify-between">
-                            {/* Top Left: Title */}
-                            <CardHeader className="p-0 z-10">
-                                <CardTitle className="text-xl font-bold">{budget.name}</CardTitle>
-                            </CardHeader>
-
-                            {/* Top Center: Date */}
-                            <div className="absolute left-1/2 -translate-x-1/2 z-10">
-                                {budget.eventDate ? (
-                                    <p className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</p>
-                                ) : (
-                                    <p className="flex items-center gap-2 text-sm text-white/70 italic"><CalendarDays className="h-4 w-4" /> No date set</p>
-                                )}
-                            </div>
-                            {/* Top Right is handled by the menu below */}
-                        </div>
-                    </div>
-
-                    {/* Bottom Content Area */}
-                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white flex justify-between items-end">
-                         {budget.eventLocation ? (
-                            <p className="flex items-start gap-2 text-sm"><MapPin className="h-4 w-4 mt-0.5 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
-                        ) : (
-                            <p className="flex items-start gap-2 text-sm text-white/70 italic"><MapPin className="h-4 w-4 mt-0.5 shrink-0" /> No location set</p>
-                        )}
-                         <p className="flex items-start gap-2 text-lg font-bold"><Wallet className="inline-block h-5 w-5 mt-0.5 shrink-0" />{new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal)}</p>
-                    </div>
-                </div>
+        <Card className="overflow-hidden group relative h-72">
+             <Link href={`/planner/${budget.id}`} className="block w-full h-full">
+                {imageUrl ? (
+                    <>
+                        <Image
+                            src={imageUrl}
+                            alt={budget.name || 'Event image'}
+                            layout="fill"
+                            objectFit="cover"
+                            className="transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-black/50" />
+                    </>
+                ) : (
+                    <div className="h-full w-full bg-gradient-to-t from-primary/80 to-primary/40" />
+                )}
             </Link>
+            {/* Top Content Area */}
+            <div className="absolute top-0 left-0 right-0 p-4 text-white">
+                <div className="flex items-start justify-between">
+                    {/* Top Left: Title */}
+                    <CardHeader className="p-0 z-10">
+                        <CardTitle className="text-xl font-bold">{budget.name}</CardTitle>
+                    </CardHeader>
+
+                    {/* Top Center: Date */}
+                    <div className="absolute left-1/2 -translate-x-1/2 z-10">
+                        {budget.eventDate ? (
+                            <p className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</p>
+                        ) : (
+                            <p className="flex items-center gap-2 text-sm text-white/70 italic"><CalendarDays className="h-4 w-4" /> No date set</p>
+                        )}
+                    </div>
+                    {/* Top Right is handled by the menu below */}
+                </div>
+            </div>
+
+            {/* Bottom Content Area */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 text-white flex justify-between items-end">
+                <div className="space-y-1">
+                    {budget.eventLocation ? (
+                        <p className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
+                    ) : (
+                        <p className="flex items-center gap-2 text-sm text-white/70 italic"><MapPin className="h-4 w-4 shrink-0" /> No location set</p>
+                    )}
+                    {budget.expectedGuests ? (
+                        <p className="flex items-center gap-2 text-sm"><Users className="h-4 w-4 shrink-0" /> {budget.expectedGuests} guests</p>
+                    ) : (
+                        <p className="flex items-center gap-2 text-sm text-white/70 italic"><Users className="h-4 w-4 shrink-0" /> No guests set</p>
+                    )}
+                </div>
+
+                <p className="flex items-start gap-2 text-lg font-bold"><Wallet className="inline-block h-5 w-5 mt-0.5 shrink-0" />{new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal)}</p>
+            </div>
 
             <div className="absolute top-2 right-2 z-30">
                 <AlertDialog>
@@ -383,8 +388,6 @@ function MyPlansPage() {
 
 export default MyPlansPage;
     
-    
-
     
 
     
