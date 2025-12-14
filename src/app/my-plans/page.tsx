@@ -80,7 +80,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                     <Image
                         src={imageUrl}
                         alt={budget.name}
-                        fill
+                        layout="fill"
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-black/50" />
@@ -359,3 +359,5 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
+
+    
