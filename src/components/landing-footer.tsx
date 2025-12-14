@@ -63,7 +63,6 @@ export default function LandingFooter() {
                 </div>
                 <div className="text-center md:text-left">
                     <h3 className="text-2xl font-headline font-bold">Connect with Us</h3>
-                    <p className="text-muted-foreground mt-2">Follow us on social media to stay updated.</p>
                     <div className="flex justify-center md:justify-start items-center gap-4 mt-4">
                         <Link href="#" className="text-muted-foreground hover:text-primary">
                             <Facebook className="h-6 w-6" />
