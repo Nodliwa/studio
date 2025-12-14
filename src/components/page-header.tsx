@@ -92,8 +92,8 @@ export default function PageHeader() {
             <Image
               src="/images/brand2.png"
               alt="SimpliPlan Logo"
-              width={250}
-              height={63}
+              width={243}
+              height={61}
               priority
             />
           </Link>
