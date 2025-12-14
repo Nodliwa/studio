@@ -39,17 +39,15 @@ export default function RootLayout({
       </head>
       <body
         className={cn(
-          "min-h-screen bg-background font-body antialiased",
+          "min-h-screen bg-background font-body antialiased flex flex-col",
           ptSans.variable,
           merriweather.variable
         )}
       >
         <PlacesAutocompleteProvider>
           <FirebaseClientProvider>
-            <div className="flex flex-col min-h-screen">
-              <main className="flex-grow">{children}</main>
-              <LandingFooter />
-            </div>
+            <main className="flex-grow">{children}</main>
+            <LandingFooter />
           </FirebaseClientProvider>
         </PlacesAutocompleteProvider>
         <Toaster />
