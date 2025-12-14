@@ -55,7 +55,7 @@ export default function LandingFooter() {
                                 <div className="relative">
                                     <Label htmlFor="message">Message</Label>
                                     <Textarea id="message" placeholder="Your message..." className="pr-20 min-h-[120px]" />
-                                    <Button type="submit" size="sm" className="absolute bottom-2.5 right-2.5">
+                                    <Button type="submit" size="sm" className="absolute bottom-2 right-2">
                                         Send
                                         <Send className="ml-2 h-4 w-4"/>
                                     </Button>
