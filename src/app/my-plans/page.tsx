@@ -122,7 +122,8 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                             <AlertDialogAction onClick={() => onDelete(budget.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
-                </div>
+                </AlertDialog>
+            </div>
 
             {/* Bottom Content Area */}
             <div className="absolute bottom-0 left-0 right-0 p-4 text-white flex justify-between items-end">
