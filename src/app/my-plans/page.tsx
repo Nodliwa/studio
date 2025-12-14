@@ -76,7 +76,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
             </Link>
 
             {imageUrl && (
-                <>
+                <div className="relative w-full h-48">
                     <Image
                         src={imageUrl}
                         alt={budget.name}
@@ -84,7 +84,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-black/50" />
-                </>
+                </div>
             )}
 
             <div className="absolute top-2 right-2 z-20">
@@ -125,12 +125,13 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                 </AlertDialog>
             </div>
 
-            <div className="relative z-20 flex flex-col flex-grow p-6 mt-auto">
+            <div className="relative z-20 flex flex-col flex-grow p-6">
+                 {!imageUrl && <div className="flex-grow"></div>}
                 <CardHeader className="p-0 mb-4">
                     <CardTitle className="group-hover:underline">{budget.name}</CardTitle>
                     {budget.eventDate && <CardDescription className="text-white/80 flex items-center gap-2 mt-2"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</CardDescription>}
                 </CardHeader>
-                <CardContent className="flex-grow space-y-1 p-0">
+                <CardContent className="space-y-1 p-0">
                      <p className="flex items-start gap-2"><Wallet className="inline-block h-4 w-4 mt-1 shrink-0" />{budget.grandTotal > 0 ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal) : 'R0.00'}</p>
                     {budget.eventLocation && <p className="flex items-start gap-2"><MapPin className="h-4 w-4 mt-1 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>}
                 </CardContent>
