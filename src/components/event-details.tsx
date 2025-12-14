@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { DocumentReference, doc } from "firebase/firestore";
+import { DocumentReference } from "firebase/firestore";
 import usePlacesAutocomplete, {
   getGeocode,
   getLatLng,
@@ -50,6 +50,7 @@ const LocationInput = ({ field, disabled }: { field: any, disabled: boolean }) =
   } = usePlacesAutocomplete({
     requestOptions: { /* Define search scope here */ },
     debounce: 300,
+    defaultValue: field.value,
   });
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,8 +63,6 @@ const LocationInput = ({ field, disabled }: { field: any, disabled: boolean }) =
     clearSuggestions();
     field.onChange(description);
 
-    // Get latitude and longitude to prove geocoding is working.
-    // In a real app, you might save these coordinates.
     getGeocode({ address: description }).then((results) => {
       const { lat, lng } = getLatLng(results[0]);
       console.log("📍 Coordinates: ", { lat, lng });
@@ -124,7 +123,6 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     control,
     handleSubmit,
     reset,
-    watch,
     formState: { isDirty, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
