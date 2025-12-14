@@ -293,7 +293,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     <div className="min-h-screen w-full bg-secondary">
       <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
         <PageHeader />
-        <main className="container mx-auto px-4 flex-grow flex flex-col">
+        <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
           <Greeter />
           {eventQuote && (
               <p className="mt-4 text-lg italic text-muted-foreground">{eventQuote}</p>

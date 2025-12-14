@@ -90,16 +90,16 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
             <MessageSquare className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-32 w-32 text-white/10" />
             
             {/* Top Right Menu */}
-            <div className="absolute top-2 right-2 z-30">
-                <AlertDialog>
-                     <DropdownMenu>
+             <AlertDialog>
+                <div className="absolute top-2 right-2 z-30">
+                    <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="relative h-8 w-8 hover:bg-white/20 text-white">
                                 <Menu className="h-5 w-5" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-background/80 backdrop-blur text-foreground">
-                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/planner/${budget.id}`); }}>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/planner/${budget.id}`); }}>
                                 View/Edit
                             </DropdownMenuItem>
                             <AlertDialogTrigger asChild>
@@ -112,20 +112,21 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                             </AlertDialogTrigger>
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete your plan and all of its data.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => onDelete(budget.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            </div>
+                </div>
+                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your plan and all of its data.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => onDelete(budget.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
 
             {/* Bottom Content Area */}
             <div className="absolute bottom-0 left-0 right-0 p-4 text-white flex justify-between items-end">
@@ -253,7 +254,7 @@ function MyPlansPage() {
         <div className="min-h-full bg-secondary flex flex-col">
             <div className="bg-background shadow-2xl container mx-auto flex flex-col flex-grow">
                 <PageHeader />
-                <main className="container mx-auto px-4 flex-grow flex flex-col">
+                <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
                     <div className="flex-grow">
                         <Greeter />
                         <MotivationalQuote />
