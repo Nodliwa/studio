@@ -33,10 +33,10 @@ export default function PageHeader() {
         </nav>
         <div className="flex items-center justify-end gap-2">
             <Button asChild variant="outline">
-                <Link href="/login">Login</Link>
+                <Link href="/login" className="text-lg">Login</Link>
             </Button>
             <Button asChild>
-                <Link href="/register">Sign Up</Link>
+                <Link href="/register" className="text-lg">Sign Up</Link>
             </Button>
         </div>
       </div>
