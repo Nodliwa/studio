@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, setDocumentNonBlocking, useStorage, useAuth } from '@/firebase';
+import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, setDocumentNonBlocking, useAuth } from '@/firebase';
 import { collection, doc, writeBatch, getDocs, setDoc, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
@@ -36,7 +36,6 @@ import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { format } from 'date-fns';
 
 function calculateInitialTotal(categories: any[]): number {
@@ -59,34 +58,10 @@ const eventTypeImages: { [key: string]: string } = {
     umgidi: '/images/umgidi1.jpg',
 };
 
-function PlanCard({ budget, onDelete, onImageUpload }: { budget: Budget, onDelete: (id: string) => void, onImageUpload: (id: string, url: string) => void }) {
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const storage = useStorage();
-    const { user } = useUser();
+function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string) => void }) {
     const { toast } = useToast();
-
-    const handleUploadClick = () => {
-        fileInputRef.current?.click();
-    };
-
-    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file || !user) return;
-
-        const imageRef = storageRef(storage, `users/${user.uid}/budgets/${budget.id}/${file.name}`);
-
-        try {
-            const snapshot = await uploadBytes(imageRef, file);
-            const downloadURL = await getDownloadURL(snapshot.ref);
-            onImageUpload(budget.id, downloadURL);
-            toast({ title: "Image uploaded successfully!" });
-        } catch (error) {
-            console.error("Error uploading image:", error);
-            toast({ variant: 'destructive', title: "Error", description: "Could not upload image." });
-        }
-    };
     
-    const imageUrl = budget.imageUrl || (budget.eventType ? eventTypeImages[budget.eventType] : undefined);
+    const imageUrl = budget.eventType ? eventTypeImages[budget.eventType] : undefined;
 
     return (
         <Card className="flex flex-col relative overflow-hidden text-white">
@@ -102,16 +77,6 @@ function PlanCard({ budget, onDelete, onImageUpload }: { budget: Budget, onDelet
                 </>
             )}
              <div className="absolute top-2 right-2 flex items-center gap-2 z-20">
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept="image/*"
-                />
-                 <Button variant="ghost" size="icon" className="hover:bg-white/20" onClick={handleUploadClick}>
-                    <Upload className="h-4 w-4" />
-                </Button>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="icon" className="hover:bg-white/20">
@@ -158,19 +123,12 @@ function MyPlansPage() {
     const router = useRouter();
     const [dialogOpen, setDialogOpen] = useState(false);
     const { toast } = useToast();
-    const [budgets, setBudgets] = useState<Budget[] | null>(null);
-
+    
     const budgetsCollection = useMemoFirebase(() => (
         user && !user.isAnonymous ? collection(firestore, 'users', user.uid, 'budgets') : null
     ), [user, firestore]);
 
-    const { data: initialBudgets, isLoading: budgetsLoading, error } = useCollection<Budget>(budgetsCollection);
-
-     useEffect(() => {
-        if (initialBudgets) {
-            setBudgets(initialBudgets);
-        }
-    }, [initialBudgets]);
+    const { data: budgets, isLoading: budgetsLoading, error } = useCollection<Budget>(budgetsCollection);
 
      useEffect(() => {
         if (isUserLoading) return;
@@ -246,21 +204,6 @@ function MyPlansPage() {
 
     };
 
-    const handleImageUpload = (budgetId: string, imageUrl: string) => {
-        if (user) {
-            const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', budgetId);
-            setDocumentNonBlocking(budgetDocRef, { imageUrl }, { merge: true });
-
-            // Update local state to show image immediately
-            setBudgets(currentBudgets => {
-                if (!currentBudgets) return null;
-                return currentBudgets.map(b => 
-                    b.id === budgetId ? { ...b, imageUrl } : b
-                );
-            });
-        }
-    };
-
     if (isUserLoading || !user || (user && user.isAnonymous)) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
@@ -294,7 +237,7 @@ function MyPlansPage() {
                     {budgets && budgets.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {budgets.map(budget => (
-                               <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} onImageUpload={handleImageUpload} />
+                               <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} />
                             ))}
                         </div>
                     ) : (
@@ -391,3 +334,5 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
+
+    
