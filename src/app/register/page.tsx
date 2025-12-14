@@ -28,6 +28,8 @@ const registerSchema = z.object({
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
+const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+
 export default function RegisterPage() {
   const auth = useAuth();
   const firestore = useFirestore();
@@ -124,11 +126,15 @@ export default function RegisterPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <ReCAPTCHA
-                    ref={recaptchaRef}
-                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-                    onChange={(token) => setValue('recaptcha', token || '', { shouldValidate: true })}
-                  />
+                  {siteKey ? (
+                    <ReCAPTCHA
+                      ref={recaptchaRef}
+                      sitekey={siteKey}
+                      onChange={(token) => setValue('recaptcha', token || '', { shouldValidate: true })}
+                    />
+                  ) : (
+                    <p className="text-destructive text-sm">reCAPTCHA site key is not configured.</p>
+                  )}
                   {errors.recaptcha && <p className="text-destructive text-sm">{errors.recaptcha.message}</p>}
                 </div>
 
