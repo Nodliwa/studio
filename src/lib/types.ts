@@ -15,7 +15,7 @@ export interface BudgetItem {
 export interface BudgetCategory {
   id: string;
   name: string;
-  icon: ForwardRefExoticComponent<Omit<LucideProps, "ref">>;
+  icon?: ForwardRefExoticComponent<Omit<LucideProps, "ref">>;
   items: BudgetItem[];
   subCategories?: BudgetCategory[];
   total: number;
@@ -40,3 +40,5 @@ export interface User {
     displayName: string;
     cellphone?: string;
 }
+
+    

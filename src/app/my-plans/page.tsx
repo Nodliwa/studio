@@ -2,11 +2,11 @@
 'use client';
 
 import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, setDocumentNonBlocking } from '@/firebase';
-import { collection, doc, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, doc, writeBatch, getDocs, setDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import type { Budget, BudgetCategory } from '@/lib/types';
+import type { Budget } from '@/lib/types';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,11 +36,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { setDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
-function calculateInitialTotal(categories: BudgetCategory[]): number {
+function calculateInitialTotal(categories: any[]): number {
     let grandTotal = 0;
     categories.forEach(category => {
         (category.items || []).forEach(item => {
@@ -53,7 +52,7 @@ function calculateInitialTotal(categories: BudgetCategory[]): number {
     return grandTotal;
 }
 
-function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string) => void }) {
+function PlanCard({ budget, onDelete, onImageUpload }: { budget: Budget, onDelete: (id: string) => void, onImageUpload: (budgetId: string, imageUrl: string) => void }) {
     const { user } = useUser();
     const firestore = useFirestore();
     const storage = getStorage();
@@ -78,8 +77,9 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
             const downloadURL = await getDownloadURL(storageRef);
 
             const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', budget.id);
-            setDocumentNonBlocking(budgetDocRef, { imageUrl: downloadURL }, { merge: true });
+            await setDoc(budgetDocRef, { imageUrl: downloadURL }, { merge: true });
 
+            onImageUpload(budget.id, downloadURL);
             toast({ title: 'Image uploaded successfully!' });
         } catch (error) {
             console.error("Error uploading image: ", error);
@@ -120,12 +120,12 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                             accept="image/*"
                         />
                         <Button variant="ghost" size="icon" onClick={handleUploadClick}>
-                           <Upload className={cn("h-4 w-4", budget.imageUrl ? 'text-white' : 'text-muted-foreground')} />
+                           <Upload className={cn("h-4 w-4", budget.imageUrl ? 'text-white hover:text-white/80' : 'text-muted-foreground')} />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="icon">
-                                <Trash2 className={cn("h-4 w-4 text-destructive", budget.imageUrl && 'text-red-400 hover:text-red-300')} />
+                                <Trash2 className={cn("h-4 w-4", budget.imageUrl ? 'text-red-400 hover:text-red-300' : 'text-destructive')} />
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
@@ -160,7 +160,15 @@ function MyPlansPage() {
         user && !user.isAnonymous ? collection(firestore, 'users', user.uid, 'budgets') : null
     ), [user, firestore]);
 
-    const { data: budgets, isLoading: budgetsLoading } = useCollection<Budget>(budgetsCollection);
+    const { data: initialBudgets, isLoading: budgetsLoading, error } = useCollection<Budget>(budgetsCollection);
+    const [budgets, setBudgets] = useState<Budget[] | null>(null);
+
+    useEffect(() => {
+        if (initialBudgets) {
+            setBudgets(initial-budgets);
+        }
+    }, [initialBudgets]);
+
 
      useEffect(() => {
         if (isUserLoading) return;
@@ -175,7 +183,7 @@ function MyPlansPage() {
         if (user && !user.isAnonymous) {
             const newBudgetId = uuidv4();
             const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
-            const initialTotal = calculateInitialTotal(template as BudgetCategory[]);
+            const initialTotal = calculateInitialTotal(template);
 
             const newBudget: Budget = {
                 id: newBudgetId,
@@ -206,22 +214,43 @@ function MyPlansPage() {
         
         const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', budgetId);
         
-        const categoriesCollectionRef = collection(budgetDocRef, 'categories');
-        const categoriesSnapshot = await getDocs(categoriesCollectionRef);
+        try {
+            const categoriesCollectionRef = collection(budgetDocRef, 'categories');
+            const categoriesSnapshot = await getDocs(categoriesCollectionRef);
+    
+            const batch = writeBatch(firestore);
+    
+            for (const categoryDoc of categoriesSnapshot.docs) {
+                const itemsCollectionRef = collection(categoryDoc.ref, 'items');
+                const itemsSnapshot = await getDocs(itemsCollectionRef);
+                itemsSnapshot.forEach(itemDoc => {
+                    batch.delete(itemDoc.ref);
+                });
+                batch.delete(categoryDoc.ref);
+            }
 
-        const batch = writeBatch(firestore);
+            batch.delete(budgetDocRef);
+            
+            await batch.commit();
 
-        for (const categoryDoc of categoriesSnapshot.docs) {
-            const itemsCollectionRef = collection(categoryDoc.ref, 'items');
-            const itemsSnapshot = await getDocs(itemsCollectionRef);
-            itemsSnapshot.forEach(itemDoc => {
-                batch.delete(itemDoc.ref);
-            });
-            batch.delete(categoryDoc.ref);
+            toast({ title: "Plan deleted successfully" });
+
+        } catch (e) {
+            console.error("Error deleting plan:", e);
+            toast({ variant: 'destructive', title: "Error", description: "Could not delete plan." });
+            // In a real app, you might want to re-throw or handle the error from the non-blocking delete
+            deleteDocument(budgetDocRef); 
         }
-        
-        await deleteDocument(budgetDocRef);
-        await batch.commit();
+
+    };
+
+    const handleImageUpload = (budgetId: string, imageUrl: string) => {
+        setBudgets(currentBudgets => {
+            if (!currentBudgets) return null;
+            return currentBudgets.map(b => 
+                b.id === budgetId ? { ...b, imageUrl } : b
+            );
+        });
     };
     
     if (isUserLoading || !user || (user && user.isAnonymous)) {
@@ -257,7 +286,7 @@ function MyPlansPage() {
                     {budgets && budgets.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {budgets.map(budget => (
-                               <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} />
+                               <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} onImageUpload={handleImageUpload} />
                             ))}
                         </div>
                     ) : (
@@ -354,3 +383,5 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
+
+    

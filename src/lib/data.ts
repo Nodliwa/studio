@@ -1,6 +1,7 @@
+
 import type { BudgetCategory } from "./types";
 
-const funeralBudgetData: Omit<BudgetCategory, 'icon'>[] = [
+const funeralBudgetData: BudgetCategory[] = [
     {
       id: "cat-1",
       name: "Meat",
@@ -124,7 +125,7 @@ const funeralBudgetData: Omit<BudgetCategory, 'icon'>[] = [
     },
 ];
 
-const weddingBudgetData: Omit<BudgetCategory, 'icon'>[] = [
+const weddingBudgetData: BudgetCategory[] = [
     {
         id: "bride", name: "Bride", total: 0, order: 1, items: [
             { id: "bride-1", name: "Ring", metric: "each", quantity: 1, unitPrice: 45000, total: 0, comment: "" },
@@ -260,7 +261,7 @@ const weddingBudgetData: Omit<BudgetCategory, 'icon'>[] = [
     }
 ];
 
-const birthdayBudgetData: Omit<BudgetCategory, 'icon'>[] = [
+const birthdayBudgetData: BudgetCategory[] = [
     {
         id: "refreshments", name: "Refreshments", total: 0, order: 1, items: [
             { id: "refreshments-1", name: "Juice", metric: "2L", quantity: 10, unitPrice: 30, total: 0, comment: "" },
@@ -285,3 +286,5 @@ export const budgetTemplates = {
  * @deprecated Use budgetTemplates instead
  */
 export const initialBudgetData = funeralBudgetData;
+
+    
