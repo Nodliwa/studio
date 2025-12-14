@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Facebook, Instagram } from 'lucide-react';
+import { Facebook, Instagram, Send } from 'lucide-react';
 import Link from 'next/link';
 
 const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -37,7 +37,7 @@ export default function LandingFooter() {
                 <div>
                      <Card>
                         <CardHeader className="text-center">
-                            <CardTitle as="h2">Suggestions / Comments / Queries</CardTitle>
+                            <CardTitle as="h3">Suggestions / Comments / Queries</CardTitle>
                             <CardDescription>We'd love to hear from you. Drop us a message below.</CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -52,11 +52,14 @@ export default function LandingFooter() {
                                         <Input id="email" type="email" placeholder="Your Email" />
                                     </div>
                                 </div>
-                                <div className="space-y-2">
+                                <div className="relative">
                                     <Label htmlFor="message">Message</Label>
-                                    <Textarea id="message" placeholder="Your message..." />
+                                    <Textarea id="message" placeholder="Your message..." className="pr-20 min-h-[120px]" />
+                                    <Button type="submit" size="sm" className="absolute bottom-2.5 right-2.5">
+                                        Send
+                                        <Send className="ml-2 h-4 w-4"/>
+                                    </Button>
                                 </div>
-                                <Button type="submit" className="w-full">Send Message</Button>
                             </form>
                         </CardContent>
                     </Card>
