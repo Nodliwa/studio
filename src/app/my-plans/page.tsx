@@ -70,32 +70,31 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
     const imageUrl = budget.eventType ? eventTypeImages[budget.eventType] : undefined;
 
     return (
-        <Card className="flex flex-col relative overflow-hidden group text-white">
-            <Link href={`/planner/${budget.id}`} className="absolute inset-0 z-10" aria-label={`View ${budget.name}`}>
-                <span className="sr-only">View Plan</span>
+        <Card className="flex flex-col relative overflow-hidden group text-white bg-card">
+            <Link href={`/planner/${budget.id}`} className="block relative h-48 w-full z-10" aria-label={`View ${budget.name}`}>
+                <div className="absolute inset-0">
+                    {imageUrl ? (
+                        <>
+                            <Image
+                                src={imageUrl}
+                                alt={budget.name || 'Event image'}
+                                layout="fill"
+                                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-black/50" />
+                        </>
+                    ) : (
+                        <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-primary/40" />
+                    )}
+                </div>
             </Link>
-
-            <div className="absolute inset-0">
-                {imageUrl && (
-                    <>
-                        <Image
-                            src={imageUrl}
-                            alt={budget.name || 'Event image'}
-                            layout="fill"
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-black/50" />
-                    </>
-                )}
-                 {!imageUrl && <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-primary/40" />}
-            </div>
             
-            <div className="relative z-20 flex flex-col h-full">
-                <div className="p-6 pb-0 flex justify-end">
-                    <AlertDialog>
+            <div className="relative z-20 flex flex-col h-full bg-black/50 p-6 pt-0">
+                <div className="flex justify-end -mr-2 -mt-2">
+                     <AlertDialog>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="relative z-30 -mr-2 -mt-2 h-8 w-8 hover:bg-white/20">
+                                <Button variant="ghost" size="icon" className="relative z-30 h-8 w-8 hover:bg-white/20">
                                     <Menu className="h-5 w-5 text-white" />
                                 </Button>
                             </DropdownMenuTrigger>
@@ -129,12 +128,12 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                     </AlertDialog>
                 </div>
                 
-                <div className="p-6 pt-0 mt-auto pointer-events-none">
+                <div className="mt-auto pointer-events-none">
                     <CardHeader className="p-0">
-                        <CardTitle className="text-xl font-bold group-hover:underline">{budget.name}</CardTitle>
+                        <CardTitle className="text-xl font-bold">{budget.name}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-1 p-0 mt-2">
-                        {budget.eventDate ? (
+                         {budget.eventDate ? (
                             <p className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</p>
                         ) : (
                             <p className="flex items-center gap-2 text-sm text-white/80 italic"><CalendarDays className="h-4 w-4" /> No date set</p>
@@ -146,7 +145,6 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                             <p className="flex items-start gap-2 text-sm text-white/80 italic"><MapPin className="h-4 w-4 mt-0.5 shrink-0" /> No location set</p>
                         )}
                     </CardContent>
-                    <CardFooter className="p-0 mt-4 flex justify-between items-center" />
                 </div>
             </div>
         </Card>
