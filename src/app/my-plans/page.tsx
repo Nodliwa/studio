@@ -2,7 +2,7 @@
 'use client';
 
 import { useUser, useCollection, useMemoFirebase, useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { Budget } from '@/lib/types';
@@ -19,11 +19,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusCircle, Heart, ListChecks, Wallet, RefreshCw } from 'lucide-react';
+import { PlusCircle, Heart, ListChecks, Wallet } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
-import { CalendarDays } from 'lucide-react';
-
 
 function MyPlansPage() {
     const { user, isUserLoading } = useUser();
@@ -117,13 +115,14 @@ function MyPlansPage() {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                            <h2 className="text-xl font-semibold">No plans yet!</h2>
-                            <p className="text-muted-foreground mt-2">Get started by creating your first celebration plan.</p>
+                         <div className="text-center py-16">
                             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                                <DialogTrigger asChild>
-                                    <Button className="mt-4">Create a Plan</Button>
-                                </DialogTrigger>
+                                <p className="text-lg text-muted-foreground">
+                                    You currently do not have an active plan,{' '}
+                                    <DialogTrigger asChild>
+                                        <button className="font-bold text-primary hover:underline focus:outline-none">add plan</button>
+                                    </DialogTrigger>
+                                </p>
                                 <DialogContent className="sm:max-w-[425px]">
                                     <DialogHeader>
                                         <DialogTitle>Create a new plan</DialogTitle>
@@ -153,57 +152,6 @@ function MyPlansPage() {
                             </Dialog>
                         </div>
                     )}
-                    
-                    <div className="mt-24 w-full max-w-6xl mx-auto">
-                    <h2 className="text-3xl font-bold font-headline text-center">Features</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-                        <Card>
-                        <CardHeader className="p-4">
-                            <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                            <ListChecks className="h-6 w-6 text-primary" />
-                            <span>Don’t forget a thing</span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                            <p className="text-sm text-muted-foreground">We give you a handy list of items to think about for your event, so nothing slips through the cracks.</p>
-                        </CardContent>
-                        </Card>
-                        <Card>
-                        <CardHeader className="p-4">
-                            <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                            <CalendarDays className="h-6 w-6 text-primary" />
-                            <span>Planning That Fits Your Life</span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                            <p className="text-sm text-muted-foreground">Plan anywhere, with anyone, whenever it suits you — simple, flexible, and stress-free.</p>
-                        </CardContent>
-                        </Card>
-                        <Card>
-                        <CardHeader className="p-4">
-                            <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                            <Wallet className="h-6 w-6 text-primary" />
-                            <span>Effortless Budgeting</span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                            <p className="text-sm text-muted-foreground">Forget diaries & spreadsheets - Organise your spending and see where your money goes, all in one place</p>
-                        </CardContent>
-                        </Card>
-                        <Card>
-                        <CardHeader className="p-4">
-                            <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                            <RefreshCw className="h-6 w-6 text-primary" />
-                            <span>Real-Time Updates</span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                            <p className="text-sm text-muted-foreground">See your grand total update instantly as you adjust quantities and prices. No surprises.</p>
-                        </CardContent>
-                        </Card>
-                    </div>
-                    </div>
-                    
                 </main>
             </div>
         </div>
