@@ -1,10 +1,14 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import { getFirestore, doc, setDoc } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage';
+import type { User as AuthUser } from 'firebase/auth';
+import type { User as AppUser } from '@/lib/types';
+
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -41,6 +45,33 @@ export function getSdks(firebaseApp: FirebaseApp) {
     storage: getStorage(firebaseApp),
   };
 }
+
+/**
+ * Creates or updates a user document in Firestore.
+ * This function is non-blocking.
+ * @param authUser The Firebase Auth user object.
+ */
+export function setUserData(authUser: AuthUser) {
+    const firestore = getFirestore();
+    if (!authUser.email) {
+      console.warn('Cannot create user profile without an email.');
+      return;
+    }
+  
+    const userRef = doc(firestore, 'users', authUser.uid);
+    const userData: AppUser = {
+      id: authUser.uid,
+      email: authUser.email,
+      displayName: authUser.displayName || 'New User', // Fallback display name
+    };
+  
+    // Use setDoc with merge:true to create or update the document without overwriting existing fields
+    // This is a non-blocking operation.
+    setDoc(userRef, userData, { merge: true }).catch(error => {
+      console.error("Error writing user document:", error);
+      // In a real app, you might want to emit a global error here
+    });
+  }
 
 export * from './provider';
 export * from './client-provider';

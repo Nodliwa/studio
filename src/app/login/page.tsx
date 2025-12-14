@@ -36,22 +36,24 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  useEffect(() => {
-    // Wait until the user loading is complete
-    if (!isUserLoading) {
-      // If a registered (non-anonymous) user is found, redirect to their plans
-      if (user && !user.isAnonymous) {
-        router.push('/my-plans');
-      }
+   useEffect(() => {
+    // Redirect if a non-anonymous user is already logged in.
+    if (!isUserLoading && user && !user.isAnonymous) {
+      router.push('/my-plans');
     }
   }, [user, isUserLoading, router]);
 
   const onSubmit = async (data: LoginFormValues) => {
     setFirebaseError(null);
     try {
+      // Non-blocking call. The onAuthStateChanged listener handles the redirect.
       initiateEmailSignIn(auth, data.email, data.password);
     } catch (error) {
+      // This will only catch synchronous errors, which are rare for this call.
+      // Asynchronous errors (like wrong password) are handled by auth state listeners
+      // or directly within the component if we were to `await` it.
       if (error instanceof FirebaseError) {
+        // A more robust implementation might map error.code to user-friendly messages.
         setFirebaseError(error.message);
       } else {
         setFirebaseError('An unexpected error occurred.');
@@ -59,8 +61,7 @@ export default function LoginPage() {
     }
   };
 
-  // If the user is loading OR if they are already logged in, show a loading state
-  // to prevent the form from flashing before the redirect.
+  // Prevent form flash while loading or redirecting
   if (isUserLoading || (user && !user.isAnonymous)) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">

@@ -9,9 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth, useFirestore, initiateEmailSignUp, useUser } from '@/firebase';
+import { useAuth, initiateEmailSignUp, useUser } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
-import { doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PageHeader from '@/components/page-header';
@@ -28,16 +27,14 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const auth = useAuth();
-  const firestore = useFirestore();
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
   });
@@ -53,26 +50,29 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormValues) => {
     setFirebaseError(null);
-    setIsSubmitting(true);
     try {
       // This function is non-blocking. It starts the sign-up process,
-      // and the onAuthStateChanged listener will handle the result.
+      // and the onAuthStateChanged listener in the FirebaseProvider
+      // will handle creating the user doc and redirecting.
       initiateEmailSignUp(auth, data.email, data.password, data.firstName, data.lastName);
 
-      // The rest of the logic (creating the firestore doc and redirecting)
-      // is now handled by the useEffect hook that listens to user state changes.
-
     } catch (error) {
-      // This catch block will handle immediate errors from initiateEmailSignUp,
-      // though most errors (like email-already-in-use) are asynchronous.
       if (error instanceof FirebaseError) {
         setFirebaseError(error.message);
       } else {
         setFirebaseError('An unexpected error occurred during registration.');
       }
-      setIsSubmitting(false); // Stop submitting on immediate error
     }
   };
+  
+    // Prevent form flash while loading or redirecting
+    if (isUserLoading || (user && !user.isAnonymous)) {
+        return (
+          <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
+              <p>Loading...</p>
+          </div>
+        );
+      }
 
   return (
     <div className="min-h-screen bg-background">
@@ -114,7 +114,7 @@ export default function RegisterPage() {
 
               {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
 
-              <Button type="submit" className="w-full" disabled={isSubmitting || (!isUserLoading && user && !user.isAnonymous)}>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? 'Creating Account...' : 'Sign Up'}
               </Button>
             </form>
