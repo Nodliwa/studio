@@ -95,7 +95,7 @@ const SortableCategory = ({ category, onItemChange, onAddItem, categoryPath = []
                 <Table>
                     <TableHeader>
                         <TableRow>
-                        <TableHead className="w-1/4">Item</TableHead>
+                        <TableHead className="min-w-[150px]">Item</TableHead>
                         <TableHead>Metric</TableHead>
                         <TableHead>Quantity</TableHead>
                         <TableHead>Unit Price</TableHead>
