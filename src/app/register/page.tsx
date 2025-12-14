@@ -38,50 +38,39 @@ export default function RegisterPage() {
     register,
     handleSubmit,
     formState: { errors },
-    getValues,
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
   });
 
   useEffect(() => {
-    const processRegistration = async () => {
-      if (user && !user.isAnonymous && isSubmitting) {
-        // A new user has been created and we initiated this.
-        const data = getValues();
-        try {
-          const userDocRef = doc(firestore, 'users', user.uid);
-          await setDoc(userDocRef, {
-            id: user.uid,
-            email: data.email,
-            displayName: `${data.firstName} ${data.lastName}`,
-          });
-          router.push('/my-plans');
-        } catch (error) {
-           if (error instanceof FirebaseError) {
-            setFirebaseError(error.message);
-          } else {
-            setFirebaseError('An unexpected error occurred creating your profile.');
-          }
-          setIsSubmitting(false); // Stop submitting on error
-        }
-      }
-    };
-    processRegistration();
-  }, [user, isUserLoading, router, firestore, getValues, isSubmitting]);
+    // If the user is fully loaded and is no longer anonymous, it means
+    // they have successfully logged in or registered. Redirect them.
+    if (!isUserLoading && user && !user.isAnonymous) {
+      router.push('/my-plans');
+    }
+  }, [user, isUserLoading, router]);
 
 
-  const onSubmit = (data: RegisterFormValues) => {
+  const onSubmit = async (data: RegisterFormValues) => {
     setFirebaseError(null);
     setIsSubmitting(true);
     try {
-        initiateEmailSignUp(auth, data.email, data.password, data.firstName, data.lastName);
+      // This function is non-blocking. It starts the sign-up process,
+      // and the onAuthStateChanged listener will handle the result.
+      initiateEmailSignUp(auth, data.email, data.password, data.firstName, data.lastName);
+
+      // The rest of the logic (creating the firestore doc and redirecting)
+      // is now handled by the useEffect hook that listens to user state changes.
+
     } catch (error) {
+      // This catch block will handle immediate errors from initiateEmailSignUp,
+      // though most errors (like email-already-in-use) are asynchronous.
       if (error instanceof FirebaseError) {
         setFirebaseError(error.message);
       } else {
-        setFirebaseError('An unexpected error occurred.');
+        setFirebaseError('An unexpected error occurred during registration.');
       }
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Stop submitting on immediate error
     }
   };
 
@@ -125,7 +114,7 @@ export default function RegisterPage() {
 
               {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              <Button type="submit" className="w-full" disabled={isSubmitting || (!isUserLoading && user && !user.isAnonymous)}>
                 {isSubmitting ? 'Creating Account...' : 'Sign Up'}
               </Button>
             </form>
