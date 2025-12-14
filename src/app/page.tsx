@@ -15,10 +15,10 @@ export default function LandingPage() {
   const [isUmgidiFlipped, setIsUmgidiFlipped] = useState(false);
 
   return (
-    <div className="min-h-screen w-full bg-secondary font-sans text-foreground p-4">
-      <main className="container mx-auto">
-        <div className="bg-background rounded-lg shadow-lg">
+    <div className="min-h-screen w-full bg-secondary font-sans text-foreground px-20 md:px-40 lg:px-60">
+      <div className="bg-background shadow-lg min-h-screen">
           <PageHeader />
+          <main className="container mx-auto p-4 md:p-8">
           <div className="p-2 md:p-4 text-center">
             <h1 className="text-4xl md:text-5xl font-bold font-headline text-foreground/90 mt-4">
               Celebrate Loved Ones. Plan Smart.            </h1>
@@ -154,8 +154,8 @@ export default function LandingPage() {
               <p>&copy; {new Date().getFullYear()} SimpliPlan. All rights reserved.</p>
             </footer>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
