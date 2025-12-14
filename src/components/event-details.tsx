@@ -12,10 +12,7 @@ import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { DocumentReference } from "firebase/firestore";
-import usePlacesAutocomplete, {
-  getGeocode,
-  getLatLng,
-} from "use-places-autocomplete";
+import usePlacesAutocomplete from "use-places-autocomplete";
 import { useLoadScript } from "@react-google-maps/api";
 import {
   Popover,
@@ -117,7 +114,6 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     }
     if (!budgetRef) return;
     
-    // Ensure the date is in a consistent format for Firestore
     const dataToSave = {
         ...data,
         eventDate: data.eventDate ? new Date(data.eventDate).toISOString() : ''
