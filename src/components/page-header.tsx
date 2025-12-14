@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { useUser, useFirestore } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
+import { setDoc, doc } from 'firebase/firestore';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +28,6 @@ import {
 import { useState } from "react";
 import type { Budget, BudgetCategory } from "@/lib/types";
 import { v4 as uuidv4 } from 'uuid';
-import { doc, setDoc } from "firebase/firestore";
 import { CrossIcon } from "lucide-react";
 import { budgetTemplates } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
@@ -112,24 +112,6 @@ export default function PageHeader() {
             <Link href="/my-plans" className={cn("font-bold transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
               MyPlans
             </Link>
-            {user && !user.isAnonymous && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-2 text-lg p-0 h-auto font-bold text-foreground/60 hover:text-foreground/80 data-[state=open]:text-foreground/80">
-                      <UserIcon className="h-5 w-5" />
-                      <span>{user.displayName || 'My Account'}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Logout</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-            )}
         </nav>
         <div className="flex items-center justify-end gap-2">
           {isUserLoading ? (
@@ -172,6 +154,10 @@ export default function PageHeader() {
                     </DialogContent>
                   </Dialog>
                 )}
+                 <Button variant="ghost" onClick={handleLogout} className="text-lg font-bold text-foreground/60 hover:text-foreground/80">
+                    <LogOut className="mr-2 h-5 w-5" />
+                    Logout
+                 </Button>
             </div>
           ) : (
             <>
