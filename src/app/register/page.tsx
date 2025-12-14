@@ -51,16 +51,19 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     setFirebaseError(null);
     try {
+      // This function now handles creating the auth user and updating their profile.
       const userCredential = await initiateEmailSignUp(auth, data.email, data.password, data.firstName, data.lastName);
       
-      // Explicitly create the Firestore user document immediately after auth creation.
+      // After the auth user is created and their profile updated, we create their
+      // corresponding document in Firestore.
       if (userCredential?.user) {
         const userRef = doc(firestore, 'users', userCredential.user.uid);
         const displayName = `${data.firstName} ${data.lastName}`;
+        // This explicitly creates the database record with the correct name.
         await setUserData(userRef, userCredential.user.email!, displayName);
       }
       
-      // Force a redirect to ensure the app state is re-initialized.
+      // Redirect to the plans page. The `onAuthStateChanged` listener will have the correct user info.
       router.push('/my-plans');
 
     } catch (error) {
