@@ -1,7 +1,7 @@
 
 'use client';
 import {
-  Auth, // Import Auth type for type hinting
+  Auth,
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -11,9 +11,7 @@ import {
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
-  // CRITICAL: Call signInAnonymously directly. Do NOT use 'await signInAnonymously(...)'.
   signInAnonymously(authInstance);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }
 
 /** 
@@ -22,12 +20,11 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
  * It creates the user, updates their auth profile, and returns the credential.
  * The Firestore document creation is now handled by the calling component.
  */
-export async function initiateEmailSignUp(authInstance: Auth, email: string, password: string, firstName: string, lastName: string): Promise<UserCredential> {
+export async function initiateEmailSignUp(authInstance: Auth, email: string, password: string, displayName: string): Promise<UserCredential> {
   try {
     // 1. Create the user in Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(authInstance, email, password);
     const user = userCredential.user;
-    const displayName = `${firstName} ${lastName}`;
 
     // 2. Update the user's profile in Firebase Auth and wait for it to complete.
     await updateProfile(user, { displayName });

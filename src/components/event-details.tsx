@@ -187,7 +187,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
       </CardHeader>
       <CardContent className="p-4">
         <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="space-y-1 lg:col-span-1">
+          <div className="space-y-1 md:col-span-2 lg:col-span-1">
             <Label htmlFor="name">My-Plan Name</Label>
             <Controller
               name="name"
@@ -209,7 +209,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
               )}
             />
           </div>
-          <div className="space-y-1 lg:col-span-1">
+          <div className="space-y-1 md:col-span-2 lg:col-span-1">
             <Label htmlFor="eventLocation">Event Location</Label>
             <Controller
               name="eventLocation"

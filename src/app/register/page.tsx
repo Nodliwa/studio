@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -51,11 +52,11 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     setFirebaseError(null);
     try {
-      const userCredential = await initiateEmailSignUp(auth, data.email, data.password, data.firstName, data.lastName);
+      const displayName = `${data.firstName} ${data.lastName}`;
+      const userCredential = await initiateEmailSignUp(auth, data.email, data.password, displayName);
       
       if (userCredential?.user) {
         const userRef = doc(firestore, 'users', userCredential.user.uid);
-        const displayName = `${data.firstName} ${data.lastName}`;
         await setUserData(userRef, userCredential.user.email!, displayName);
         router.push('/my-plans');
       }

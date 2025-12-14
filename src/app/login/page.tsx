@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -14,6 +15,7 @@ import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PageHeader from '@/components/page-header';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -47,10 +49,9 @@ export default function LoginPage() {
     setFirebaseError(null);
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
-      // The onAuthStateChanged listener in the provider will handle the redirect.
+      router.push('/my-plans');
     } catch (error) {
       if (error instanceof FirebaseError) {
-        // A more robust implementation might map error.code to user-friendly messages.
         setFirebaseError(error.message);
       } else {
         setFirebaseError('An unexpected error occurred.');
