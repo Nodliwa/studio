@@ -86,7 +86,7 @@ export default function PageHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm shadow-sm">
-      <div className="container flex h-14 items-center justify-between mx-auto">
+      <div className="container flex h-20 items-center justify-between mx-auto">
         <div className="flex items-center">
           <Link href="/" className="flex items-center space-x-2">
             <Image
