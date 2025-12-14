@@ -37,12 +37,14 @@ function MyPlansPage() {
     const { data: budgets, isLoading: budgetsLoading } = useCollection<Budget>(budgetsCollection);
 
      useEffect(() => {
-        if (!isUserLoading) {
-            if (!user || user.isAnonymous) {
-                router.push('/register');
-            }
+        // Wait until user loading is complete before making routing decisions
+        if (isUserLoading) return;
+    
+        // If loading is done and there's still no user or user is anonymous, redirect
+        if (!user || user.isAnonymous) {
+          router.push('/register');
         }
-    }, [user, isUserLoading, router]);
+      }, [user, isUserLoading, router]);
 
     const handleNewPlan = async (eventType: string) => {
         setDialogOpen(false); 
@@ -242,6 +244,3 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
-
-    
-    

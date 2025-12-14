@@ -1,13 +1,30 @@
-
 'use client';
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
+import { useUser } from "@/firebase/provider";
+import { getAuth, signOut } from "firebase/auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { User as UserIcon, LogOut } from 'lucide-react';
+
 
 export default function PageHeader() {
   const pathname = usePathname();
+  const { user, isUserLoading } = useUser();
+  const auth = getAuth();
+
+  const handleLogout = () => {
+    signOut(auth);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm px-[30px] py-3 shadow-sm">
@@ -32,12 +49,35 @@ export default function PageHeader() {
             </Link>
         </nav>
         <div className="flex items-center justify-end gap-2">
-            <Button asChild variant="outline">
-                <Link href="/login" className="text-2xl">Login</Link>
-            </Button>
-            <Button asChild>
-                <Link href="/register" className="text-2xl">Sign Up</Link>
-            </Button>
+          {isUserLoading ? (
+            <div className="w-24 h-10 bg-muted rounded-md animate-pulse" />
+          ) : user && !user.isAnonymous ? (
+             <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <UserIcon className="h-4 w-4" />
+                  <span>{user.displayName || 'My Account'}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Button asChild variant="outline">
+                  <Link href="/login" className="text-lg">Login</Link>
+              </Button>
+              <Button asChild>
+                  <Link href="/register" className="text-lg">Sign Up</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>
