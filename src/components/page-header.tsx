@@ -1,3 +1,4 @@
+
 'use client';
 import Image from "next/image";
 import Link from "next/link";
@@ -24,11 +25,25 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import type { Budget } from "@/lib/types";
+import type { Budget, BudgetCategory } from "@/lib/types";
 import { v4 as uuidv4 } from 'uuid';
 import { collection } from "firebase/firestore";
 import { CrossIcon } from "lucide-react";
+import { budgetTemplates } from "@/lib/data";
 
+
+function calculateInitialTotal(categories: BudgetCategory[]): number {
+    let grandTotal = 0;
+    categories.forEach(category => {
+        (category.items || []).forEach(item => {
+            grandTotal += (item.quantity || 0) * (item.unitPrice || 0);
+        });
+        if (category.subCategories) {
+            grandTotal += calculateInitialTotal(category.subCategories);
+        }
+    });
+    return grandTotal;
+}
 
 export default function PageHeader() {
   const pathname = usePathname();
@@ -46,9 +61,12 @@ export default function PageHeader() {
     setDialogOpen(false);
     if (user && !user.isAnonymous) {
       const newBudgetId = uuidv4();
+      const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
+      const initialTotal = calculateInitialTotal(template as BudgetCategory[]);
+
       const newBudget: Omit<Budget, 'id'> = {
         name: `${eventType.charAt(0).toUpperCase() + eventType.slice(1)} Plan`,
-        grandTotal: 0,
+        grandTotal: initialTotal,
         userId: user.uid,
         eventType: eventType,
       };
@@ -116,13 +134,13 @@ export default function PageHeader() {
                           <CrossIcon />
                           Funeral
                         </Button>
-                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('birthday')}>
-                          <ListChecks />
-                          Birthday
+                         <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('umemulo')}>
+                            <ListChecks />
+                            uMemulo
                         </Button>
-                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('other')}>
-                          <Wallet />
-                          Other
+                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('umgidi')}>
+                            <Wallet />
+                            umGidi
                         </Button>
                       </div>
                     </DialogContent>

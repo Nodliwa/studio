@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useUser, useCollection, useMemoFirebase, useFirestore, addDocumentNonBlocking, deleteDocument } from '@/firebase';
 import { collection, doc, writeBatch, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import type { Budget } from '@/lib/types';
+import type { Budget, BudgetCategory } from '@/lib/types';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,20 @@ import {
 import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Trash2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
+import { budgetTemplates } from '@/lib/data';
+
+function calculateInitialTotal(categories: BudgetCategory[]): number {
+    let grandTotal = 0;
+    categories.forEach(category => {
+        (category.items || []).forEach(item => {
+            grandTotal += (item.quantity || 0) * (item.unitPrice || 0);
+        });
+        if (category.subCategories) {
+            grandTotal += calculateInitialTotal(category.subCategories);
+        }
+    });
+    return grandTotal;
+}
 
 function MyPlansPage() {
     const { user, isUserLoading } = useUser();
@@ -57,9 +72,12 @@ function MyPlansPage() {
         setDialogOpen(false); 
         if (user && !user.isAnonymous) {
             const newBudgetId = uuidv4();
+            const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
+            const initialTotal = calculateInitialTotal(template as BudgetCategory[]);
+
             const newBudget: Omit<Budget, 'id'> = {
                 name: `${eventType.charAt(0).toUpperCase() + eventType.slice(1)} Plan`,
-                grandTotal: 0,
+                grandTotal: initialTotal,
                 userId: user.uid,
                 eventType: eventType,
             };
