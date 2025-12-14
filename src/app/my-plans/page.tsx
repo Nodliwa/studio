@@ -77,7 +77,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                         <Image
                             src={imageUrl}
                             alt={budget.name || 'Event image'}
-                            layout="fill"
+                            fill
                             objectFit="cover"
                             className="transition-transform duration-300 group-hover:scale-105"
                         />
@@ -87,29 +87,16 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                     <div className="h-full w-full bg-gradient-to-t from-primary/80 to-primary/40" />
                 )}
             </Link>
-            {/* Top Content Area */}
-            <div className="absolute top-0 left-0 right-0 p-4 text-white">
-                <div className="flex items-start justify-between">
-                    {/* Top Left: Title */}
-                    <CardHeader className="p-0 z-10">
-                        <CardTitle className="text-xl font-bold">{budget.name}</CardTitle>
-                    </CardHeader>
-
-                    {/* Top Center: Date */}
-                    <div className="absolute left-1/2 -translate-x-1/2 z-10">
-                        {budget.eventDate ? (
-                            <p className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</p>
-                        ) : (
-                            <p className="flex items-center gap-2 text-sm text-white/70 italic"><CalendarDays className="h-4 w-4" /> No date set</p>
-                        )}
-                    </div>
-                    {/* Top Right is handled by the menu below */}
-                </div>
-            </div>
-
+            
             {/* Bottom Content Area */}
             <div className="absolute bottom-0 left-0 right-0 p-4 text-white flex justify-between items-end">
                 <div className="space-y-1">
+                    <h3 className="text-xl font-bold">{budget.name}</h3>
+                     {budget.eventDate ? (
+                        <p className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</p>
+                    ) : (
+                        <p className="flex items-center gap-2 text-sm text-white/70 italic"><CalendarDays className="h-4 w-4" /> No date set</p>
+                    )}
                     {budget.eventLocation ? (
                         <p className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
                     ) : (
