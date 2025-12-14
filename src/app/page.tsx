@@ -1,12 +1,19 @@
 
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UtensilsCrossed, Cake, Handshake, ShoppingCart } from 'lucide-react';
 import PageHeader from '@/components/page-header';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function LandingPage() {
+  const [isUmemuloFlipped, setIsUmemuloFlipped] = useState(false);
+  const [isUmgidiFlipped, setIsUmgidiFlipped] = useState(false);
+
   return (
     <div className="min-h-screen w-full bg-secondary font-sans text-foreground p-4">
       <main className="container mx-auto">
@@ -43,22 +50,57 @@ export default function LandingPage() {
                     </CardHeader>
                   </Card>
                 </Link>
-                 <Link href="/planner?eventType=other" className="group">
-                    <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1">
+                
+                {/* uMemulo Flip Card */}
+                <div className="flip-card group" onClick={() => setIsUmemuloFlipped(!isUmemuloFlipped)}>
+                  <div className={cn("flip-card-inner", { 'is-flipped': isUmemuloFlipped })}>
+                    <div className="flip-card-front">
+                      <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 w-full h-full">
                         <Image src="/images/umemulo.jpg" alt="uMemulo" width={400} height={300} className="object-cover w-full h-48" />
                         <CardHeader className="p-1">
-                            <CardTitle className="text-xl font-semibold">uMemulo</CardTitle>
+                          <CardTitle className="text-xl font-semibold">uMemulo</CardTitle>
                         </CardHeader>
-                    </Card>
-                </Link>
-                <Link href="/planner?eventType=other" className="group">
-                    <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1">
+                      </Card>
+                    </div>
+                    <div className="flip-card-back">
+                      <div className="relative w-full h-full rounded-lg overflow-hidden">
+                        <Image src="/images/umemulo-back.jpg" alt="Coming Soon" layout="fill" className="object-cover" />
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                          <div className="text-center text-white p-4">
+                            <h3 className="text-2xl font-bold">Ngisakula!</h3>
+                            <p className="text-lg">Coming Soon!</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* umGidi Flip Card */}
+                <div className="flip-card group" onClick={() => setIsUmgidiFlipped(!isUmgidiFlipped)}>
+                  <div className={cn("flip-card-inner", { 'is-flipped': isUmgidiFlipped })}>
+                    <div className="flip-card-front">
+                      <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 w-full h-full">
                         <Image src="/images/umgidi1.jpg" alt="umGidi" width={400} height={300} className="object-cover w-full h-48" />
                         <CardHeader className="p-1">
-                            <CardTitle className="text-xl font-semibold">umGidi</CardTitle>
+                          <CardTitle className="text-xl font-semibold">umGidi</CardTitle>
                         </CardHeader>
-                    </Card>
-                </Link>
+                      </Card>
+                    </div>
+                    <div className="flip-card-back">
+                      <div className="relative w-full h-full rounded-lg overflow-hidden">
+                        <Image src="/images/umgidi-back.jpg" alt="Coming Soon" layout="fill" className="object-cover" />
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                          <div className="text-center text-white p-4">
+                            <h3 className="text-2xl font-bold">Ndisakhula!</h3>
+                            <p className="text-lg">Coming Soon!</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
 
