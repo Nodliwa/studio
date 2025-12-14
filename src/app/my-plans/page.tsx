@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, useAuth } from '@/firebase';
@@ -18,7 +17,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -72,7 +70,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
 
     return (
         <Card className="overflow-hidden group relative">
-             <Link href={`/planner/${budget.id}`} className="block w-full h-full">
+            <Link href={`/planner/${budget.id}`} className="block w-full h-full">
                 <div className="relative w-full h-64">
                     {imageUrl ? (
                         <>
@@ -89,23 +87,28 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                         <div className="h-full w-full bg-gradient-to-t from-primary/80 to-primary/40" />
                     )}
 
-                    <div className="absolute inset-0 flex flex-col justify-start p-4 text-white">
+                    {/* Top Content */}
+                    <div className="absolute top-0 left-0 p-4 text-white">
                         <CardHeader className="p-0">
-                             <CardTitle className="text-xl font-bold">{budget.name}</CardTitle>
+                            <CardTitle className="text-xl font-bold">{budget.name}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-1 p-0 mt-2">
-                             {budget.eventDate ? (
+                            {budget.eventDate ? (
                                 <p className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4" /> {format(new Date(budget.eventDate), 'dd-MM-yyyy')}</p>
                             ) : (
                                 <p className="flex items-center gap-2 text-sm text-white/70 italic"><CalendarDays className="h-4 w-4" /> No date set</p>
                             )}
-                            <p className="flex items-start gap-2 text-sm"><Wallet className="inline-block h-4 w-4 mt-0.5 shrink-0" />{new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal)}</p>
-                            {budget.eventLocation ? (
-                                <p className="flex items-start gap-2 text-sm"><MapPin className="h-4 w-4 mt-0.5 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
-                            ) : (
-                                <p className="flex items-start gap-2 text-sm text-white/70 italic"><MapPin className="h-4 w-4 mt-0.5 shrink-0" /> No location set</p>
-                            )}
                         </CardContent>
+                    </div>
+
+                    {/* Bottom Content */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white flex justify-between items-end">
+                         {budget.eventLocation ? (
+                            <p className="flex items-start gap-2 text-sm"><MapPin className="h-4 w-4 mt-0.5 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
+                        ) : (
+                            <p className="flex items-start gap-2 text-sm text-white/70 italic"><MapPin className="h-4 w-4 mt-0.5 shrink-0" /> No location set</p>
+                        )}
+                         <p className="flex items-start gap-2 text-lg font-bold"><Wallet className="inline-block h-5 w-5 mt-0.5 shrink-0" />{new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(budget.grandTotal)}</p>
                     </div>
                 </div>
             </Link>
@@ -214,7 +217,7 @@ function MyPlansPage() {
     
             const batch = writeBatch(firestore);
     
-            for (const categoryDoc of categoriesSnapshot.docs) {
+            for (const categoryDoc of the non-breaking changesnapshot.docs) {
                 const itemsCollectionRef = collection(categoryDoc.ref, 'items');
                 const itemsSnapshot = await getDocs(itemsCollectionRef);
                 itemsSnapshot.forEach(itemDoc => {
@@ -232,7 +235,7 @@ function MyPlansPage() {
         } catch (e) {
             console.error("Error deleting plan:", e);
             toast({ variant: 'destructive', title: "Error", description: "Could not delete plan." });
-            // In a real app, you might want to re-throw or handle the error from the non-blocking delete
+            // In a real app, you might want to re-throw or handle the error from the non-breaking changesdelete
             deleteDocument(budgetDocRef); 
         }
 
