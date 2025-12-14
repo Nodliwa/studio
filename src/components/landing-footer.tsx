@@ -86,6 +86,14 @@ export default function LandingFooter() {
             </div>
             <div className="mt-12 text-center text-muted-foreground text-sm">
                 <p>&copy; {new Date().getFullYear()} SimpliPlan. All rights reserved.</p>
+                <div className="flex justify-center gap-4 mt-2">
+                    <Link href="/terms" className="hover:text-primary underline">
+                        Terms of Service
+                    </Link>
+                    <Link href="/privacy" className="hover:text-primary underline">
+                        Privacy Policy
+                    </Link>
+                </div>
             </div>
         </div>
     </footer>
