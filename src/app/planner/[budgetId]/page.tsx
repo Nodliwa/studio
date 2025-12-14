@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useId, useMemo } from 'react';
@@ -79,6 +80,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   const [eventQuote, setEventQuote] = useState('');
   const uniqueId = useId();
   const isTemplateMode = budgetId === 'template';
+  const [isNewPlan, setIsNewPlan] = useState(false);
 
   const budgetDocRef = useMemoFirebase(() => (
     user && budgetId && !isTemplateMode ? doc(firestore, 'users', user.uid, 'budgets', budgetId) : null
@@ -100,6 +102,16 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+  
+  useEffect(() => {
+    // Check if it's a new plan when the budget data loads
+    if (!budgetLoading && budget && !budget.eventDate) {
+        setIsNewPlan(true);
+    } else if (!budgetLoading && budget) {
+        setIsNewPlan(false);
+    }
+  }, [budget, budgetLoading]);
+
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -114,15 +126,16 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
           const { categories, grandTotal } = calculateTotals(JSON.parse(JSON.stringify(template)));
           setBudgetData(categories);
           setGrandTotal(grandTotal);
-      } else if (user && !user.isAnonymous && budgetId && !budgetLoading && !categoriesLoading) {
-          if (fetchedCategories && fetchedCategories.length > 0) {
-              const sortedCategories = [...fetchedCategories].sort((a, b) => a.order - b.order);
-              const { categories, grandTotal } = calculateTotals(sortedCategories);
-              setBudgetData(categories);
-              setGrandTotal(grandTotal);
-          } else if (fetchedCategories?.length === 0) {
+      } else if (user && !user.isAnonymous && budgetId && !budgetLoading) {
+          // If it's a new plan, load from template first
+          if (isNewPlan && (!fetchedCategories || fetchedCategories.length === 0)) {
               const eventType = budget?.eventType || searchParams.get('eventType') || 'other';
               const initialData = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
+              const { categories: calculatedCategories, grandTotal: calculatedTotal } = calculateTotals(JSON.parse(JSON.stringify(initialData)));
+              setBudgetData(calculatedCategories);
+              setGrandTotal(calculatedTotal);
+              
+              // Then, save this to Firestore
               const batch = writeBatch(firestore);
               initialData.forEach((category, index) => {
                   const seededCategoryRef = doc(firestore, 'users', user.uid, 'budgets', budgetId, 'categories', category.id);
@@ -130,8 +143,15 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
               });
               batch.commit();
           }
+          // If categories are fetched from Firestore, use them
+          else if (fetchedCategories && fetchedCategories.length > 0 && !categoriesLoading) {
+              const sortedCategories = [...fetchedCategories].sort((a, b) => a.order - b.order);
+              const { categories, grandTotal } = calculateTotals(sortedCategories);
+              setBudgetData(categories);
+              setGrandTotal(grandTotal);
+          }
       }
-  }, [isTemplateMode, searchParams, fetchedCategories, categoriesLoading, budgetLoading, user, firestore, budgetId, budget]);
+  }, [isTemplateMode, searchParams, fetchedCategories, categoriesLoading, budgetLoading, user, firestore, budgetId, budget, isNewPlan]);
 
   useEffect(() => {
     if (eventType === 'funeral') {
@@ -255,7 +275,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     }
   };
   
-  if (isUserLoading || (!isTemplateMode && (categoriesLoading || budgetLoading))) {
+  if (isUserLoading || (!isTemplateMode && (categoriesLoading || budgetLoading) && !isNewPlan) || budgetData.length === 0) {
     return (
         <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
             <p>Loading...</p>
