@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,10 +8,11 @@ const Greeter = () => {
   const { user } = useUser();
   const [mainGreeting, setMainGreeting] = useState('');
   const [subGreeting, setSubGreeting] = useState('');
-  const name = user?.displayName || 'there';
 
   useEffect(() => {
+    const name = user?.displayName || 'there';
     const hour = new Date().getHours();
+    
     if (hour < 12) {
       setMainGreeting(`Good Morning, ${name}!`);
       setSubGreeting('');
@@ -21,7 +23,9 @@ const Greeter = () => {
       setMainGreeting(`Good Evening, ${name}!`);
       setSubGreeting("Let's pick up where we left off with our planning...");
     }
-  }, [name]);
+  }, [user]);
+
+  const name = user?.displayName || 'there';
 
   return (
     <div>

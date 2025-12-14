@@ -2,9 +2,9 @@
 'use client';
 
 import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument, setDocumentNonBlocking, useAuth } from '@/firebase';
-import { collection, doc, writeBatch, getDocs, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch, getDocs, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import type { Budget } from '@/lib/types';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Trash2, Upload, MapPin } from 'lucide-react';
+import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Trash2, MapPin } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
@@ -334,5 +334,3 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
-
-    

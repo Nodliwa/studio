@@ -9,11 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth, initiateEmailSignUp, useUser } from '@/firebase';
+import { useAuth, initiateEmailSignUp, useUser, setUserData, useFirestore } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PageHeader from '@/components/page-header';
+import { doc } from 'firebase/firestore';
 
 const registerSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -27,6 +28,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
@@ -49,9 +51,18 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     setFirebaseError(null);
     try {
-      await initiateEmailSignUp(auth, data.email, data.password, data.firstName, data.lastName);
-      // Force a redirect to ensure the user object with displayName is loaded.
+      const userCredential = await initiateEmailSignUp(auth, data.email, data.password, data.firstName, data.lastName);
+      
+      // Explicitly create the Firestore user document immediately after auth creation.
+      if (userCredential?.user) {
+        const userRef = doc(firestore, 'users', userCredential.user.uid);
+        const displayName = `${data.firstName} ${data.lastName}`;
+        await setUserData(userRef, userCredential.user.email!, displayName);
+      }
+      
+      // Force a redirect to ensure the app state is re-initialized.
       router.push('/my-plans');
+
     } catch (error) {
       if (error instanceof FirebaseError) {
         setFirebaseError(error.message);

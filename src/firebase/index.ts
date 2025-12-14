@@ -4,9 +4,8 @@
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore'
+import { getFirestore, doc, setDoc, DocumentReference } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage';
-import type { User as AuthUser } from 'firebase/auth';
 import type { User as AppUser } from '@/lib/types';
 
 
@@ -48,29 +47,32 @@ export function getSdks(firebaseApp: FirebaseApp) {
 
 /**
  * Creates or updates a user document in Firestore.
- * This function is non-blocking.
- * @param authUser The Firebase Auth user object.
+ * This function is designed to be awaited.
+ * @param userRef The DocumentReference for the user's document.
+ * @param email The user's email.
+ * @param displayName The user's full name.
  */
-export function setUserData(authUser: AuthUser) {
-    const firestore = getFirestore();
-    if (!authUser.email) {
+export async function setUserData(userRef: DocumentReference, email: string, displayName: string) {
+    if (!email) {
       console.warn('Cannot create user profile without an email.');
       return;
     }
   
-    const userRef = doc(firestore, 'users', authUser.uid);
     const userData: AppUser = {
-      id: authUser.uid,
-      email: authUser.email,
-      displayName: authUser.displayName || 'New User', // Fallback display name
+      id: userRef.id,
+      email: email,
+      displayName: displayName,
     };
   
-    // Use setDoc with merge:true to create or update the document without overwriting existing fields
-    // This is a non-blocking operation.
-    setDoc(userRef, userData, { merge: true }).catch(error => {
-      console.error("Error writing user document:", error);
-      // In a real app, you might want to emit a global error here
-    });
+    // Use setDoc with merge:true to create or update the document.
+    // Await this operation to ensure it completes.
+    try {
+      await setDoc(userRef, userData, { merge: true });
+    } catch (error) {
+       console.error("Error writing user document:", error);
+       // Re-throw the error so the calling function can handle it.
+       throw error;
+    }
   }
 
 export * from './provider';
