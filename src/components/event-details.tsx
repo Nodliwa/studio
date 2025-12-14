@@ -65,6 +65,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     handleSubmit,
     reset,
     setValue: setFormValue,
+    watch,
     formState: { isDirty, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -75,6 +76,14 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
       expectedGuests: 0,
     },
   });
+
+  const eventLocationValue = watch('eventLocation');
+
+  useEffect(() => {
+    if (eventLocationValue) {
+      setAutocompleteValue(eventLocationValue);
+    }
+  }, [eventLocationValue, setAutocompleteValue]);
   
   useEffect(() => {
     if (isTemplateMode) {
@@ -87,9 +96,6 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
         expectedGuests: budget.expectedGuests || 0,
       };
       reset(initialValues);
-      if (budget.eventLocation) {
-        setAutocompleteValue(budget.eventLocation, false);
-      }
        setIsEditing(!budget.name || budget.name === DEFAULT_BUDGET_NAME && !budget.eventLocation);
     } else if (user && budgetRef && !budget) {
         const initialBudget: Omit<Budget, 'id'> = {
@@ -121,20 +127,13 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     
     setDocumentNonBlocking(budgetRef, dataToSave, { merge: true });
     setIsEditing(false);
+    clearSuggestions();
   };
 
   const handleLocationSelect = (description: string) => {
       setFormValue('eventLocation', description, { shouldDirty: true });
-      setAutocompleteValue(description, false); // Also update autocomplete state
       clearSuggestions();
   }
-
-  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>, fieldOnChange: (value: any) => void) => {
-    // This function now correctly updates both react-hook-form and use-places-autocomplete
-    fieldOnChange(e.target.value); // Update react-hook-form state
-    setAutocompleteValue(e.target.value); // Update use-places-autocomplete state
-  };
-
 
   return (
     <Card className="shadow-lg border-border/60">
@@ -147,7 +146,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
         )}
       </CardHeader>
       <CardContent className="p-4">
-        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
             <Label htmlFor="name">My-Plan Name</Label>
             <Controller
@@ -168,7 +167,6 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
                       <Input
                         id="eventLocation"
                         {...field}
-                        onChange={(e) => handleLocationChange(e, field.onChange)}
                         disabled={!isEditing || !isLoaded}
                         placeholder={isLoaded ? "Start typing your address..." : "Loading location..."}
                         autoComplete="off"
@@ -226,7 +224,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
           </div>
           
           {isEditing && (
-            <div className="md:col-span-2 lg:col-span-4 flex justify-end gap-2 mt-4">
+            <div className="md:col-span-2 flex justify-end gap-2 mt-4">
                {!isTemplateMode && (
                 <Button type="button" variant="ghost" onClick={() => {
                   if (budget) {
@@ -237,11 +235,9 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
                         expectedGuests: budget.expectedGuests || 0,
                     };
                     reset(initialValues);
-                    if(budget.eventLocation) {
-                        setAutocompleteValue(initialValues.eventLocation, false);
-                    }
                   }
                   setIsEditing(false);
+                  clearSuggestions();
                 }}>Cancel</Button>
                )}
               <Button type="submit" disabled={isSubmitting}>
