@@ -12,7 +12,11 @@ import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { DocumentReference } from "firebase/firestore";
-import usePlacesAutocomplete from "use-places-autocomplete";
+import usePlacesAutocomplete, {
+  getGeocode,
+  getLatLng,
+} from "use-places-autocomplete";
+import { useLoadScript } from "@react-google-maps/api";
 import {
   Popover,
   PopoverContent,
@@ -36,18 +40,23 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const DEFAULT_BUDGET_NAME = "My Celebration Plan";
+const libraries: "places"[] = ["places"];
 
 export function EventDetails({ budget, budgetRef, isTemplateMode = false }: EventDetailsProps) {
   const { user } = useUser();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(isTemplateMode);
 
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+    libraries,
+  });
+
   const {
     control,
     handleSubmit,
     reset,
     setValue: setFormValue,
-    watch,
     formState: { isDirty, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -68,6 +77,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
   } = usePlacesAutocomplete({
     requestOptions: { /* Define search scope here */ },
     debounce: 300,
+    disabled: !isLoaded,
   });
 
   useEffect(() => {
@@ -77,13 +87,15 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
       const initialValues = {
         name: budget.name || DEFAULT_BUDGET_NAME,
         eventLocation: budget.eventLocation || "",
-        eventDate: budget.eventDate || "",
+        eventDate: budget.eventDate ? new Date(budget.eventDate).toISOString().split('T')[0] : "",
         expectedGuests: budget.expectedGuests || 0,
       };
       reset(initialValues);
-      setAutocompleteValue(initialValues.eventLocation, false); // Sync autocomplete
-      setIsEditing(!budget.name || budget.name === DEFAULT_BUDGET_NAME && !budget.eventLocation);
-    } else if (user && budgetRef) {
+      if (budget.eventLocation) {
+        setAutocompleteValue(budget.eventLocation, false);
+      }
+       setIsEditing(!budget.name || budget.name === DEFAULT_BUDGET_NAME && !budget.eventLocation);
+    } else if (user && budgetRef && !budget) {
         const initialBudget: Omit<Budget, 'id'> = {
             name: DEFAULT_BUDGET_NAME,
             grandTotal: 0,
@@ -97,6 +109,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     }
   }, [budget, reset, user, budgetRef, isTemplateMode, setAutocompleteValue]);
 
+
   const onSubmit = (data: FormData) => {
     if (isTemplateMode) {
       router.push('/register');
@@ -104,7 +117,13 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     }
     if (!budgetRef) return;
     
-    setDocumentNonBlocking(budgetRef, data, { merge: true });
+    // Ensure the date is in a consistent format for Firestore
+    const dataToSave = {
+        ...data,
+        eventDate: data.eventDate ? new Date(data.eventDate).toISOString() : ''
+    };
+    
+    setDocumentNonBlocking(budgetRef, dataToSave, { merge: true });
     setIsEditing(false);
   };
   
@@ -113,6 +132,64 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
       setFormValue('eventLocation', description, { shouldDirty: true });
       clearSuggestions();
   }
+
+  const renderLocationInput = () => {
+    if (loadError) {
+      return <Input disabled value="Error loading maps" />;
+    }
+    if (!isLoaded) {
+      return <Input disabled value="Loading location..." />;
+    }
+    return (
+      <Popover open={status === 'OK' && autocompleteData.length > 0}>
+        <PopoverTrigger asChild>
+          <Controller
+            name="eventLocation"
+            control={control}
+            render={({ field }) => (
+              <Input
+                id="eventLocation"
+                {...field}
+                value={autocompleteValue}
+                onChange={(e) => {
+                  field.onChange(e.target.value);
+                  setAutocompleteValue(e.target.value);
+                }}
+                disabled={!isEditing}
+                placeholder="Start typing your address..."
+                autoComplete="off"
+              />
+            )}
+          />
+        </PopoverTrigger>
+        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+          <div className="flex flex-col gap-2 p-2">
+            {autocompleteData.map((suggestion) => {
+              const {
+                place_id,
+                structured_formatting: { main_text, secondary_text },
+                description
+              } = suggestion;
+              return (
+                <Button
+                  key={place_id}
+                  variant="ghost"
+                  className="justify-start h-auto text-left"
+                  onClick={() => handleLocationSelect(description)}
+                >
+                  <div>
+                    <strong>{main_text}</strong>
+                    <br />
+                    <small className="text-muted-foreground">{secondary_text}</small>
+                  </div>
+                </Button>
+              );
+            })}
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  };
 
   return (
     <Card className="shadow-lg border-border/60">
@@ -136,54 +213,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
           </div>
           <div className="space-y-1">
              <Label htmlFor="eventLocation">Event Location</Label>
-             <Popover open={status === 'OK' && autocompleteData.length > 0}>
-                <PopoverTrigger asChild>
-                    <Controller
-                    name="eventLocation"
-                    control={control}
-                    render={({ field }) => (
-                        <Input
-                        id="eventLocation"
-                        {...field}
-                        value={autocompleteValue}
-                        onChange={(e) => {
-                           // This now correctly updates both react-hook-form and use-places-autocomplete
-                           field.onChange(e.target.value);
-                           setAutocompleteValue(e.target.value);
-                        }}
-                        disabled={!ready || !isEditing}
-                        placeholder="Start typing your address..."
-                        autoComplete="off"
-                        />
-                    )}
-                    />
-                </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                    <div className="flex flex-col gap-2 p-2">
-                        {autocompleteData.map((suggestion) => {
-                        const {
-                            place_id,
-                            structured_formatting: { main_text, secondary_text },
-                            description
-                        } = suggestion;
-                        return (
-                            <Button
-                            key={place_id}
-                            variant="ghost"
-                            className="justify-start h-auto text-left"
-                            onClick={() => handleLocationSelect(description)}
-                            >
-                            <div>
-                                <strong>{main_text}</strong>
-                                <br />
-                                <small className="text-muted-foreground">{secondary_text}</small>
-                            </div>
-                            </Button>
-                        );
-                        })}
-                    </div>
-                </PopoverContent>
-            </Popover>
+             {renderLocationInput()}
           </div>
           <div className="space-y-1">
             <Label htmlFor="eventDate">Event Date</Label>
@@ -209,14 +239,16 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
                {!isTemplateMode && (
                 <Button type="button" variant="ghost" onClick={() => {
                   if (budget) {
-                    const initialValues = {
+                     const initialValues = {
                         name: budget.name || DEFAULT_BUDGET_NAME,
                         eventLocation: budget.eventLocation || "",
-                        eventDate: budget.eventDate || "",
+                        eventDate: budget.eventDate ? new Date(budget.eventDate).toISOString().split('T')[0] : "",
                         expectedGuests: budget.expectedGuests || 0,
                     };
                     reset(initialValues);
-                    setAutocompleteValue(initialValues.eventLocation, false);
+                    if(budget.eventLocation) {
+                        setAutocompleteValue(initialValues.eventLocation, false);
+                    }
                   }
                   setIsEditing(false);
                 }}>Cancel</Button>

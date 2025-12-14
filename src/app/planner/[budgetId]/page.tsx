@@ -4,14 +4,14 @@
 
 import { useState, useEffect, useId, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import type { BudgetItem, BudgetCategory } from "@/lib/types";
+import type { BudgetItem, BudgetCategory, Budget } from "@/lib/types";
 import { budgetTemplates } from "@/lib/data";
 import PageHeader from "@/components/page-header";
 import { BudgetAccordion } from "@/components/budget-accordion";
 import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn, setDocumentNonBlocking, useDoc } from '@/firebase';
-import { collection, doc, writeBatch } from 'firebase/firestore';
+import { collection, doc, writeBatch, setDoc } from 'firebase/firestore';
 import {
   DndContext,
   closestCenter,
@@ -87,7 +87,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     user && budgetId && !isTemplateMode ? doc(firestore, 'users', user.uid, 'budgets', budgetId) : null
   ), [user, firestore, budgetId, isTemplateMode]);
 
-  const { data: budget, isLoading: budgetLoading } = useDoc(budgetDocRef);
+  const { data: budget, isLoading: budgetLoading } = useDoc<Budget>(budgetDocRef);
 
   const categoriesCollection = useMemoFirebase(() => (
     user && budgetId && !isTemplateMode ? collection(firestore, 'users', user.uid, 'budgets', budgetId, 'categories') : null
@@ -105,54 +105,76 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   );
   
   useEffect(() => {
-    // Check if it's a new plan when the budget data loads
-    if (!budgetLoading && budget && !budget.name) {
-        setIsNewPlan(true);
-    } else if (!budgetLoading && budget) {
-        setIsNewPlan(false);
-    }
-  }, [budget, budgetLoading]);
-
-
-  useEffect(() => {
     if (!isUserLoading && !user) {
       initiateAnonymousSignIn(auth);
     }
   }, [user, isUserLoading, auth]);
 
   useEffect(() => {
+    const initializePlan = async () => {
+      // Template mode: Load from template
       if (isTemplateMode) {
-          const eventType = searchParams.get('eventType') || 'other';
-          const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
-          const { categories, grandTotal } = calculateTotals(JSON.parse(JSON.stringify(template)));
-          setBudgetData(categories);
-          setGrandTotal(grandTotal);
-      } else if (user && !user.isAnonymous && budgetId && !budgetLoading) {
-          // If it's a new plan, load from template first
-          if (isNewPlan && (!fetchedCategories || fetchedCategories.length === 0)) {
-              const eventType = budget?.eventType || searchParams.get('eventType') || 'other';
-              const initialData = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
-              const { categories: calculatedCategories, grandTotal: calculatedTotal } = calculateTotals(JSON.parse(JSON.stringify(initialData)));
-              setBudgetData(calculatedCategories);
-              setGrandTotal(calculatedTotal);
-              
-              // Then, save this to Firestore
-              const batch = writeBatch(firestore);
-              initialData.forEach((category, index) => {
-                  const seededCategoryRef = doc(firestore, 'users', user.uid, 'budgets', budgetId, 'categories', category.id);
-                  batch.set(seededCategoryRef, { ...category, order: index });
-              });
-              batch.commit();
-          }
-          // If categories are fetched from Firestore, use them
-          else if (fetchedCategories && fetchedCategories.length > 0 && !categoriesLoading) {
-              const sortedCategories = [...fetchedCategories].sort((a, b) => a.order - b.order);
-              const { categories, grandTotal } = calculateTotals(sortedCategories);
-              setBudgetData(categories);
-              setGrandTotal(grandTotal);
-          }
+        const eventType = searchParams.get('eventType') || 'other';
+        const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
+        const { categories, grandTotal } = calculateTotals(JSON.parse(JSON.stringify(template)));
+        setBudgetData(categories);
+        setGrandTotal(grandTotal);
+        return;
       }
-  }, [isTemplateMode, searchParams, fetchedCategories, categoriesLoading, budgetLoading, user, firestore, budgetId, budget, isNewPlan]);
+  
+      // Firestore mode
+      if (user && !user.isAnonymous && budgetId && !budgetLoading) {
+        const isActuallyNew = budget && !budget.name && (!fetchedCategories || fetchedCategories.length === 0);
+
+        if (isActuallyNew) {
+          const eventType = searchParams.get('eventType') || budget?.eventType || 'other';
+          const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
+          
+          const newBudgetId = budgetId;
+          const initialTotal = calculateTotals(template).grandTotal;
+          
+          const newBudget: Omit<Budget, 'id'> = {
+            name: "My Celebration Plan",
+            grandTotal: initialTotal,
+            userId: user.uid,
+            eventType: eventType,
+            eventDate: "",
+            eventLocation: "",
+            expectedGuests: 0,
+          };
+  
+          // Set budget doc first
+          const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
+          await setDoc(budgetDocRef, newBudget, { merge: true });
+
+          // Then batch write categories
+          const batch = writeBatch(firestore);
+          const categoriesWithTotals = calculateTotals(template).categories;
+          categoriesWithTotals.forEach((category, index) => {
+            const categoryRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId, 'categories', category.id);
+            const categoryData = {
+              ...category,
+              order: index,
+              budgetId: newBudgetId,
+            };
+            batch.set(categoryRef, categoryData);
+          });
+          await batch.commit();
+
+          setBudgetData(categoriesWithTotals);
+          setGrandTotal(initialTotal);
+
+        } else if (fetchedCategories && fetchedCategories.length > 0) {
+            const sortedCategories = [...fetchedCategories].sort((a, b) => a.order - b.order);
+            const { categories, grandTotal } = calculateTotals(sortedCategories);
+            setBudgetData(categories);
+            setGrandTotal(grandTotal);
+        }
+      }
+    };
+  
+    initializePlan();
+  }, [isTemplateMode, searchParams, user, isUserLoading, budget, budgetLoading, fetchedCategories, categoriesLoading, firestore, budgetId, auth, router]);
 
   useEffect(() => {
     if (eventType === 'funeral') {
@@ -163,7 +185,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   }, [eventType]);
 
   useEffect(() => {
-    // If in template mode and a registered user logs in, redirect them.
     if (!isUserLoading && isTemplateMode && user && !user.isAnonymous) {
       router.push('/my-plans');
     }
@@ -187,12 +208,10 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     const updatedBudgetData = JSON.parse(JSON.stringify(budgetData));
     let currentLevel = updatedBudgetData;
     let categoryToUpdate: BudgetCategory | undefined;
-    let parentCategory: BudgetCategory | undefined;
 
     for (const id of categoryPath) {
         const foundCategory = currentLevel.find(c => c.id === id);
         if (foundCategory) {
-            parentCategory = categoryToUpdate;
             categoryToUpdate = foundCategory;
             currentLevel = foundCategory.subCategories || [];
         }
@@ -274,7 +293,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     }
   };
   
-  if (isUserLoading || (!isTemplateMode && (categoriesLoading || budgetLoading) && !isNewPlan) || budgetData.length === 0) {
+  if (isUserLoading || (!isTemplateMode && (categoriesLoading || budgetLoading)) || budgetData.length === 0) {
     return (
         <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
             <p>Loading...</p>
@@ -282,8 +301,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     );
   }
 
-  // A registered user landed on a template page, they should be on their own plans.
-  // Wait until loading is done to make this check.
   if (!isUserLoading && isTemplateMode && user && !user.isAnonymous) {
     return <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center"><p>Redirecting...</p></div>;
   }
