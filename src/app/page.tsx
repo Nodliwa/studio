@@ -66,7 +66,7 @@ export default function LandingPage() {
                        <Image src="/images/girl.jpg" alt="uMemulo Background" fill className="object-cover" />
                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                             <div className="text-center text-white p-4">
-                                <h3 className="text-2xl font-bold">Ngisakula!</h3>
+                                <h3 className="text-2xl font-bold">Sisakhula phoo!</h3>
                                 <p className="text-lg">Coming Soon!</p>
                             </div>
                        </div>
