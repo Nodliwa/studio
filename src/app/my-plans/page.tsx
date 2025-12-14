@@ -2,7 +2,7 @@
 'use client';
 
 import { useUser, useCollection, useMemoFirebase, useFirestore, deleteDocument } from '@/firebase';
-import { collection, doc, writeBatch, getDocs, setDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { Budget, BudgetCategory } from '@/lib/types';
@@ -35,6 +35,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
+import { setDoc } from 'firebase/firestore';
 
 function calculateInitialTotal(categories: BudgetCategory[]): number {
     let grandTotal = 0;
@@ -146,7 +147,7 @@ function MyPlansPage() {
 
     return (
         <div className="min-h-screen bg-secondary px-16">
-            <div className="bg-background shadow-lg min-h-screen">
+            <div className="bg-background shadow-2xl min-h-screen">
                 <PageHeader />
                 <main className="container mx-auto p-4 md:p-8">
                     <Greeter name={user.displayName || 'there'} />
@@ -291,3 +292,5 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
+
+    

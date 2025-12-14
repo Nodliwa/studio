@@ -16,7 +16,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen w-full bg-secondary font-sans text-foreground px-20 md:px-40 lg:px-40">
-      <div className="bg-background shadow-lg min-h-screen">
+      <div className="bg-background shadow-2xl min-h-screen">
           <PageHeader />
           <main className="container mx-auto p-4 md:p-8">
           <div className="p-2 md:p-4 text-center">
@@ -159,3 +159,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
