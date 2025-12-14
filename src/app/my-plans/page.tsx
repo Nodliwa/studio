@@ -82,7 +82,7 @@ function MyPlansPage() {
     }
 
     return (
-        <div className="min-h-screen bg-secondary px-20 md:px-40 lg:px-40">
+        <div className="min-h-screen bg-secondary px-16">
             <div className="bg-background shadow-lg min-h-screen">
                 <PageHeader />
                 <main className="container mx-auto p-4 md:p-8">
@@ -206,5 +206,3 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
-
-    
