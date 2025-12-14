@@ -151,28 +151,23 @@ export default function RegisterPage() {
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                            <Label htmlFor="firstName">Known as</Label>
-                            <Input id="firstName" {...register('firstName')} />
+                            <Input id="firstName" placeholder="Known as" {...register('firstName')} />
                             {errors.firstName && <p className="text-destructive text-sm">{errors.firstName.message}</p>}
                             </div>
                             <div className="space-y-2">
-                            <Label htmlFor="lastName">Surname</Label>
-                            <Input id="lastName" {...register('lastName')} />
+                            <Input id="lastName" placeholder="Surname" {...register('lastName')} />
                             {errors.lastName && <p className="text-destructive text-sm">{errors.lastName.message}</p>}
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" {...register('email')} />
+                            <Input id="email" type="email" placeholder="Email" {...register('email')} />
                             {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="cellphone">Cellphone (Optional)</Label>
-                            <Input id="cellphone" type="tel" {...register('cellphone')} />
+                            <Input id="cellphone" type="tel" placeholder="Cellphone (Optional)" {...register('cellphone')} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input id="password" type="password" {...register('password')} />
+                            <Input id="password" type="password" placeholder="Password" {...register('password')} />
                             {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
                         </div>
                         
@@ -209,5 +204,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-
-    
