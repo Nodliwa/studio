@@ -79,7 +79,7 @@ const SortableCategory = ({ category, onItemChange, onAddItem, categoryPath = []
   return (
     <div ref={setNodeRef} style={style}>
       <AccordionItem value={category.id} key={category.id} className="mb-4 rounded-lg border-b-0 bg-card shadow-sm overflow-hidden">
-        <AccordionTrigger className="px-6 py-4 text-lg hover:no-underline [&[data-state=open]>svg]:text-primary">
+        <AccordionTrigger className="px-6 py-2 text-lg hover:no-underline [&[data-state=open]>svg]:text-primary">
           <div className="flex items-center gap-4 w-full">
             <div {...attributes} {...listeners} className="cursor-grab p-2">
               <GripVertical className="h-6 w-6 text-muted-foreground" />
