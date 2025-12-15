@@ -27,7 +27,7 @@ const Greeter = ({ quote }: { quote?: string }) => {
   }, [user]);
 
   return (
-    <div className="mt-8">
+    <div className="mt-8 text-center">
       <h2 className="text-3xl font-bold font-headline text-foreground/90">
         {mainGreeting}
       </h2>
