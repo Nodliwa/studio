@@ -46,7 +46,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   };
 
   return (
-    <div className="flex items-start gap-3 p-3 border-b last:border-b-0">
+    <div className="group flex items-start gap-3 p-3 border-b last:border-b-0">
       <Checkbox
         id={`mustdo-${item.id}`}
         checked={item.status === 'done'}
@@ -58,7 +58,12 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onBlur={() => handleBlur('title')}
-          className={cn("h-auto p-0 border-0 focus-visible:ring-0 text-base", item.status === 'done' && "line-through text-muted-foreground")}
+          className={cn(
+            "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent",
+            "read-only:cursor-default read-only:bg-transparent group-hover:read-only:bg-inherit group-hover:read-only:cursor-text",
+             item.status === 'done' && "line-through text-muted-foreground"
+          )}
+          readOnly={item.status === 'done'}
           placeholder="New must-do..."
         />
         <Textarea
@@ -67,7 +72,12 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
           onBlur={() => handleBlur('note')}
           placeholder="Add a note..."
           rows={1}
-          className="h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px]"
+          className={cn(
+            "h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px] bg-transparent",
+            "hidden group-hover:block", // Hide by default, show on hover
+            "read-only:cursor-default read-only:bg-transparent group-hover:read-only:bg-inherit group-hover:read-only:cursor-text"
+          )}
+          readOnly={item.status === 'done'}
         />
         <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
           <DropdownMenu>
@@ -100,7 +110,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
           </DropdownMenu>
         </div>
       </div>
-      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onDelete(item.id)}>
+      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100" onClick={() => onDelete(item.id)}>
         <Trash2 className="h-4 w-4" />
       </Button>
     </div>
