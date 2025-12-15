@@ -3,15 +3,17 @@
 
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarClock, CheckCircle, Wallet } from "lucide-react";
+import { CalendarClock, CheckCircle, Wallet, ListChecks } from "lucide-react";
 import React from "react";
 
 interface BudgetSummaryProps {
   grandTotal: number;
   daysLeft: string | null;
+  mustDosTotal: number;
+  mustDosCompleted: number;
 }
 
-export function BudgetSummary({ grandTotal, daysLeft }: BudgetSummaryProps) {
+export function BudgetSummary({ grandTotal, daysLeft, mustDosTotal, mustDosCompleted }: BudgetSummaryProps) {
   return (
     <Card className="shadow-lg border-border/60">
       <CardHeader className="p-4 pb-2">
@@ -32,9 +34,14 @@ export function BudgetSummary({ grandTotal, daysLeft }: BudgetSummaryProps) {
             </div>
             <span className="font-semibold text-lg">{daysLeft ?? 'N/A'}</span>
         </div>
+        <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+            <div className="flex items-center gap-3">
+                <ListChecks className="h-6 w-6 text-primary" />
+                <span className="font-semibold text-lg">Must-Dos</span>
+            </div>
+            <span className="font-semibold text-lg">{`${mustDosCompleted} / ${mustDosTotal}`}</span>
+        </div>
       </CardContent>
     </Card>
   );
 }
-
-    

@@ -124,6 +124,14 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     return `${diffDays} days`;
   }, [budget?.eventDate]);
   
+  const mustDosCount = useMemo(() => {
+    if (!mustDos) return { completed: 0, total: 0 };
+    return {
+      completed: mustDos.filter(item => item.status === 'done').length,
+      total: mustDos.length,
+    };
+  }, [mustDos]);
+
   useEffect(() => {
     if (!isUserLoading && !user) {
       initiateAnonymousSignIn(auth);
@@ -347,7 +355,9 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
        <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
         <PageHeader />
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
-          <Greeter quote={eventQuote} />
+          <div className="w-full">
+            <Greeter quote={eventQuote} />
+          </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
             <div className="space-y-8">
@@ -358,6 +368,8 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
                <BudgetSummary 
                 grandTotal={grandTotal}
                 daysLeft={daysLeft}
+                mustDosTotal={mustDosCount.total}
+                mustDosCompleted={mustDosCount.completed}
               />
             </div>
           </div>
@@ -399,5 +411,3 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
-
-    
