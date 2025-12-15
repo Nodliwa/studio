@@ -112,5 +112,8 @@
     background-color: hsl(var(--primary));
     color: white;
     transform: rotateY(180deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }

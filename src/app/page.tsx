@@ -13,13 +13,14 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function LandingPage() {
     const { toast } = useToast();
+    const [flippedCard, setFlippedCard] = useState<string | null>(null);
 
-    const handleComingSoon = (e: React.MouseEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        toast({
-            title: "Coming Soon!",
-            description: "This event type is not available yet, but we're working on it.",
-        });
+    const handleFlip = (cardId: string) => {
+        if (flippedCard === cardId) {
+            setFlippedCard(null);
+        } else {
+            setFlippedCard(cardId);
+        }
     };
 
 
@@ -43,7 +44,7 @@ export default function LandingPage() {
             <div className="w-full max-w-4xl mx-auto mt-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <Link href="/planner?eventType=wedding" className="group">
-                        <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 h-full">
+                        <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 h-full min-h-[236px]">
                             <Image src="/images/wedding.jpg" alt="Wedding" width={400} height={300} className="object-cover w-full h-40" />
                             <CardHeader className="p-2 text-center">
                                 <CardTitle className="text-xl font-semibold flex items-center justify-center gap-2">
@@ -53,7 +54,7 @@ export default function LandingPage() {
                         </Card>
                     </Link>
                     <Link href="/planner?eventType=funeral" className="group">
-                        <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 h-full">
+                        <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 h-full min-h-[236px]">
                             <Image src="/images/funeral2.png" alt="Funeral" width={400} height={300} className="object-cover w-full h-40" />
                             <CardHeader className="p-2 text-center">
                                 <CardTitle className="text-xl font-semibold flex items-center justify-center gap-2">
@@ -62,31 +63,40 @@ export default function LandingPage() {
                             </CardHeader>
                         </Card>
                     </Link>
-                    <div onClick={handleComingSoon} className="group cursor-pointer">
-                        <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 h-full relative">
-                            <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center">
-                                <span className="text-white font-bold text-lg">Coming Soon</span>
+                    <div className="flip-card" onClick={() => handleFlip('umemulo')}>
+                        <div className={cn("flip-card-inner", { 'is-flipped': flippedCard === 'umemulo' })}>
+                            <div className="flip-card-front">
+                                <Card className="overflow-hidden h-full">
+                                    <Image src="/images/umemulo.jpg" alt="uMemulo" width={400} height={300} className="object-cover w-full h-40" />
+                                    <CardHeader className="p-2 text-center">
+                                        <CardTitle className="text-xl font-semibold flex items-center justify-center gap-2">
+                                            <Star className="h-5 w-5" /> uMemulo
+                                        </CardTitle>
+                                    </CardHeader>
+                                </Card>
                             </div>
-                            <Image src="/images/umemulo.jpg" alt="uMemulo" width={400} height={300} className="object-cover w-full h-40 filter grayscale" />
-                            <CardHeader className="p-2 text-center">
-                                <CardTitle className="text-xl font-semibold flex items-center justify-center gap-2">
-                                    <Star className="h-5 w-5" /> uMemulo
-                                </CardTitle>
-                            </CardHeader>
-                        </Card>
+                            <div className="flip-card-back">
+                                <h3 className="text-2xl font-bold">Coming Soon</h3>
+                            </div>
+                        </div>
                     </div>
-                    <div onClick={handleComingSoon} className="group cursor-pointer">
-                        <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 h-full relative">
-                            <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center">
-                                <span className="text-white font-bold text-lg">Coming Soon</span>
+
+                    <div className="flip-card" onClick={() => handleFlip('umgidi')}>
+                        <div className={cn("flip-card-inner", { 'is-flipped': flippedCard === 'umgidi' })}>
+                            <div className="flip-card-front">
+                                <Card className="overflow-hidden h-full">
+                                    <Image src="/images/umgidi.jpg" alt="uMgidi" width={400} height={300} className="object-cover w-full h-40" />
+                                    <CardHeader className="p-2 text-center">
+                                        <CardTitle className="text-xl font-semibold flex items-center justify-center gap-2">
+                                            <Gift className="h-5 w-5" /> uMgidi
+                                        </CardTitle>
+                                    </CardHeader>
+                                </Card>
                             </div>
-                            <Image src="/images/umgidi.jpg" alt="uMgidi" width={400} height={300} className="object-cover w-full h-40 filter grayscale" />
-                             <CardHeader className="p-2 text-center">
-                                <CardTitle className="text-xl font-semibold flex items-center justify-center gap-2">
-                                    <Gift className="h-5 w-5" /> uMgidi
-                                </CardTitle>
-                            </CardHeader>
-                        </Card>
+                            <div className="flip-card-back">
+                                <h3 className="text-2xl font-bold">Coming Soon</h3>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
