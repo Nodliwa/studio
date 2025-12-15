@@ -15,24 +15,22 @@ const Greeter = () => {
     
     if (hour < 12) {
       setMainGreeting(`Good Morning, ${name}!`);
-      setSubGreeting('');
+      setSubGreeting("Let's get your day planned out.");
     } else if (hour < 18) {
       setMainGreeting(`Good Afternoon, ${name}!`);
-      setSubGreeting('');
+      setSubGreeting("Ready to continue planning?");
     } else {
       setMainGreeting(`Good Evening, ${name}!`);
       setSubGreeting("Let's pick up where we left off with our planning...");
     }
   }, [user]);
 
-  const name = user?.displayName || 'there';
-
   return (
     <div className="mt-8">
       <h2 className="text-3xl font-bold font-headline text-foreground/90">
         {mainGreeting}
       </h2>
-      {subGreeting && name !== 'there' && (
+      {subGreeting && (
         <p className="mt-2 text-muted-foreground font-bold italic">{subGreeting}</p>
       )}
     </div>
