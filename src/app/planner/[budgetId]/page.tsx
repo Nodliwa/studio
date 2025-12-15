@@ -379,12 +379,12 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
           </p>
           
           {isTemplateMode && (
-            <Card className="mt-8 bg-yellow-100 border-yellow-300">
-              <CardContent className="p-3">
+            <Card className="mt-4 bg-yellow-100 border-yellow-300">
+              <CardContent className="p-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-bold">You are in Preview Mode</h3>
-                    <p className="text-sm text-yellow-800">Your changes won't be saved. <a href="/register" className="underline font-semibold">Register now</a> to save your plan!</p>
+                    <h3 className="font-bold text-sm">You are in Preview Mode</h3>
+                    <p className="text-xs text-yellow-800">Your changes won't be saved. <a href="/register" className="underline font-semibold">Register now</a> to save your plan!</p>
                   </div>
                 </div>
               </CardContent>
