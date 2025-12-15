@@ -309,11 +309,21 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
        <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
         <PageHeader />
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
-          <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
-            <div className="lg:col-span-1">
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+            {/* Left Column */}
+            <div className="lg:col-span-2 space-y-8">
               <Greeter quote={eventQuote} />
+              
+              <div>
+                <p className="text-muted-foreground">This is your moment to bring everything together, and SimpliPlan is here to help you feel organised, confident, and ready for the big day.</p>
+              </div>
+
+              <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
             </div>
-            <div className="lg:col-span-1 row-start-1 lg:row-start-auto">
+
+            {/* Right Column */}
+            <div className="lg:col-span-1">
               <MustDos budgetId={budgetId} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
             </div>
           </div>
@@ -330,16 +340,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
               </CardContent>
             </Card>
           )}
-
-          <div className="mt-8">
-            <p className="text-muted-foreground">This is your moment to bring everything together, and SimpliPlan is here to help you feel organised, confident, and ready for the big day.</p>
-          </div>
-            
-          <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mt-4">
-             <div className="lg:col-span-1">
-                <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
-             </div>
-          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
             <div className="lg:col-span-1">
@@ -373,4 +373,3 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   );
 }
 
-    
