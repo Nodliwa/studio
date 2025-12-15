@@ -166,7 +166,14 @@ service cloud.firestore {
              allow get, list, create, update, delete: if isOwner(userId);
           }
         }
+         /**
+         * @description Rules for the must-do tasks within a budget.
+         */
+        match /mustDos/{mustDoId} {
+          allow get, list, create, update, delete: if isOwner(userId);
+        }
       }
     }
   }
 }
+    

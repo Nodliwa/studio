@@ -9,6 +9,7 @@ import PageHeader from "@/components/page-header";
 import { BudgetAccordion } from "@/components/budget-accordion";
 import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
+import { MustDos } from "@/components/must-dos";
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn, setDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc, writeBatch, setDoc } from 'firebase/firestore';
 import {
@@ -332,8 +333,8 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
                 <p className="mt-2 mb-4 text-muted-foreground">This is your moment to bring everything together, and SimpliPlan is here to help you feel organised, confident, and ready for the big day.</p>
                 <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
              </div>
-             <div className="lg:col-span-1 flex items-center">
-                {/* This div is now empty but kept for grid structure */}
+             <div className="lg:col-span-1 mt-8 lg:mt-0">
+                <MustDos budgetId={budgetId} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
              </div>
 
             <div className="lg:col-span-2 my-8">
@@ -366,5 +367,4 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
-
     

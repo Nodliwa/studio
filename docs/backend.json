@@ -151,6 +151,24 @@
         "id",
         "email"
       ]
+    },
+    "MustDo": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MustDo",
+      "type": "object",
+      "description": "Represents a critical, non-budgeted action item for an event.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the must-do item." },
+        "budgetId": { "type": "string", "description": "Reference to the parent Budget." },
+        "userId": { "type": "string", "description": "Reference to the owning User." },
+        "title": { "type": "string", "description": "A short, action-oriented title for the task." },
+        "note": { "type": "string", "description": "Optional context or details about the task." },
+        "status": { "type": "string", "enum": ["todo", "done"], "description": "The completion status of the task." },
+        "importance": { "type": "string", "enum": ["none", "important", "critical"], "description": "The priority level of the task." },
+        "timing": { "type": "string", "enum": ["anytime", "before-event", "day-before", "on-the-day"], "description": "A relative sense of when the task should be done." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the item was created." }
+      },
+      "required": ["id", "budgetId", "userId", "title", "status", "importance", "timing", "createdAt"]
     }
   },
   "auth": {
@@ -166,35 +184,20 @@
         "path": "/users/{userId}",
         "definition": {
           "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Collection for storing user profiles. Only the user can read/write their profile.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/User" },
+          "description": "Collection for storing user profiles.",
+          "params": [{ "name": "userId", "description": "The unique identifier of the user." }]
         }
       },
       {
         "path": "/users/{userId}/budgets/{budgetId}",
         "definition": {
           "entityName": "Budget",
-          "schema": {
-            "$ref": "#/backend/entities/Budget"
-          },
-          "description": "Collection for storing budgets of a user. Only the user can read/write their budgets.",
+          "schema": { "$ref": "#/backend/entities/Budget" },
+          "description": "Collection for storing budgets of a user.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            },
-            {
-              "name": "budgetId",
-              "description": "The unique identifier of the budget."
-            }
+            { "name": "userId", "description": "The unique identifier of the user." },
+            { "name": "budgetId", "description": "The unique identifier of the budget." }
           ]
         }
       },
@@ -202,23 +205,12 @@
         "path": "/users/{userId}/budgets/{budgetId}/categories/{categoryId}",
         "definition": {
           "entityName": "Category",
-          "schema": {
-            "$ref": "#/backend/entities/Category"
-          },
-          "description": "Collection for storing categories of a budget. Only the user can read/write their categories.",
+          "schema": { "$ref": "#/backend/entities/Category" },
+          "description": "Collection for storing categories of a budget.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            },
-            {
-              "name": "budgetId",
-              "description": "The unique identifier of the budget."
-            },
-            {
-              "name": "categoryId",
-              "description": "The unique identifier of the category."
-            }
+            { "name": "userId", "description": "The unique identifier of the user." },
+            { "name": "budgetId", "description": "The unique identifier of the budget." },
+            { "name": "categoryId", "description": "The unique identifier of the category." }
           ]
         }
       },
@@ -226,27 +218,26 @@
         "path": "/users/{userId}/budgets/{budgetId}/categories/{categoryId}/items/{itemId}",
         "definition": {
           "entityName": "Item",
-          "schema": {
-            "$ref": "#/backend/entities/Item"
-          },
-          "description": "Collection for storing items of a category. Only the user can read/write their items.",
+          "schema": { "$ref": "#/backend/entities/Item" },
+          "description": "Collection for storing items of a category.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            },
-            {
-              "name": "budgetId",
-              "description": "The unique identifier of the budget."
-            },
-            {
-              "name": "categoryId",
-              "description": "The unique identifier of the category."
-            },
-            {
-              "name": "itemId",
-              "description": "The unique identifier of the item."
-            }
+            { "name": "userId", "description": "The unique identifier of the user." },
+            { "name": "budgetId", "description": "The unique identifier of the budget." },
+            { "name": "categoryId", "description": "The unique identifier of the category." },
+            { "name": "itemId", "description": "The unique identifier of the item." }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/budgets/{budgetId}/mustDos/{mustDoId}",
+        "definition": {
+          "entityName": "MustDo",
+          "schema": { "$ref": "#/backend/entities/MustDo" },
+          "description": "Collection for storing critical must-do tasks for a budget.",
+          "params": [
+            { "name": "userId", "description": "The unique identifier of the user." },
+            { "name": "budgetId", "description": "The unique identifier of the budget." },
+            { "name": "mustDoId", "description": "The unique identifier of the must-do item." }
           ]
         }
       }
@@ -254,3 +245,4 @@
     "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. It leverages path-based ownership for user-specific data and avoids hierarchical authorization dependencies by denormalizing authorization context where necessary. The structure also supports secure list operations via structural segregation.\\n\\nBudgets, Categories and Items are nested under the `/users/{userId}` collection, ensuring that only the user has access to their own data (Path-Based Ownership).\\n\\nThis structure will need to be implemented with corresponding Firebase Security Rules."
   }
 }
+    
