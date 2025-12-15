@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -45,12 +46,12 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   };
 
   return (
-    <div className="flex items-start gap-3 p-3 border-b last:border-b-0">
+    <div className="flex items-start gap-3 p-3 border-b border-border/20 last:border-b-0">
       <Checkbox
         id={`mustdo-${item.id}`}
         checked={item.status === 'done'}
         onCheckedChange={(checked) => onUpdate(item.id, { status: checked ? 'done' : 'todo' })}
-        className="mt-1"
+        className="mt-1 border-foreground/50"
       />
       <div className="flex-1 space-y-1">
         <div className="flex items-center gap-2">
@@ -59,7 +60,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
             onChange={(e) => setTitle(e.target.value)}
             onBlur={() => handleBlur('title')}
             className={cn(
-                "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent flex-grow",
+                "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent flex-grow placeholder:text-foreground/60",
                 item.status === 'done' && "line-through text-muted-foreground"
             )}
             readOnly={item.status === 'done'}
@@ -68,7 +69,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1">
+                    <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
                         <ImportanceIcon importance={item.importance} />
                         <span>{ImportanceLevels[item.importance].label}</span>
                     </Button>
@@ -84,7 +85,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-auto p-1">{TimingOptions[item.timing]}</Button>
+                    <Button variant="ghost" size="sm" className="h-auto p-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">{TimingOptions[item.timing]}</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                     {Object.entries(TimingOptions).map(([key, label]) => (
@@ -103,13 +104,13 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
           placeholder="Add a note..."
           rows={1}
           className={cn(
-            "h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px] bg-transparent",
+            "h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px] bg-transparent placeholder:text-foreground/50",
             "read-only:cursor-default read-only:bg-transparent"
           )}
           readOnly={item.status === 'done'}
         />
       </div>
-      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onDelete(item.id)}>
+      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-foreground/80 hover:bg-white/10 hover:text-foreground" onClick={() => onDelete(item.id)}>
         <Trash2 className="h-4 w-4" />
       </Button>
     </div>
@@ -237,19 +238,19 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false }: MustDos
   };
 
   return (
-    <Card className="shadow-lg border-border/60 h-full">
+    <Card className="h-full bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
       <CardHeader className="p-4">
         <CardTitle className="font-headline text-2xl">Must-Dos</CardTitle>
-        <CardDescription>The things that make your event run smoothly. Add what matters most to you.</CardDescription>
+        <CardDescription className="text-foreground/80">The things that make your event run smoothly. Add what matters most to you.</CardDescription>
       </CardHeader>
       <CardContent className="p-4 pt-0">
         <div className="space-y-2">
-          <div className="flex items-center gap-4 text-sm font-medium">
+          <div className="flex items-center gap-4 text-sm font-medium text-foreground/90">
             <span>{completedCount} of {items.length} completed</span>
-            <Progress value={progress} className="w-full h-2" />
+            <Progress value={progress} className="w-full h-2 bg-white/20" />
           </div>
 
-          <div className="border rounded-lg overflow-hidden">
+          <div className="border border-border/20 rounded-lg overflow-hidden bg-white/5">
             {items.map(item => (
               <MustDoItem key={item.id} item={item} onUpdate={handleUpdateItem} onDelete={handleDeleteItem} />
             ))}
@@ -261,7 +262,7 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false }: MustDos
             )}
           </div>
           
-          <Button variant="outline" onClick={handleAddItem} className="w-full">
+          <Button variant="outline" onClick={handleAddItem} className="w-full bg-white/10 hover:bg-white/20 border-white/30">
             <PlusCircle className="mr-2 h-4 w-4" />
             Add a Must-Do
           </Button>
@@ -270,3 +271,5 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false }: MustDos
     </Card>
   );
 }
+
+    
