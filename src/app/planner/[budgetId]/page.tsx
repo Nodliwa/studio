@@ -359,17 +359,15 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
           
           <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
             {/* Left Column */}
-            <div className="space-y-8">
-              <Greeter quote={eventQuote} />
-              
-              <div>
+            <div className="flex flex-col">
+              <div className="space-y-8">
+                <Greeter quote={eventQuote} />
                 <p className="text-muted-foreground">This is your moment to bring everything together, and SimpliPlan is here to help you feel organised, confident, and ready for the big day.</p>
+                <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
               </div>
-
-              <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
-              
-              <MustDos budgetId={budgetId} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} mustDos={mustDos} />
-
+              <div className="mt-8">
+                <MustDos budgetId={budgetId} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} mustDos={mustDos} />
+              </div>
             </div>
 
             {/* Right Column */}
@@ -416,3 +414,5 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
+
+    
