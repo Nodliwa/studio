@@ -8,7 +8,7 @@ import { Button } from "./ui/button";
 import { useUser, useFirestore } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { LogOut, PlusCircle, Heart, ListChecks, Wallet, CrossIcon, Menu } from 'lucide-react';
+import { LogOut, PlusCircle, Heart, ListChecks, Wallet, CrossIcon, Menu, Star, Gift } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -90,8 +90,8 @@ export default function PageHeader() {
             <Image
               src="/images/brand2.png"
               alt="SimpliPlan Logo"
-              width={243}
-              height={61}
+              width={162}
+              height={41}
               priority
             />
           </Link>
@@ -117,23 +117,31 @@ export default function PageHeader() {
                         Add Plan
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>Create a new plan</DialogTitle>
-                        <DialogDescription>
-                          Select an event type to get started with a template.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('wedding')}>
-                          <Heart />
-                          Wedding
-                        </Button>
-                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
-                          <CrossIcon />
-                          Funeral
-                        </Button>
-                      </div>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Create a new plan</DialogTitle>
+                            <DialogDescription>
+                                Select an event type to get started with a template.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid grid-cols-2 gap-4 py-4">
+                            <Button variant="outline" size="lg" className="h-24 flex-col gap-2" onClick={() => handleNewPlan('wedding')}>
+                                <Heart />
+                                Wedding
+                            </Button>
+                            <Button variant="outline" size="lg" className="h-24 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
+                                <CrossIcon />
+                                Funeral
+                            </Button>
+                            <Button variant="outline" size="lg" className="h-24 flex-col gap-2" onClick={() => alert('Coming Soon!')}>
+                                <Star />
+                                uMemulo
+                            </Button>
+                                <Button variant="outline" size="lg" className="h-24 flex-col gap-2" onClick={() => alert('Coming Soon!')}>
+                                <Gift />
+                                umGidi
+                            </Button>
+                        </div>
                     </DialogContent>
                   </Dialog>
                 )}

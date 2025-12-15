@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ListChecks, CalendarDays, Wallet, RefreshCw, Star, Gift, Utensils, Ribbon } from 'lucide-react';
+import { ListChecks, CalendarDays, Wallet, RefreshCw } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -48,8 +48,8 @@ export default function LandingPage() {
                             <Image src="/images/wedding.jpg" alt="Wedding" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                             <div className="absolute bottom-0 left-0 right-0 p-4">
-                                <CardTitle className="text-2xl font-semibold flex items-center justify-center gap-2 text-white">
-                                    <Ribbon className="h-6 w-6" /> Wedding
+                                <CardTitle className="text-2xl font-semibold flex items-center justify-center text-white">
+                                    Wedding
                                 </CardTitle>
                             </div>
                         </Card>
@@ -59,8 +59,8 @@ export default function LandingPage() {
                             <Image src="/images/funeral2.png" alt="Funeral" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                             <div className="absolute bottom-0 left-0 right-0 p-4">
-                                <CardTitle className="text-2xl font-semibold flex items-center justify-center gap-2 text-white">
-                                    <Utensils className="h-6 w-6" /> Funeral
+                                <CardTitle className="text-2xl font-semibold flex items-center justify-center text-white">
+                                    Funeral
                                 </CardTitle>
                             </div>
                         </Card>
@@ -72,8 +72,8 @@ export default function LandingPage() {
                                     <Image src="/images/umemulo.jpg" alt="uMemulo" fill className="object-cover" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                     <div className="absolute bottom-0 left-0 right-0 p-4">
-                                      <CardTitle className="text-2xl font-semibold flex items-center justify-center gap-2 text-white">
-                                          <Star className="h-6 w-6" /> uMemulo
+                                      <CardTitle className="text-2xl font-semibold flex items-center justify-center text-white">
+                                          uMemulo
                                       </CardTitle>
                                     </div>
                                 </Card>
@@ -91,8 +91,8 @@ export default function LandingPage() {
                                     <Image src="/images/umgidi1.jpg" alt="uMgidi" fill className="object-cover" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                     <div className="absolute bottom-0 left-0 right-0 p-4">
-                                      <CardTitle className="text-2xl font-semibold flex items-center justify-center gap-2 text-white">
-                                          <Gift className="h-6 w-6" /> uMgidi
+                                      <CardTitle className="text-2xl font-semibold flex items-center justify-center text-white">
+                                          uMgidi
                                       </CardTitle>
                                     </div>
                                 </Card>
@@ -161,5 +161,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
