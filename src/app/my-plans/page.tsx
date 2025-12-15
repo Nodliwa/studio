@@ -257,7 +257,6 @@ function MyPlansPage() {
                 <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
                     <div className="flex-grow">
                         <Greeter />
-                        <MotivationalQuote />
 
                         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                             <Card className="mt-8">
@@ -402,6 +401,3 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
-
-    
-    

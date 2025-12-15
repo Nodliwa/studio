@@ -3,14 +3,15 @@
 
 import { useState, useEffect } from 'react';
 import { useUser } from '@/firebase';
+import MotivationalQuote from './motivational-quote';
 
-const Greeter = () => {
+const Greeter = ({ quote }: { quote?: string }) => {
   const { user } = useUser();
   const [mainGreeting, setMainGreeting] = useState('');
   const [subGreeting, setSubGreeting] = useState('');
 
   useEffect(() => {
-    const name = user?.displayName || 'there';
+    const name = user?.displayName?.split(' ')[0] || 'there';
     const hour = new Date().getHours();
     
     if (hour < 12) {
@@ -33,6 +34,7 @@ const Greeter = () => {
       {subGreeting && (
         <p className="mt-2 text-muted-foreground font-bold italic">{subGreeting}</p>
       )}
+      <MotivationalQuote quote={quote} />
     </div>
   );
 };
