@@ -41,7 +41,7 @@ export default function LandingPage() {
               </Button>
             </Link>
 
-            <div className="w-full max-w-4xl mx-auto mt-8">
+            <div className="w-full mx-auto mt-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <Link href="/planner?eventType=wedding" className="group">
                        <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-square">
