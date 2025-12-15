@@ -36,7 +36,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Menu, MapPin, Users, MessageSquare } from 'lucide-react';
+import { PlusCircle, Heart, ListChecks, Wallet, CalendarDays, RefreshCw, Menu, MapPin, Users, MessageSquare, Star, Gift } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CrossIcon } from 'lucide-react';
 import { budgetTemplates } from '@/lib/data';
@@ -277,21 +277,29 @@ function MyPlansPage() {
                                 </CardContent>
                             </Card>
 
-                            <DialogContent className="sm:max-w-[425px]">
+                            <DialogContent className="sm:max-w-md">
                                 <DialogHeader>
                                     <DialogTitle>Create a new plan</DialogTitle>
                                     <DialogDescription>
                                         Select an event type to get started with a template.
                                     </DialogDescription>
                                 </DialogHeader>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-                                    <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('wedding')}>
+                                <div className="grid grid-cols-2 gap-4 py-4">
+                                    <Button variant="outline" size="lg" className="h-24 flex-col gap-2" onClick={() => handleNewPlan('wedding')}>
                                         <Heart />
                                         Wedding
                                     </Button>
-                                    <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
+                                    <Button variant="outline" size="lg" className="h-24 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
                                         <CrossIcon />
                                         Funeral
+                                    </Button>
+                                    <Button variant="outline" size="lg" className="h-24 flex-col gap-2" onClick={() => alert('Coming Soon!')}>
+                                        <Star />
+                                        uMemulo
+                                    </Button>
+                                     <Button variant="outline" size="lg" className="h-24 flex-col gap-2" onClick={() => alert('Coming Soon!')}>
+                                        <Gift />
+                                        umGidi
                                     </Button>
                                 </div>
                             </DialogContent>
@@ -374,13 +382,5 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
-    
-    
-
-    
-
-    
-
-    
 
     
