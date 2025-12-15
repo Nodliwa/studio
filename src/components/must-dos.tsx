@@ -54,47 +54,49 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
         className="mt-1"
       />
       <div className="flex-1 space-y-1">
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={() => handleBlur('title')}
-          className={cn(
-            "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent",
-            "read-only:cursor-default read-only:bg-transparent group-hover:read-only:bg-inherit group-hover:read-only:cursor-text",
-             item.status === 'done' && "line-through text-muted-foreground"
-          )}
-          readOnly={item.status === 'done'}
-          placeholder="New must-do..."
-        />
-        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1">
-                <ImportanceIcon importance={item.importance} />
-                <span>{ImportanceLevels[item.importance].label}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {Object.entries(ImportanceLevels).map(([key, { label }]) => (
-                <DropdownMenuItem key={key} onSelect={() => onUpdate(item.id, { importance: key as Importance })}>
-                  {label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex items-center gap-2">
+            <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={() => handleBlur('title')}
+            className={cn(
+                "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent flex-grow",
+                "read-only:cursor-default read-only:bg-transparent group-hover:read-only:bg-inherit group-hover:read-only:cursor-text",
+                item.status === 'done' && "line-through text-muted-foreground"
+            )}
+            readOnly={item.status === 'done'}
+            placeholder="New must-do..."
+            />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ImportanceIcon importance={item.importance} />
+                        <span>{ImportanceLevels[item.importance].label}</span>
+                    </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                    {Object.entries(ImportanceLevels).map(([key, { label }]) => (
+                        <DropdownMenuItem key={key} onSelect={() => onUpdate(item.id, { importance: key as Importance })}>
+                        {label}
+                        </DropdownMenuItem>
+                    ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-auto p-1">{TimingOptions[item.timing]}</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {Object.entries(TimingOptions).map(([key, label]) => (
-                <DropdownMenuItem key={key} onSelect={() => onUpdate(item.id, { timing: key as Timing })}>
-                  {label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-auto p-1 opacity-0 group-hover:opacity-100 transition-opacity">{TimingOptions[item.timing]}</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                    {Object.entries(TimingOptions).map(([key, label]) => (
+                        <DropdownMenuItem key={key} onSelect={() => onUpdate(item.id, { timing: key as Timing })}>
+                        {label}
+                        </DropdownMenuItem>
+                    ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         </div>
         <Textarea
           value={note}
