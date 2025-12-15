@@ -310,13 +310,9 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
         <PageHeader />
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
           <Greeter />
-          
-          {eventQuote && (
-              <MotivationalQuote quote={eventQuote} />
-          )}
 
           {isTemplateMode && (
-            <Card className="mt-4 mb-8 bg-yellow-100 border-yellow-300">
+            <Card className="mt-8 mb-8 bg-yellow-100 border-yellow-300">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -330,7 +326,10 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
 
           <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
              <div className="lg:col-span-1">
-                <p className="mt-2 mb-4 text-muted-foreground">This is your moment to bring everything together, and SimpliPlan is here to help you feel organised, confident, and ready for the big day.</p>
+                <p className="mt-2 text-muted-foreground">This is your moment to bring everything together, and SimpliPlan is here to help you feel organised, confident, and ready for the big day.</p>
+                 {eventQuote && (
+                    <MotivationalQuote quote={eventQuote} />
+                )}
                 <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
              </div>
              <div className="lg:col-span-1 mt-8 lg:mt-0">
