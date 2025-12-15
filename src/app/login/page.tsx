@@ -112,7 +112,7 @@ export default function LoginPage() {
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+                    <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn}>
                         <GoogleIcon className="mr-2" />
                         Sign in with Google
                     </Button>
@@ -175,3 +175,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
