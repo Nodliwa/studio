@@ -14,7 +14,7 @@ interface BudgetSummaryProps {
 
 export function BudgetSummary({ grandTotal, daysLeft, mustDosCount }: BudgetSummaryProps) {
   return (
-    <Card className="sticky top-8 shadow-lg border-border/60">
+    <Card className="shadow-lg border-border/60">
       <CardHeader className="p-4 pb-2">
         <CardTitle className="font-headline text-2xl">Dashboard</CardTitle>
       </CardHeader>
