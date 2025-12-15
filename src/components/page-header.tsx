@@ -205,19 +205,19 @@ export default function PageHeader() {
                     </Link>
                 </SheetClose>
                  {user && !user.isAnonymous ? (
-                    <Button variant="ghost" onClick={handleLogout} className="justify-start p-0 text-lg font-bold text-foreground/60 hover:text-foreground/80">
+                    <Button variant="ghost" onClick={handleLogout} className="justify-start p-0 text-lg font-medium text-foreground/60 hover:text-foreground/80">
                         <LogOut className="mr-1 h-5 w-5" />
                         Logout
                     </Button>
                  ) : (
                    <>
                     <SheetClose asChild>
-                      <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                      <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60 font-medium">
                         Login
                       </Link>
                     </SheetClose>
                     <SheetClose asChild>
-                      <Link href="/register" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                      <Link href="/register" className="transition-colors hover:text-foreground/80 text-foreground/60 font-medium">
                         Sign Up
                       </Link>
                     </SheetClose>
