@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useId, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import type { BudgetItem, BudgetCategory, Budget } from "@/lib/types";
+import type { BudgetItem, BudgetCategory, Budget, MustDo } from "@/lib/types";
 import { budgetTemplates } from "@/lib/data";
 import PageHeader from "@/components/page-header";
 import { BudgetAccordion } from "@/components/budget-accordion";
@@ -11,7 +11,7 @@ import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
 import { MustDos } from "@/components/must-dos";
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn, setDocumentNonBlocking, useDoc } from '@/firebase';
-import { collection, doc, writeBatch, setDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch, setDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import {
   DndContext,
   closestCenter,
@@ -30,7 +30,6 @@ import {
 import Greeter from '@/components/greeter';
 import { Card, CardContent } from '@/components/ui/card';
 import { v4 as uuidv4 } from 'uuid';
-import MotivationalQuote from '@/components/motivational-quote';
 
 const funeralQuotes = [
     '"Blessed are those who mourn, for they will be comforted." - Matthew 5:4',
@@ -94,6 +93,16 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
 
   const { data: fetchedCategories, isLoading: categoriesLoading } = useCollection<BudgetCategory>(categoriesCollection);
 
+  const mustDosCollection = useMemoFirebase(() => (
+    !isTemplateMode && user && budgetDocRef ? collection(budgetDocRef, 'mustDos') : null
+  ), [isTemplateMode, user, budgetDocRef]);
+
+  const mustDosQuery = useMemoFirebase(() => (
+    mustDosCollection ? query(mustDosCollection, orderBy('createdAt', 'desc')) : null
+  ), [mustDosCollection]);
+
+  const { data: mustDos } = useCollection<MustDo>(mustDosQuery);
+
   const eventType = isTemplateMode ? searchParams.get('eventType') : budget?.eventType;
 
   const sensors = useSensors(
@@ -102,6 +111,27 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  const mustDosCount = useMemo(() => {
+    if (!mustDos) return { completed: 0, total: 0 };
+    return {
+        completed: mustDos.filter(item => item.status === 'done').length,
+        total: mustDos.length
+    };
+  }, [mustDos]);
+  
+  const daysLeft = useMemo(() => {
+    if (!budget?.eventDate) return null;
+    const eventDate = new Date(budget.eventDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize today's date
+    const diffTime = eventDate.getTime() - today.getTime();
+    if (diffTime < 0) return "Event has passed";
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return "Today!";
+    if (diffDays === 1) return "1 day";
+    return `${diffDays} days`;
+  }, [budget?.eventDate]);
   
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -161,6 +191,23 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
             budgetId: newBudgetId,
           };
           batch.set(categoryRef, categoryData);
+          
+           if (!mustDos || mustDos.length === 0) {
+                const mustDoTemplate = [
+                    { title: 'Confirm venue access time', note: 'Key collection is with security', importance: 'important', timing: 'before-event' },
+                    { title: 'Pick up decorations', note: '', importance: 'none', timing: 'on-the-day' }
+                ];
+                mustDoTemplate.forEach(item => {
+                    const mustDoRef = doc(collection(budgetDocRef, 'mustDos'));
+                    batch.set(mustDoRef, {
+                        ...item,
+                        budgetId: newBudgetId,
+                        userId: user.uid,
+                        status: 'todo',
+                        createdAt: serverTimestamp()
+                    });
+                });
+            }
         });
         await batch.commit();
         
@@ -173,7 +220,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     };
   
     initializePlan();
-  }, [isTemplateMode, searchParams, user, isUserLoading, budget, budgetLoading, fetchedCategories, categoriesLoading, firestore, budgetId, auth, router]);
+  }, [isTemplateMode, searchParams, user, isUserLoading, budget, budgetLoading, fetchedCategories, categoriesLoading, firestore, budgetId, auth, router, mustDos]);
 
   useEffect(() => {
     if (eventType === 'funeral') {
@@ -324,7 +371,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
 
             {/* Right Column */}
             <div>
-              <MustDos budgetId={budgetId} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
+              <MustDos budgetId={budgetId} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} mustDos={mustDos} />
             </div>
           </div>
           
@@ -344,8 +391,9 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
           <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
             <div className="lg:col-span-1">
               <BudgetSummary 
-                categories={budgetData}
                 grandTotal={grandTotal}
+                daysLeft={daysLeft}
+                mustDosCount={mustDosCount}
               />
             </div>
             <div className="lg:col-span-1">

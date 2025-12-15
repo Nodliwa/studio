@@ -2,8 +2,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocument } from '@/firebase';
-import { collection, doc, orderBy, query, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocument } from '@/firebase';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import type { MustDo, Importance, Timing } from '@/lib/types';
 import { ImportanceLevels, TimingOptions } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, Star, Trash2, ChevronDown } from 'lucide-react';
+import { PlusCircle, Star, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +26,7 @@ interface MustDosProps {
   budgetId: string;
   budgetRef: DocumentReference | null;
   isTemplateMode?: boolean;
+  mustDos: MustDo[] | null;
 }
 
 function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id: string, data: Partial<MustDo>) => void, onDelete: (id: string) => void }) {
@@ -117,20 +118,13 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   );
 }
 
-export function MustDos({ budgetId, budgetRef, isTemplateMode = false }: MustDosProps) {
+export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos }: MustDosProps) {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const mustDosCollection = useMemoFirebase(() => (
-    !isTemplateMode && user && budgetRef ? collection(budgetRef, 'mustDos') : null
-  ), [isTemplateMode, user, budgetRef]);
-
-  const mustDosQuery = useMemoFirebase(() => (
-    mustDosCollection ? query(mustDosCollection, orderBy('createdAt', 'desc')) : null
-  ), [mustDosCollection]);
-
-  const { data: mustDos, isLoading } = useCollection<MustDo>(mustDosQuery);
   const [localMustDos, setLocalMustDos] = useState<MustDo[]>([]);
+  const [isLoading, setIsLoading] = useState(!isTemplateMode && !mustDos);
+
 
   useEffect(() => {
     if (isTemplateMode && localMustDos.length === 0) {
@@ -161,6 +155,12 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false }: MustDos
     }
   }, [isTemplateMode, budgetId, localMustDos.length]);
 
+  useEffect(() => {
+    if (mustDos !== null) {
+      setIsLoading(false);
+    }
+  }, [mustDos]);
+
 
   const items = useMemo(() => {
     const serverItems = mustDos || [];
@@ -187,6 +187,7 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false }: MustDos
   const progress = items.length > 0 ? (completedCount / items.length) * 100 : 0;
 
   const handleAddItem = () => {
+    const mustDosCollection = budgetRef ? collection(budgetRef, 'mustDos') : null;
     if (!user || !mustDosCollection) {
         // Handle local update for template mode
         const newItem: MustDo = {
@@ -218,6 +219,7 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false }: MustDos
   };
 
   const handleUpdateItem = (id: string, data: Partial<MustDo>) => {
+     const mustDosCollection = budgetRef ? collection(budgetRef, 'mustDos') : null;
     if (isTemplateMode) {
       setLocalMustDos(prev => prev.map(item => item.id === id ? { ...item, ...data } : item));
       return;
@@ -228,6 +230,7 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false }: MustDos
   };
 
   const handleDeleteItem = (id: string) => {
+    const mustDosCollection = budgetRef ? collection(budgetRef, 'mustDos') : null;
     if (isTemplateMode) {
       setLocalMustDos(prev => prev.filter(item => item.id !== id));
       return;
@@ -271,5 +274,3 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false }: MustDos
     </Card>
   );
 }
-
-    
