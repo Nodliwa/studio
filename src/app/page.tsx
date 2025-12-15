@@ -44,10 +44,10 @@ export default function LandingPage() {
             <div className="w-full max-w-4xl mx-auto mt-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <Link href="/planner?eventType=wedding" className="group">
-                       <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 h-full min-h-[236px]">
+                       <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-square">
                             <Image src="/images/wedding.jpg" alt="Wedding" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
-                            <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
-                            <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-4">
                                 <CardTitle className="text-2xl font-semibold flex items-center justify-center gap-2 text-white">
                                     <Ribbon className="h-6 w-6" /> Wedding
                                 </CardTitle>
@@ -55,23 +55,23 @@ export default function LandingPage() {
                         </Card>
                     </Link>
                     <Link href="/planner?eventType=funeral" className="group">
-                        <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 h-full min-h-[236px]">
+                        <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-square">
                             <Image src="/images/funeral2.png" alt="Funeral" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
-                            <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
-                            <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-4">
                                 <CardTitle className="text-2xl font-semibold flex items-center justify-center gap-2 text-white">
                                     <Utensils className="h-6 w-6" /> Funeral
                                 </CardTitle>
                             </div>
                         </Card>
                     </Link>
-                    <div className="flip-card" onClick={() => handleFlip('umemulo')}>
+                    <div className="flip-card aspect-square" onClick={() => handleFlip('umemulo')}>
                         <div className={cn("flip-card-inner", { 'is-flipped': flippedCard === 'umemulo' })}>
                             <div className="flip-card-front">
                                 <Card className="overflow-hidden h-full relative">
                                     <Image src="/images/umemulo.jpg" alt="uMemulo" fill className="object-cover" />
-                                    <div className="absolute inset-0 bg-black/40" />
-                                    <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                    <div className="absolute bottom-0 left-0 right-0 p-4">
                                       <CardTitle className="text-2xl font-semibold flex items-center justify-center gap-2 text-white">
                                           <Star className="h-6 w-6" /> uMemulo
                                       </CardTitle>
@@ -84,13 +84,13 @@ export default function LandingPage() {
                         </div>
                     </div>
 
-                    <div className="flip-card" onClick={() => handleFlip('umgidi')}>
+                    <div className="flip-card aspect-square" onClick={() => handleFlip('umgidi')}>
                         <div className={cn("flip-card-inner", { 'is-flipped': flippedCard === 'umgidi' })}>
                             <div className="flip-card-front">
                                 <Card className="overflow-hidden h-full relative">
                                     <Image src="/images/umgidi1.jpg" alt="uMgidi" fill className="object-cover" />
-                                    <div className="absolute inset-0 bg-black/40" />
-                                    <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                    <div className="absolute bottom-0 left-0 right-0 p-4">
                                       <CardTitle className="text-2xl font-semibold flex items-center justify-center gap-2 text-white">
                                           <Gift className="h-6 w-6" /> uMgidi
                                       </CardTitle>
@@ -161,3 +161,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    

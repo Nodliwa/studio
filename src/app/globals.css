@@ -75,7 +75,7 @@
     background-color: transparent;
     width: 100%;
     /* Set height based on Card content or a fixed value */
-    min-height: 236px; 
+    /* min-height: 236px;  We use aspect-square now */
     perspective: 1000px;
     cursor: pointer;
   }
@@ -117,3 +117,5 @@
     justify-content: center;
   }
 }
+
+    
