@@ -62,6 +62,7 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
             <MustDos 
                 budgetId={budgetId} 
                 budgetRef={budgetDocRef} 
+                eventType={budget?.eventType}
                 isTemplateMode={false} 
                 mustDos={mustDos} 
             />
@@ -71,5 +72,3 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
-
-    

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useTransition } from 'react';
 import { useUser, useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocument } from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import type { MustDo, Importance, Timing } from '@/lib/types';
@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, Star, Trash2 } from 'lucide-react';
+import { PlusCircle, Star, Trash2, Sparkles, Wand2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,10 +21,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
 import type { DocumentReference } from 'firebase/firestore';
+import { suggestMustDos, type SuggestMustDosInput, type SuggestMustDosOutput } from '@/ai/flows/suggest-must-dos-flow';
 
 interface MustDosProps {
   budgetId: string;
   budgetRef: DocumentReference | null;
+  eventType?: string;
   isTemplateMode?: boolean;
   mustDos: MustDo[] | null;
 }
@@ -118,13 +120,12 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   );
 }
 
-export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos }: MustDosProps) {
+export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMode = false, mustDos }: MustDosProps) {
   const { user } = useUser();
-  const firestore = useFirestore();
-
   const [localMustDos, setLocalMustDos] = useState<MustDo[]>([]);
   const [isLoading, setIsLoading] = useState(!isTemplateMode && !mustDos);
-
+  const [isAiLoading, startAiTransition] = useTransition();
+  const [aiSuggestions, setAiSuggestions] = useState<SuggestMustDosOutput['suggestions']>([]);
 
   useEffect(() => {
     if (isTemplateMode && localMustDos.length === 0) {
@@ -186,20 +187,24 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos }
   const completedCount = useMemo(() => items.filter(item => item.status === 'done').length, [items]);
   const progress = items.length > 0 ? (completedCount / items.length) * 100 : 0;
 
-  const handleAddItem = () => {
+  const handleAddItem = (suggestion?: SuggestMustDosOutput['suggestions'][0]) => {
     const mustDosCollection = budgetRef ? collection(budgetRef, 'mustDos') : null;
-    if (!user || !mustDosCollection) {
-        // Handle local update for template mode
+    
+    const newItemData = {
+        title: suggestion?.title || '',
+        note: suggestion?.note || '',
+        importance: suggestion?.importance || 'none',
+        timing: suggestion?.timing || 'anytime',
+    };
+
+    if (isTemplateMode || !user || !mustDosCollection) {
         const newItem: MustDo = {
             id: `local-${Date.now()}`,
             budgetId,
             userId: '',
-            title: '',
-            note: '',
             status: 'todo',
-            importance: 'none',
-            timing: 'anytime',
-            createdAt: new Date()
+            createdAt: new Date(),
+            ...newItemData
         };
         setLocalMustDos(prev => [newItem, ...prev]);
         return;
@@ -208,14 +213,16 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos }
     const newItem: Omit<MustDo, 'id'> = {
       budgetId,
       userId: user.uid,
-      title: '',
-      note: '',
       status: 'todo',
-      importance: 'none',
-      timing: 'anytime',
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      ...newItemData
     };
     addDocumentNonBlocking(mustDosCollection, newItem);
+  };
+
+  const handleAddSuggestion = (suggestion: SuggestMustDosOutput['suggestions'][0]) => {
+    handleAddItem(suggestion);
+    setAiSuggestions(prev => prev.filter(s => s.title !== suggestion.title));
   };
 
   const handleUpdateItem = (id: string, data: Partial<MustDo>) => {
@@ -240,10 +247,22 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos }
     deleteDocument(docRef);
   };
 
+  const handleGetAiSuggestions = () => {
+    startAiTransition(async () => {
+        const existingTitles = items.map(item => item.title);
+        const input: SuggestMustDosInput = {
+            eventType: eventType,
+            existingMustDos: existingTitles
+        };
+        const result = await suggestMustDos(input);
+        setAiSuggestions(result.suggestions);
+    });
+  };
+
   return (
     <Card className="h-full bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
       <CardHeader className="p-4">
-        <CardTitle className="font-headline text-2xl">Must-Dos</CardTitle>
+        <CardTitle className="font-headline text-2xl">Must-Do's</CardTitle>
         <CardDescription className="text-foreground/80">The things that make your event run smoothly. Add what matters most to you.</CardDescription>
       </CardHeader>
       <CardContent className="p-4 pt-0">
@@ -265,10 +284,40 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos }
             )}
           </div>
           
-          <Button variant="outline" onClick={handleAddItem} className="w-full bg-white/10 hover:bg-white/20 border-white/30">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add a Must-Do
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => handleAddItem()} className="bg-white/10 hover:bg-white/20 border-white/30">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add a Must-Do
+            </Button>
+            <Button variant="outline" onClick={handleGetAiSuggestions} disabled={isAiLoading} className="bg-white/10 hover:bg-white/20 border-white/30">
+                <Wand2 className="mr-2 h-4 w-4" />
+                {isAiLoading ? 'Thinking...' : 'Get AI Suggestions'}
+            </Button>
+          </div>
+
+           {aiSuggestions.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <h4 className="font-semibold text-sm text-foreground/90">AI Suggestions:</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {aiSuggestions.map((suggestion, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleAddSuggestion(suggestion)}
+                    className="h-auto justify-start text-left flex items-start gap-2 bg-primary/10 hover:bg-primary/20 border-primary/30"
+                  >
+                    <PlusCircle className="h-4 w-4 mt-1 shrink-0" />
+                    <div>
+                      <span className="font-semibold">{suggestion.title}</span>
+                      <p className="text-xs text-muted-foreground">{suggestion.note}</p>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            </div>
+           )}
+
         </div>
       </CardContent>
     </Card>
