@@ -135,12 +135,28 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
       clearSuggestions();
   }
 
+  const calculateDaysLeft = () => {
+    if (!budget?.eventDate) return null;
+    const eventDate = new Date(budget.eventDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize today's date
+    const diffTime = eventDate.getTime() - today.getTime();
+    if (diffTime < 0) return "The event has passed.";
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return "The event is today!";
+    if (diffDays === 1) return "You have 1 day to your event.";
+    return `You have ${diffDays} days to your event.`;
+  };
+
   return (
     <Card className="shadow-lg border-border/60">
-      <CardHeader className="flex flex-row items-center justify-between p-4">
-        <CardTitle className="font-headline text-2xl">
-          Event Details
-        </CardTitle>
+      <CardHeader className="flex flex-row items-start justify-between p-4">
+        <div className="flex-1">
+          <CardTitle className="font-headline text-2xl">
+            Event Details
+          </CardTitle>
+           <p className="text-sm font-semibold text-primary mt-2">{calculateDaysLeft()}</p>
+        </div>
         {!isEditing && !isTemplateMode && (
             <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>Edit</Button>
         )}

@@ -291,19 +291,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     }
   };
 
-  const calculateDaysLeft = () => {
-    if (!budget?.eventDate) return null;
-    const eventDate = new Date(budget.eventDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize today's date
-    const diffTime = eventDate.getTime() - today.getTime();
-    if (diffTime < 0) return "The event has passed.";
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return "The event is today!";
-    if (diffDays === 1) return "You have 1 day to your event.";
-    return `You have ${diffDays} days to your event.`;
-  };
-  
   if (isUserLoading || (!isTemplateMode && (categoriesLoading || budgetLoading)) || budgetData.length === 0) {
     return (
         <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
@@ -346,9 +333,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
                 <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
              </div>
              <div className="lg:col-span-1 flex items-center">
-                <div className="p-4 rounded-lg">
-                    <p className="text-lg font-semibold text-primary">{calculateDaysLeft()}</p>
-                </div>
+                {/* This div is now empty but kept for grid structure */}
              </div>
 
             <div className="lg:col-span-2 my-8">
