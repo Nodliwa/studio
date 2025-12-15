@@ -85,7 +85,7 @@ export default function LandingPage() {
                         <div className={cn("flip-card-inner", { 'is-flipped': flippedCard === 'umgidi' })}>
                             <div className="flip-card-front">
                                 <Card className="overflow-hidden h-full">
-                                    <Image src="/images/umgidi.jpg" alt="uMgidi" width={400} height={300} className="object-cover w-full h-40" />
+                                    <Image src="/images/umgidi1.jpg" alt="uMgidi" width={400} height={300} className="object-cover w-full h-40" />
                                     <CardHeader className="p-2 text-center">
                                         <CardTitle className="text-xl font-semibold flex items-center justify-center gap-2">
                                             <Gift className="h-5 w-5" /> uMgidi
