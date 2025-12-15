@@ -82,14 +82,6 @@ export default function PageHeader() {
     }
   };
 
-  const handleComingSoon = () => {
-    toast({
-        title: "Feature Coming Soon!",
-        description: "We're working hard to bring this to you.",
-    });
-  };
-
-
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm shadow-sm">
       <div className="container flex h-20 items-center justify-between mx-auto">
@@ -140,14 +132,6 @@ export default function PageHeader() {
                         <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
                           <CrossIcon />
                           Funeral
-                        </Button>
-                         <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
-                            <ListChecks />
-                            uMemulo
-                        </Button>
-                        <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
-                            <Wallet />
-                            umGidi
                         </Button>
                       </div>
                     </DialogContent>

@@ -11,8 +11,6 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export default function LandingPage() {
-  const [isUmemuloFlipped, setIsUmemuloFlipped] = useState(false);
-  const [isUmgidiFlipped, setIsUmgidiFlipped] = useState(false);
 
   return (
     <div className="min-h-screen w-full bg-secondary">
@@ -23,7 +21,7 @@ export default function LandingPage() {
             <h1 className="text-4xl md:text-5xl font-bold font-headline text-foreground/90">
               Celebrate Loved Ones. Plan Smart.            </h1>
             <p className="mt-4 mb-8 max-w-2xl mx-auto text-lg text-muted-foreground">
-              SimpliPlan helps you budget for life's most important moments. From Weddings to uMemulo, and more, plan your celebration with ease and confidence.
+              SimpliPlan helps you budget for life's most important moments. From Weddings to Funerals, plan your celebration with ease and confidence.
             </p>
             <Link href="/planner" className="inline-block">
               <Button size="lg" className="font-semibold text-lg py-4 px-4">
@@ -31,12 +29,12 @@ export default function LandingPage() {
               </Button>
             </Link>
 
-            <div className="w-full max-w-6xl mx-auto mt-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="w-full max-w-3xl mx-auto mt-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Link href="/planner?eventType=wedding" className="group">
                   <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1">
                     <Image src="/images/wedding.jpg" alt="Wedding" width={400} height={300} className="object-cover w-full h-48" />
-                    <CardHeader className="p-1">
+                    <CardHeader className="p-2 text-center">
                       <CardTitle className="text-xl font-semibold">Wedding</CardTitle>
                     </CardHeader>
                   </Card>
@@ -44,59 +42,11 @@ export default function LandingPage() {
                 <Link href="/planner?eventType=funeral" className="group">
                   <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1">
                     <Image src="/images/funeral2.png" alt="Funeral" width={400} height={300} className="object-cover w-full h-48" />
-                    <CardHeader className="p-1">
+                    <CardHeader className="p-2 text-center">
                       <CardTitle className="text-xl font-semibold">Funeral</CardTitle>
                     </CardHeader>
                   </Card>
                 </Link>
-                {/* uMemulo Flip Card */}
-                <div className="flip-card group" onClick={() => setIsUmemuloFlipped(!isUmemuloFlipped)}>
-                  <div className={cn("flip-card-inner", { 'is-flipped': isUmemuloFlipped })}>
-                    <div className="flip-card-front">
-                      <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 w-full h-full">
-                         <div className="relative w-full h-48">
-                            <Image src="/images/umemulo.jpg" alt="uMemulo" layout="fill" objectFit="cover" />
-                         </div>
-                        <CardHeader className="p-1 text-center">
-                          <CardTitle className="text-xl font-semibold">uMemulo</CardTitle>
-                        </CardHeader>
-                      </Card>
-                    </div>
-                    <div className="flip-card-back flex items-center justify-center p-0 overflow-hidden">
-                       <Image src="/images/girl.jpg" alt="uMemulo Background" fill className="object-cover" />
-                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                            <div className="text-center text-white p-4">
-                                <h3 className="text-2xl font-bold">Sisakhula phoo!</h3>
-                                <p className="text-lg">Coming Soon!</p>
-                            </div>
-                       </div>
-                    </div>
-                  </div>
-                </div>
-                 {/* umGidi Flip Card */}
-                <div className="flip-card group" onClick={() => setIsUmgidiFlipped(!isUmgidiFlipped)}>
-                  <div className={cn("flip-card-inner", { 'is-flipped': isUmgidiFlipped })}>
-                    <div className="flip-card-front">
-                      <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 w-full h-full">
-                        <div className="relative w-full h-48">
-                            <Image src="/images/umgidi1.jpg" alt="umGidi" layout="fill" objectFit="cover" />
-                        </div>
-                        <CardHeader className="p-1 text-center">
-                          <CardTitle className="text-xl font-semibold">umGidi</CardTitle>
-                        </CardHeader>
-                      </Card>
-                    </div>
-                     <div className="flip-card-back flex items-center justify-center p-0 overflow-hidden">
-                       <Image src="/images/boy.jpg" alt="umGidi Background" fill className="object-cover" />
-                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                            <div className="text-center text-white p-4">
-                                <h3 className="text-2xl font-bold">Ndisakhula!</h3>
-                                <p className="text-lg">Coming Soon!</p>
-                            </div>
-                       </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 

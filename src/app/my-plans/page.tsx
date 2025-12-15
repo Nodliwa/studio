@@ -60,8 +60,6 @@ function calculateInitialTotal(categories: any[]): number {
 const eventTypeImages: { [key: string]: string } = {
     wedding: '/images/wedding.jpg',
     funeral: '/images/funeral2.png',
-    umemulo: '/images/umemulo.jpg',
-    umgidi: '/images/umgidi1.jpg',
 };
 
 function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string) => void }) {
@@ -210,13 +208,6 @@ function MyPlansPage() {
         }
     };
     
-    const handleComingSoon = () => {
-        toast({
-            title: "Feature Coming Soon!",
-            description: "We're working hard to bring this to you.",
-        });
-    };
-
     const handleDeletePlan = async (budgetId: string) => {
         if (!user || !firestore) return;
         
@@ -301,14 +292,6 @@ function MyPlansPage() {
                                     <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={() => handleNewPlan('funeral')}>
                                         <CrossIcon />
                                         Funeral
-                                    </Button>
-                                    <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
-                                        <ListChecks />
-                                        uMemulo
-                                    </Button>
-                                    <Button variant="outline" size="lg" className="h-20 flex-col gap-2" onClick={handleComingSoon}>
-                                        <Wallet />
-                                        umGidi
                                     </Button>
                                 </div>
                             </DialogContent>
@@ -400,4 +383,3 @@ export default MyPlansPage;
 
     
 
-    
