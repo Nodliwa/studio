@@ -150,7 +150,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
 
   return (
     <Card className="shadow-lg border-border/60 h-full">
-      <CardHeader className="flex flex-row items-start justify-between p-4">
+      <CardHeader className="flex flex-row items-start justify-between p-4 pb-0">
         <div className="flex-1">
           <CardTitle className="font-headline text-2xl">
             Event Details
@@ -161,7 +161,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
             <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>Edit</Button>
         )}
       </CardHeader>
-      <CardContent className="p-4">
+      <CardContent className="p-4 pt-4">
         <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
             <Label htmlFor="name">My-Plan Name</Label>
