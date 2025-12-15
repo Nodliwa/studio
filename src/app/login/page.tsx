@@ -135,6 +135,10 @@ export default function LoginPage() {
                         {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
                     </div>
                     <div className="space-y-2">
+                        <Label htmlFor="cellphone">Cellphone (Optional)</Label>
+                        <Input id="cellphone" type="tel" />
+                    </div>
+                    <div className="space-y-2">
                         <Label htmlFor="password">Password</Label>
                         <Input id="password" type="password" {...register('password')} />
                         {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
