@@ -310,9 +310,9 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
         <PageHeader />
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
             {/* Left Column */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="space-y-8">
               <Greeter quote={eventQuote} />
               
               <div>
@@ -323,7 +323,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
             </div>
 
             {/* Right Column */}
-            <div className="lg:col-span-1">
+            <div>
               <MustDos budgetId={budgetId} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
             </div>
           </div>
@@ -372,4 +372,3 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
-
