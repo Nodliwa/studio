@@ -75,8 +75,8 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
         : null;
 
     return (
-        <Card className="overflow-hidden group relative flex flex-col">
-            <div className="relative h-52 w-full">
+        <Card className="overflow-hidden group relative flex flex-col bg-card shadow-sm">
+            <div className="relative h-64 w-full">
                 <Link href={`/planner/${budget.id}`} className="block w-full h-full">
                     {imageUrl ? (
                         <>
@@ -86,13 +86,40 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                                 fill
                                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                             />
-                            <div className="absolute inset-0 bg-black/50" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/10" />
                         </>
                     ) : (
                         <div className="h-full w-full bg-gradient-to-t from-primary/80 to-primary/40" />
                     )}
                 </Link>
-                <MessageSquare className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-32 w-32 text-white/10" />
+
+                <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
+                    <div className="space-y-2">
+                        <h3 className="text-xl font-bold truncate text-shadow" title={budget.name}>{budget.name}</h3>
+                        <div className='space-y-1 text-sm text-white/90 text-shadow-sm'>
+                            {formattedDate ? (
+                                <p className="flex items-center gap-2"><CalendarDays className="h-4 w-4 shrink-0" /> {formattedDate}</p>
+                            ) : (
+                                <p className="flex items-center gap-2 italic"><CalendarDays className="h-4 w-4 shrink-0" /> No date set</p>
+                            )}
+                            {budget.eventLocation ? (
+                                <p className="flex items-center gap-2"><MapPin className="h-4 w-4 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
+                            ) : (
+                                <p className="flex items-center gap-2 italic"><MapPin className="h-4 w-4 shrink-0" /> No location set</p>
+                            )}
+                            {budget.expectedGuests ? (
+                                <p className="flex items-center gap-2"><Users className="h-4 w-4 shrink-0" /> {budget.expectedGuests} guests</p>
+                            ) : (
+                                <p className="flex items-center gap-2 italic"><Users className="h-4 w-4 shrink-0" /> No guests set</p>
+                            )}
+                        </div>
+                    </div>
+
+                    <p className="flex items-start gap-2 text-2xl font-bold text-white text-shadow mt-3 self-end">
+                        <Wallet className="inline-block h-6 w-6 mt-1 shrink-0" />
+                        {new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(budget.grandTotal)}
+                    </p>
+                </div>
             </div>
 
             <AlertDialog>
@@ -132,30 +159,6 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                 </AlertDialogContent>
             </AlertDialog>
             
-            <CardContent className="p-4 flex-grow flex flex-col justify-between bg-card text-card-foreground">
-                <div className="space-y-2">
-                    <h3 className="text-lg font-bold truncate" title={budget.name}>{budget.name}</h3>
-                    <div className='space-y-1 text-sm text-muted-foreground'>
-                        {formattedDate ? (
-                            <p className="flex items-center gap-2"><CalendarDays className="h-4 w-4 shrink-0" /> {formattedDate}</p>
-                        ) : (
-                            <p className="flex items-center gap-2 italic"><CalendarDays className="h-4 w-4 shrink-0" /> No date set</p>
-                        )}
-                        {budget.eventLocation ? (
-                            <p className="flex items-center gap-2"><MapPin className="h-4 w-4 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
-                        ) : (
-                            <p className="flex items-center gap-2 italic"><MapPin className="h-4 w-4 shrink-0" /> No location set</p>
-                        )}
-                        {budget.expectedGuests ? (
-                            <p className="flex items-center gap-2"><Users className="h-4 w-4 shrink-0" /> {budget.expectedGuests} guests</p>
-                        ) : (
-                            <p className="flex items-center gap-2 italic"><Users className="h-4 w-4 shrink-0" /> No guests set</p>
-                        )}
-                    </div>
-                </div>
-
-                <p className="flex items-start gap-2 text-lg font-bold text-primary mt-3"><Wallet className="inline-block h-5 w-5 mt-1 shrink-0" />{new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(budget.grandTotal)}</p>
-            </CardContent>
              <CardFooter className="p-2 border-t bg-card">
                 <Button variant="outline" className="w-full" onClick={() => router.push(`/planner/${budget.id}/must-dos`)}>
                     <ListChecks className="mr-2 h-4 w-4" />

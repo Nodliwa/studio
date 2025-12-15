@@ -66,6 +66,12 @@
       linear-gradient(160deg, rgba(255,255,255,0.4) 35%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 65%),
       repeating-linear-gradient(90deg, hsla(0,0%,100%,0) 0, hsla(0,0%,100%,0) 1px, hsla(0,0%,100%,.1) 1px, hsla(0,0%,100%,.1) 3px);
   }
+  .text-shadow {
+    text-shadow: 1px 1px 3px rgb(0 0 0 / 0.5);
+  }
+  .text-shadow-sm {
+    text-shadow: 1px 1px 2px rgb(0 0 0 / 0.4);
+  }
 }
 
 
@@ -115,5 +121,7 @@
     justify-content: center;
   }
 }
+
+    
 
     
