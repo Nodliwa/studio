@@ -76,7 +76,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
 
     return (
         <Card className="overflow-hidden group relative flex flex-col bg-card shadow-sm">
-            <div className="relative h-64 w-full">
+            <div className="relative w-full aspect-[4/3]">
                 <Link href={`/planner/${budget.id}`} className="block w-full h-full">
                     {imageUrl ? (
                         <>
