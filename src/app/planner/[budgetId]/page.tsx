@@ -373,6 +373,9 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
               />
             </div>
           </div>
+           <p className="text-center text-sm text-muted-foreground mt-8">
+            click on each category below to open shopping items and start creating your plan.
+          </p>
 
            <div className="mt-8">
               <DndContext
