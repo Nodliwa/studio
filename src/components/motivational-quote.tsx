@@ -31,11 +31,11 @@ const MotivationalQuote = ({ quote: propQuote }: { quote?: string }) => {
 
   if (!quote) {
     // Render a placeholder or nothing on the server and during initial client render
-    return <p className="mt-4 text-lg italic text-muted-foreground">&nbsp;</p>;
+    return <p className="mt-4 italic text-muted-foreground">&nbsp;</p>;
   }
 
   return (
-    <p className="mt-4 text-lg italic text-muted-foreground">
+    <p className="mt-4 text-base italic text-muted-foreground">
       {`"${quote}"`}
     </p>
   );
