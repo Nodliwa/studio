@@ -29,6 +29,7 @@ import {
 import Greeter from '@/components/greeter';
 import { Card, CardContent } from '@/components/ui/card';
 import { v4 as uuidv4 } from 'uuid';
+import { Calendar } from '@/components/ui/calendar';
 
 const funeralQuotes = [
     '"Blessed are those who mourn, for they will be comforted." - Matthew 5:4',
@@ -79,6 +80,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   const [eventQuote, setEventQuote] = useState('');
   const uniqueId = useId();
   const isTemplateMode = budgetId === 'template';
+  const [date, setDate] = useState<Date | undefined>(new Date());
   
   const budgetDocRef = useMemoFirebase(() => (
     user && budgetId && !isTemplateMode ? doc(firestore, 'users', user.uid, 'budgets', budgetId) : null
@@ -359,12 +361,12 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
             <Greeter quote={eventQuote} />
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
-            <div className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8 mt-8">
+            <div className="lg:col-span-2 space-y-8">
               <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-8 row-start-1 lg:row-start-auto">
                <BudgetSummary 
                 grandTotal={grandTotal}
                 daysLeft={daysLeft}

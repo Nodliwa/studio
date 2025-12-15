@@ -13,17 +13,19 @@ const Greeter = ({ quote }: { quote?: string }) => {
   useEffect(() => {
     const name = user?.displayName?.split(' ')[0] || 'there';
     const hour = new Date().getHours();
-    
+    let timeOfDayGreeting = '';
+
     if (hour < 12) {
-      setMainGreeting(`Good Morning, ${name}!`);
-      setSubGreeting("Let's get your day planned out.");
-    } else if (hour < 18) {
-      setMainGreeting(`Good Afternoon, ${name}!`);
-      setSubGreeting("Ready to continue planning?");
+      timeOfDayGreeting = 'Good morning';
+    } else if (hour < 17) {
+      timeOfDayGreeting = 'Good afternoon';
     } else {
-      setMainGreeting(`Good Evening, ${name}!`);
-      setSubGreeting("Let's pick up where we left off with our planning...");
+      timeOfDayGreeting = 'Good evening';
     }
+    
+    setMainGreeting(`${timeOfDayGreeting}, ${name}!`);
+    setSubGreeting("Let's get your planning done.");
+
   }, [user]);
 
   return (
