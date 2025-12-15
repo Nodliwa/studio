@@ -373,11 +373,25 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
               />
             </div>
           </div>
+
            <p className="text-center text-sm text-muted-foreground mt-8">
             Click on each category below to open shopping items and start creating your plan.
           </p>
+          
+          {isTemplateMode && (
+            <Card className="mt-8 bg-yellow-100 border-yellow-300">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold">You are in Preview Mode</h3>
+                    <p className="text-sm text-yellow-800">Your changes won't be saved. <a href="/register" className="underline font-semibold">Register now</a> to save your plan!</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-           <div className="mt-8">
+           <div className="mt-4">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -395,19 +409,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
                 </SortableContext>
               </DndContext>
             </div>
-          
-          {isTemplateMode && (
-            <Card className="mt-8 mb-8 bg-yellow-100 border-yellow-300">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold">You are in Preview Mode</h3>
-                    <p className="text-sm text-yellow-800">Your changes won't be saved. <a href="/register" className="underline font-semibold">Register now</a> to save your plan!</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
         </main>
       </div>
