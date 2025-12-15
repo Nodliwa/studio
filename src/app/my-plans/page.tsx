@@ -160,7 +160,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
             </AlertDialog>
             
              <CardFooter className="p-0 border-t bg-card">
-                <Button variant="default" className="w-full rounded-t-none" onClick={() => router.push(`/planner/${budget.id}/must-dos`)}>
+                <Button variant="default" className="w-full rounded-t-none text-lg font-bold py-4" onClick={() => router.push(`/planner/${budget.id}/must-dos`)}>
                     <ListChecks className="mr-2 h-4 w-4" />
                     Must-Do's
                 </Button>
@@ -411,3 +411,5 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
+
+    
