@@ -44,35 +44,38 @@ export default function LandingPage() {
             <div className="w-full max-w-4xl mx-auto mt-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <Link href="/planner?eventType=wedding" className="group">
-                        <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 h-full min-h-[236px]">
-                            <Image src="/images/wedding.jpg" alt="Wedding" width={400} height={300} className="object-cover w-full h-40" />
-                            <CardHeader className="p-2 text-center">
-                                <CardTitle className="text-xl font-semibold flex items-center justify-center gap-2">
-                                    <Ribbon className="h-5 w-5" /> Wedding
+                       <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 h-full min-h-[236px]">
+                            <Image src="/images/wedding.jpg" alt="Wedding" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                            <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <CardTitle className="text-2xl font-semibold flex items-center justify-center gap-2 text-white">
+                                    <Ribbon className="h-6 w-6" /> Wedding
                                 </CardTitle>
-                            </CardHeader>
+                            </div>
                         </Card>
                     </Link>
                     <Link href="/planner?eventType=funeral" className="group">
-                        <Card className="overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 h-full min-h-[236px]">
-                            <Image src="/images/funeral2.png" alt="Funeral" width={400} height={300} className="object-cover w-full h-40" />
-                            <CardHeader className="p-2 text-center">
-                                <CardTitle className="text-xl font-semibold flex items-center justify-center gap-2">
-                                    <Utensils className="h-5 w-5" /> Funeral
+                        <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 h-full min-h-[236px]">
+                            <Image src="/images/funeral2.png" alt="Funeral" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                            <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <CardTitle className="text-2xl font-semibold flex items-center justify-center gap-2 text-white">
+                                    <Utensils className="h-6 w-6" /> Funeral
                                 </CardTitle>
-                            </CardHeader>
+                            </div>
                         </Card>
                     </Link>
                     <div className="flip-card" onClick={() => handleFlip('umemulo')}>
                         <div className={cn("flip-card-inner", { 'is-flipped': flippedCard === 'umemulo' })}>
                             <div className="flip-card-front">
-                                <Card className="overflow-hidden h-full">
-                                    <Image src="/images/umemulo.jpg" alt="uMemulo" width={400} height={300} className="object-cover w-full h-40" />
-                                    <CardHeader className="p-2 text-center">
-                                        <CardTitle className="text-xl font-semibold flex items-center justify-center gap-2">
-                                            <Star className="h-5 w-5" /> uMemulo
-                                        </CardTitle>
-                                    </CardHeader>
+                                <Card className="overflow-hidden h-full relative">
+                                    <Image src="/images/umemulo.jpg" alt="uMemulo" fill className="object-cover" />
+                                    <div className="absolute inset-0 bg-black/40" />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <CardTitle className="text-2xl font-semibold flex items-center justify-center gap-2 text-white">
+                                          <Star className="h-6 w-6" /> uMemulo
+                                      </CardTitle>
+                                    </div>
                                 </Card>
                             </div>
                             <div className="flip-card-back">
@@ -84,13 +87,14 @@ export default function LandingPage() {
                     <div className="flip-card" onClick={() => handleFlip('umgidi')}>
                         <div className={cn("flip-card-inner", { 'is-flipped': flippedCard === 'umgidi' })}>
                             <div className="flip-card-front">
-                                <Card className="overflow-hidden h-full">
-                                    <Image src="/images/umgidi1.jpg" alt="uMgidi" width={400} height={300} className="object-cover w-full h-40" />
-                                    <CardHeader className="p-2 text-center">
-                                        <CardTitle className="text-xl font-semibold flex items-center justify-center gap-2">
-                                            <Gift className="h-5 w-5" /> uMgidi
-                                        </CardTitle>
-                                    </CardHeader>
+                                <Card className="overflow-hidden h-full relative">
+                                    <Image src="/images/umgidi1.jpg" alt="uMgidi" fill className="object-cover" />
+                                    <div className="absolute inset-0 bg-black/40" />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <CardTitle className="text-2xl font-semibold flex items-center justify-center gap-2 text-white">
+                                          <Gift className="h-6 w-6" /> uMgidi
+                                      </CardTitle>
+                                    </div>
                                 </Card>
                             </div>
                             <div className="flip-card-back">
