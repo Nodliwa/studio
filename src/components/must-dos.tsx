@@ -66,21 +66,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
           readOnly={item.status === 'done'}
           placeholder="New must-do..."
         />
-        <Textarea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          onBlur={() => handleBlur('note')}
-          placeholder="Add a note..."
-          rows={1}
-          className={cn(
-            "h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px] bg-transparent",
-            "hidden group-hover:block",
-            note && "block", // Always block if note has content
-            "read-only:cursor-default read-only:bg-transparent group-hover:read-only:bg-inherit group-hover:read-only:cursor-text"
-          )}
-          readOnly={item.status === 'done'}
-        />
-        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1 hidden group-hover:flex">
+        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1">
@@ -110,6 +96,20 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        <Textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          onBlur={() => handleBlur('note')}
+          placeholder="Add a note..."
+          rows={1}
+          className={cn(
+            "h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px] bg-transparent",
+            "hidden group-hover:block",
+            note && "block", // Always block if note has content
+            "read-only:cursor-default read-only:bg-transparent group-hover:read-only:bg-inherit group-hover:read-only:cursor-text"
+          )}
+          readOnly={item.status === 'done'}
+        />
       </div>
       <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100" onClick={() => onDelete(item.id)}>
         <Trash2 className="h-4 w-4" />
