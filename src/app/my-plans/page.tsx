@@ -162,7 +162,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
              <CardFooter className="p-0 border-t bg-card">
                 <Button variant="default" className="w-full rounded-t-none" onClick={() => router.push(`/planner/${budget.id}/must-dos`)}>
                     <ListChecks className="mr-2 h-4 w-4" />
-                    Must-Dos
+                    Must-Do's
                 </Button>
             </CardFooter>
         </Card>
