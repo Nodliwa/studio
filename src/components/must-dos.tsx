@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
 import type { DocumentReference } from 'firebase/firestore';
-import { suggestMustDos, type SuggestMustDosInput, type SuggestMustDosOutput } from '@/ai/flows/suggest-must-dos-flow';
+import { suggestMustDos } from '@/ai/flows/suggest-must-dos-flow';
+import type { SuggestMustDosInput, SuggestMustDosOutput } from '@/ai/flows/schemas';
 
 interface MustDosProps {
   budgetId: string;

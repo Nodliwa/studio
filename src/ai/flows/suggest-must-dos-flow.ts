@@ -3,32 +3,15 @@
  * @fileOverview An AI flow to suggest 'must-do' tasks for event planning.
  *
  * - suggestMustDos - A function that suggests tasks based on event type and existing tasks.
- * - SuggestMustDosInput - The input type for the suggestMustDos function.
- * - SuggestMustDosOutput - The return type for the suggestMustDos function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
-import { MustDo } from '@/lib/types';
-
-// We don't need the full MustDo schema for the output, just the relevant parts.
-const SuggestedMustDoSchema = z.object({
-    title: z.string().describe('The concise title of the suggested task.'),
-    note: z.string().describe('A brief, helpful note or detail for the task.'),
-    importance: z.enum(['none', 'important', 'critical']).describe('The suggested priority of the task.'),
-    timing: z.enum(['anytime', 'before-event', 'day-before', 'on-the-day']).describe('The suggested timing for the task relative to the event.'),
-});
-
-export const SuggestMustDosInputSchema = z.object({
-  eventType: z.string().describe('The type of event, e.g., "wedding", "funeral".'),
-  existingMustDos: z.array(z.string()).describe('A list of titles of existing must-do tasks to avoid suggesting duplicates.'),
-});
-export type SuggestMustDosInput = z.infer<typeof SuggestMustDosInputSchema>;
-
-export const SuggestMustDosOutputSchema = z.object({
-  suggestions: z.array(SuggestedMustDoSchema).describe('A list of 3-5 new, relevant must-do suggestions.'),
-});
-export type SuggestMustDosOutput = z.infer<typeof SuggestMustDosOutputSchema>;
+import {
+  SuggestMustDosInputSchema,
+  SuggestMustDosOutputSchema,
+  type SuggestMustDosInput,
+  type SuggestMustDosOutput,
+} from './schemas';
 
 export async function suggestMustDos(input: SuggestMustDosInput): Promise<SuggestMustDosOutput> {
   return suggestMustDosFlow(input);
