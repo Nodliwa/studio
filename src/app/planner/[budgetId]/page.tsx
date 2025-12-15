@@ -80,8 +80,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   const [eventQuote, setEventQuote] = useState('');
   const uniqueId = useId();
   const isTemplateMode = budgetId === 'template';
-  const [isNewPlan, setIsNewPlan] = useState(false);
-
+  
   const budgetDocRef = useMemoFirebase(() => (
     user && budgetId && !isTemplateMode ? doc(firestore, 'users', user.uid, 'budgets', budgetId) : null
   ), [user, firestore, budgetId, isTemplateMode]);
@@ -111,7 +110,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
 
   useEffect(() => {
     const initializePlan = async () => {
-      // Template mode: Load from template
+      // Case 1: Template mode for anonymous users
       if (isTemplateMode) {
         const eventType = searchParams.get('eventType') || 'other';
         const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
@@ -121,54 +120,54 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
         return;
       }
   
-      // Firestore mode
-      if (user && !user.isAnonymous && budgetId && !budgetLoading) {
-        const isActuallyNew = budget && !budget.name && (!fetchedCategories || fetchedCategories.length === 0);
+      // Case 2: Logged-in user, loading an existing plan from Firestore
+      if (user && !user.isAnonymous && fetchedCategories && fetchedCategories.length > 0) {
+        const sortedCategories = [...fetchedCategories].sort((a, b) => a.order - b.order);
+        const { categories, grandTotal } = calculateTotals(sortedCategories);
+        setBudgetData(categories);
+        setGrandTotal(grandTotal);
+        return;
+      }
 
-        if (isActuallyNew) {
-          const eventType = searchParams.get('eventType') || budget?.eventType || 'other';
-          const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
-          
-          const newBudgetId = budgetId;
-          const initialTotal = calculateTotals(template).grandTotal;
-          
-          const newBudget: Omit<Budget, 'id'> = {
-            name: "My Celebration Plan",
-            grandTotal: initialTotal,
-            userId: user.uid,
-            eventType: eventType,
-            eventDate: "",
-            eventLocation: "",
-            expectedGuests: 0,
+      // Case 3: Logged-in user, creating a NEW plan from a template
+      // This runs when budget is loaded, but categories are not.
+      if (user && !user.isAnonymous && budget && !categoriesLoading && (!fetchedCategories || fetchedCategories.length === 0)) {
+        const eventType = searchParams.get('eventType') || budget?.eventType || 'other';
+        const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
+        
+        const newBudgetId = budgetId;
+        const { categories: templateCategories, grandTotal: initialTotal } = calculateTotals(JSON.parse(JSON.stringify(template)));
+        
+        const newBudget: Partial<Budget> = {
+          name: "My Celebration Plan",
+          grandTotal: initialTotal,
+          userId: user.uid,
+          eventType: eventType,
+        };
+
+        // Update the budget document with template-derived info
+        const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
+        await setDoc(budgetDocRef, newBudget, { merge: true });
+
+        // Batch write all categories and their items from the template
+        const batch = writeBatch(firestore);
+        templateCategories.forEach((category, index) => {
+          const categoryRef = doc(collection(budgetDocRef, 'categories'));
+          const categoryData: BudgetCategory = {
+            ...category,
+            id: categoryRef.id, // Use the new generated ID
+            order: index,
+            budgetId: newBudgetId,
           };
-  
-          // Set budget doc first
-          const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
-          await setDoc(budgetDocRef, newBudget, { merge: true });
-
-          // Then batch write categories
-          const batch = writeBatch(firestore);
-          const categoriesWithTotals = calculateTotals(template).categories;
-          categoriesWithTotals.forEach((category, index) => {
-            const categoryRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId, 'categories', category.id);
-            const categoryData = {
-              ...category,
-              order: index,
-              budgetId: newBudgetId,
-            };
-            batch.set(categoryRef, categoryData);
-          });
-          await batch.commit();
-
-          setBudgetData(categoriesWithTotals);
-          setGrandTotal(initialTotal);
-
-        } else if (fetchedCategories && fetchedCategories.length > 0) {
-            const sortedCategories = [...fetchedCategories].sort((a, b) => a.order - b.order);
-            const { categories, grandTotal } = calculateTotals(sortedCategories);
-            setBudgetData(categories);
-            setGrandTotal(grandTotal);
-        }
+          batch.set(categoryRef, categoryData);
+        });
+        await batch.commit();
+        
+        // The useCollection hook will now fetch the newly created categories,
+        // triggering the "Existing Plan" block on the next render.
+        // For immediate UI update, we can set it here as well.
+        setBudgetData(templateCategories);
+        setGrandTotal(initialTotal);
       }
     };
   
