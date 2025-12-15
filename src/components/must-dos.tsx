@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -46,7 +45,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   };
 
   return (
-    <div className="group flex items-start gap-3 p-3 border-b last:border-b-0">
+    <div className="flex items-start gap-3 p-3 border-b last:border-b-0">
       <Checkbox
         id={`mustdo-${item.id}`}
         checked={item.status === 'done'}
@@ -61,7 +60,6 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
             onBlur={() => handleBlur('title')}
             className={cn(
                 "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent flex-grow",
-                "read-only:cursor-default read-only:bg-transparent group-hover:read-only:bg-inherit group-hover:read-only:cursor-text",
                 item.status === 'done' && "line-through text-muted-foreground"
             )}
             readOnly={item.status === 'done'}
@@ -70,7 +68,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1">
                         <ImportanceIcon importance={item.importance} />
                         <span>{ImportanceLevels[item.importance].label}</span>
                     </Button>
@@ -86,7 +84,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-auto p-1 opacity-0 group-hover:opacity-100 transition-opacity">{TimingOptions[item.timing]}</Button>
+                    <Button variant="ghost" size="sm" className="h-auto p-1">{TimingOptions[item.timing]}</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                     {Object.entries(TimingOptions).map(([key, label]) => (
@@ -106,14 +104,12 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
           rows={1}
           className={cn(
             "h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px] bg-transparent",
-            "hidden group-hover:block",
-            note && "block", // Always block if note has content
-            "read-only:cursor-default read-only:bg-transparent group-hover:read-only:bg-inherit group-hover:read-only:cursor-text"
+            "read-only:cursor-default read-only:bg-transparent"
           )}
           readOnly={item.status === 'done'}
         />
       </div>
-      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100" onClick={() => onDelete(item.id)}>
+      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onDelete(item.id)}>
         <Trash2 className="h-4 w-4" />
       </Button>
     </div>
