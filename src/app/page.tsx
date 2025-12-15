@@ -81,7 +81,10 @@ export default function LandingPage() {
                             <div className="flip-card-back relative">
                                 <Image src="/images/girl.jpg" alt="uMemulo Coming Soon" fill className="object-cover rounded-lg" />
                                 <div className="absolute inset-0 bg-black/50 rounded-lg" />
-                                <h3 className="text-2xl font-bold relative z-10">Iyeza, ay'kaka'fiki</h3>
+                                <div className="relative z-10 text-2xl font-bold text-center">
+                                    <p>Iyeza,</p>
+                                    <p>ay'kaka'fiki.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -102,7 +105,10 @@ export default function LandingPage() {
                             <div className="flip-card-back relative">
                                 <Image src="/images/boy.jpg" alt="uMgidi Coming Soon" fill className="object-cover rounded-lg" />
                                 <div className="absolute inset-0 bg-black/50 rounded-lg" />
-                                <h3 className="text-2xl font-bold relative z-10">Iyeza, ay'kaka'fiki</h3>
+                                <div className="relative z-10 text-2xl font-bold text-center">
+                                    <p>Iyeza,</p>
+                                    <p>ay'kaka'fiki.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
