@@ -178,7 +178,7 @@ export default function PageHeader() {
                     <Button asChild variant="outline" size="sm">
                         <Link href="/login" className="text-lg">Login</Link>
                     </Button>
-                    <Button asChild size="sm" className="mr-4">
+                    <Button asChild size="sm" className="mr-7">
                         <Link href="/register" className="text-lg">Sign Up</Link>
                     </Button>
                 </>
