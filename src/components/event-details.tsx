@@ -149,7 +149,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
   }
 
   return (
-    <Card className="shadow-lg border-border/60">
+    <Card className="shadow-lg border-border/60 h-full">
       <CardHeader className="flex flex-row items-start justify-between p-4">
         <div className="flex-1">
           <CardTitle className="font-headline text-2xl">
