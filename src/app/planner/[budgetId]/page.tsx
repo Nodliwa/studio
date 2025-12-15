@@ -356,8 +356,8 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
        <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
         <PageHeader />
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
             {/* Left Column */}
             <div className="space-y-8">
               <Greeter quote={eventQuote} />
@@ -367,36 +367,18 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
               </div>
 
               <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
+              
+              <MustDos budgetId={budgetId} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} mustDos={mustDos} />
+
             </div>
 
             {/* Right Column */}
-            <div>
-              <MustDos budgetId={budgetId} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} mustDos={mustDos} />
-            </div>
-          </div>
-          
-          {isTemplateMode && (
-            <Card className="mt-8 mb-8 bg-yellow-100 border-yellow-300">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold">You are in Preview Mode</h3>
-                    <p className="text-sm text-yellow-800">Your changes won't be saved. <a href="/register" className="underline font-semibold">Register now</a> to save your plan!</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
-            <div className="lg:col-span-1">
-              <BudgetSummary 
+            <div className="space-y-8">
+               <BudgetSummary 
                 grandTotal={grandTotal}
                 daysLeft={daysLeft}
                 mustDosCount={mustDosCount}
               />
-            </div>
-            <div className="lg:col-span-1">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -415,6 +397,20 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
               </DndContext>
             </div>
           </div>
+          
+          {isTemplateMode && (
+            <Card className="mt-8 mb-8 bg-yellow-100 border-yellow-300">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold">You are in Preview Mode</h3>
+                    <p className="text-sm text-yellow-800">Your changes won't be saved. <a href="/register" className="underline font-semibold">Register now</a> to save your plan!</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
         </main>
       </div>
     </div>
