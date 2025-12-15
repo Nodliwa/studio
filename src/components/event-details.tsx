@@ -155,7 +155,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
           <CardTitle className="font-headline text-2xl">
             Event Details
           </CardTitle>
-           <p className="text-sm font-semibold text-primary mt-2">{daysLeftText}</p>
+           <p className="text-sm font-semibold text-primary mt-1">{daysLeftText}</p>
         </div>
         {!isEditing && !isTemplateMode && (
             <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>Edit</Button>
