@@ -107,9 +107,6 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/planner/${budget.id}`); }}>
                                 Edit Budget
                             </DropdownMenuItem>
-                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/planner/${budget.id}/must-dos`); }}>
-                                View Must-Dos
-                            </DropdownMenuItem>
                             <AlertDialogTrigger asChild>
                                 <DropdownMenuItem 
                                     className="text-destructive focus:bg-destructive/10 focus:text-destructive"
@@ -135,7 +132,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                 </AlertDialogContent>
             </AlertDialog>
             
-            <div className="p-4 flex-grow flex flex-col justify-between bg-card text-card-foreground">
+            <CardContent className="p-4 flex-grow flex flex-col justify-between bg-card text-card-foreground">
                 <div className="space-y-2">
                     <h3 className="text-lg font-bold truncate" title={budget.name}>{budget.name}</h3>
                     <div className='space-y-1 text-sm text-muted-foreground'>
@@ -158,7 +155,13 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                 </div>
 
                 <p className="flex items-start gap-2 text-lg font-bold text-primary mt-3"><Wallet className="inline-block h-5 w-5 mt-1 shrink-0" />{new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(budget.grandTotal)}</p>
-            </div>
+            </CardContent>
+             <CardFooter className="p-2 border-t bg-card">
+                <Button variant="outline" className="w-full" onClick={() => router.push(`/planner/${budget.id}/must-dos`)}>
+                    <ListChecks className="mr-2 h-4 w-4" />
+                    Must-Dos
+                </Button>
+            </CardFooter>
         </Card>
     );
 }
