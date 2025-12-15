@@ -9,7 +9,6 @@ import PageHeader from "@/components/page-header";
 import { BudgetAccordion } from "@/components/budget-accordion";
 import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
-import { MustDos } from "@/components/must-dos";
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn, setDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc, writeBatch, setDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import {
@@ -112,14 +111,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     })
   );
 
-  const mustDosCount = useMemo(() => {
-    if (!mustDos) return { completed: 0, total: 0 };
-    return {
-        completed: mustDos.filter(item => item.status === 'done').length,
-        total: mustDos.length
-    };
-  }, [mustDos]);
-  
   const daysLeft = useMemo(() => {
     if (!budget?.eventDate) return null;
     const eventDate = new Date(budget.eventDate);
@@ -359,23 +350,19 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
           <Greeter quote={eventQuote} />
           
           <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
-            {/* Left Column */}
-            <div className="flex flex-col">
-              <div className="space-y-8">
-                <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
-              </div>
-              <div className="mt-8">
-                 <MustDos budgetId={budgetId} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} mustDos={mustDos} />
-              </div>
+            <div className="space-y-8">
+              <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
             </div>
 
-            {/* Right Column */}
             <div className="space-y-8">
                <BudgetSummary 
                 grandTotal={grandTotal}
                 daysLeft={daysLeft}
-                mustDosCount={mustDosCount}
               />
+            </div>
+          </div>
+
+           <div className="mt-8">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -393,7 +380,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
                 </SortableContext>
               </DndContext>
             </div>
-          </div>
           
           {isTemplateMode && (
             <Card className="mt-8 mb-8 bg-yellow-100 border-yellow-300">
@@ -413,3 +399,5 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
+
+    

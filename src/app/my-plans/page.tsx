@@ -75,26 +75,27 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
         : null;
 
     return (
-        <Card className="overflow-hidden group relative h-72 w-full">
-            <Link href={`/planner/${budget.id}`} className="block w-full h-full">
-                {imageUrl ? (
-                    <>
-                        <Image
-                            src={imageUrl}
-                            alt={budget.name || 'Event image'}
-                            fill
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-black/50" />
-                    </>
-                ) : (
-                    <div className="h-full w-full bg-gradient-to-t from-primary/80 to-primary/40" />
-                )}
-            </Link>
+        <Card className="overflow-hidden group relative flex flex-col">
+            <div className="relative h-52 w-full">
+                <Link href={`/planner/${budget.id}`} className="block w-full h-full">
+                    {imageUrl ? (
+                        <>
+                            <Image
+                                src={imageUrl}
+                                alt={budget.name || 'Event image'}
+                                fill
+                                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-black/50" />
+                        </>
+                    ) : (
+                        <div className="h-full w-full bg-gradient-to-t from-primary/80 to-primary/40" />
+                    )}
+                </Link>
+                <MessageSquare className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-32 w-32 text-white/10" />
+            </div>
 
-            <MessageSquare className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-32 w-32 text-white/10" />
-            
-             <AlertDialog>
+            <AlertDialog>
                 <div className="absolute top-2 right-2 z-30">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -104,7 +105,10 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-background/80 backdrop-blur text-foreground">
                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/planner/${budget.id}`); }}>
-                                View/Edit
+                                Edit Budget
+                            </DropdownMenuItem>
+                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/planner/${budget.id}/must-dos`); }}>
+                                View Must-Dos
                             </DropdownMenuItem>
                             <AlertDialogTrigger asChild>
                                 <DropdownMenuItem 
@@ -130,30 +134,30 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
-
-            {/* Bottom Content Area */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 text-white flex justify-between items-end">
-                <div className="space-y-1">
-                    <h3 className="text-xl font-bold">{budget.name}</h3>
-                     {formattedDate ? (
-                        <p className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4 shrink-0" /> {formattedDate}</p>
-                    ) : (
-                        <p className="flex items-center gap-2 text-sm text-white/70 italic"><CalendarDays className="h-4 w-4 shrink-0" /> No date set</p>
-                    )}
-                    {budget.eventLocation ? (
-                        <p className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
-                    ) : (
-                        <p className="flex items-center gap-2 text-sm text-white/70 italic"><MapPin className="h-4 w-4 shrink-0" /> No location set</p>
-                    )}
-                    {budget.expectedGuests ? (
-                        <p className="flex items-center gap-2 text-sm"><Users className="h-4 w-4 shrink-0" /> {budget.expectedGuests} guests</p>
-                    ) : (
-                        <p className="flex items-center gap-2 text-sm text-white/70 italic"><Users className="h-4 w-4 shrink-0" /> No guests set</p>
-                    )}
+            
+            <div className="p-4 flex-grow flex flex-col justify-between bg-card text-card-foreground">
+                <div className="space-y-2">
+                    <h3 className="text-lg font-bold truncate" title={budget.name}>{budget.name}</h3>
+                    <div className='space-y-1 text-sm text-muted-foreground'>
+                        {formattedDate ? (
+                            <p className="flex items-center gap-2"><CalendarDays className="h-4 w-4 shrink-0" /> {formattedDate}</p>
+                        ) : (
+                            <p className="flex items-center gap-2 italic"><CalendarDays className="h-4 w-4 shrink-0" /> No date set</p>
+                        )}
+                        {budget.eventLocation ? (
+                            <p className="flex items-center gap-2"><MapPin className="h-4 w-4 shrink-0" /> <span className="truncate">{budget.eventLocation}</span></p>
+                        ) : (
+                            <p className="flex items-center gap-2 italic"><MapPin className="h-4 w-4 shrink-0" /> No location set</p>
+                        )}
+                        {budget.expectedGuests ? (
+                            <p className="flex items-center gap-2"><Users className="h-4 w-4 shrink-0" /> {budget.expectedGuests} guests</p>
+                        ) : (
+                            <p className="flex items-center gap-2 italic"><Users className="h-4 w-4 shrink-0" /> No guests set</p>
+                        )}
+                    </div>
                 </div>
 
-                <p className="flex items-start gap-2 text-lg font-bold"><Wallet className="inline-block h-5 w-5 mt-0.5 shrink-0" />{new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(budget.grandTotal)}</p>
+                <p className="flex items-start gap-2 text-lg font-bold text-primary mt-3"><Wallet className="inline-block h-5 w-5 mt-1 shrink-0" />{new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(budget.grandTotal)}</p>
             </div>
         </Card>
     );
@@ -401,3 +405,5 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
+
+    
