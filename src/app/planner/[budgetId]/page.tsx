@@ -309,8 +309,15 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
        <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
         <PageHeader />
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
-          <Greeter quote={eventQuote} />
-
+          <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
+            <div className="lg:col-span-1">
+              <Greeter quote={eventQuote} />
+            </div>
+            <div className="lg:col-span-1 row-start-1 lg:row-start-auto">
+              <MustDos budgetId={budgetId} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
+            </div>
+          </div>
+          
           {isTemplateMode && (
             <Card className="mt-8 mb-8 bg-yellow-100 border-yellow-300">
               <CardContent className="p-4">
@@ -323,22 +330,25 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
               </CardContent>
             </Card>
           )}
-            <p className="mt-8 text-muted-foreground">This is your moment to bring everything together, and SimpliPlan is here to help you feel organised, confident, and ready for the big day.</p>
-          <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-4">
+
+          <div className="mt-8">
+            <p className="text-muted-foreground">This is your moment to bring everything together, and SimpliPlan is here to help you feel organised, confident, and ready for the big day.</p>
+          </div>
+            
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mt-4">
              <div className="lg:col-span-1">
                 <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
              </div>
-             <div className="lg:col-span-1 mt-8 lg:mt-0">
-                <MustDos budgetId={budgetId} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
-             </div>
+          </div>
 
-            <div className="lg:col-span-2 my-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
+            <div className="lg:col-span-1">
               <BudgetSummary 
                 categories={budgetData}
                 grandTotal={grandTotal}
               />
             </div>
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-1">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -362,3 +372,5 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
+
+    
