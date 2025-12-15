@@ -74,12 +74,13 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
           rows={1}
           className={cn(
             "h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px] bg-transparent",
-            "hidden group-hover:block", // Hide by default, show on hover
+            "hidden group-hover:block",
+            note && "block", // Always block if note has content
             "read-only:cursor-default read-only:bg-transparent group-hover:read-only:bg-inherit group-hover:read-only:cursor-text"
           )}
           readOnly={item.status === 'done'}
         />
-        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
+        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1 hidden group-hover:flex">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1">
@@ -271,4 +272,3 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false }: MustDos
     </Card>
   );
 }
-    
