@@ -46,7 +46,7 @@ export default function LandingPage() {
                     <Link href="/planner?eventType=wedding" className="group">
                        <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-square">
                             <Image src="/images/wedding.jpg" alt="Wedding" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
-                            <div className="absolute bottom-0 left-0 right-0 p-4">
+                            <div className="absolute inset-0 flex items-end justify-center p-4">
                                 <CardTitle className="text-2xl font-semibold flex items-center justify-center text-white">
                                     Wedding
                                 </CardTitle>
@@ -56,7 +56,7 @@ export default function LandingPage() {
                     <Link href="/planner?eventType=funeral" className="group">
                         <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-square">
                             <Image src="/images/funeral2.png" alt="Funeral" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
-                            <div className="absolute bottom-0 left-0 right-0 p-4">
+                            <div className="absolute inset-0 flex items-end justify-center p-4">
                                 <CardTitle className="text-2xl font-semibold flex items-center justify-center text-white">
                                     Funeral
                                 </CardTitle>
@@ -66,17 +66,19 @@ export default function LandingPage() {
                     <div className="flip-card aspect-square" onClick={() => handleFlip('umemulo')}>
                         <div className={cn("flip-card-inner", { 'is-flipped': flippedCard === 'umemulo' })}>
                             <div className="flip-card-front">
-                                <Card className="overflow-hidden h-full relative">
+                                <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-square h-full">
                                     <Image src="/images/umemulo.jpg" alt="uMemulo" fill className="object-cover" />
-                                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                                      <CardTitle className="text-2xl font-semibold flex items-center justify-center text-white">
+                                    <div className="absolute inset-0 flex items-end justify-center p-4">
+                                      <CardTitle className="text-2xl font-semibold text-white">
                                           uMemulo
                                       </CardTitle>
                                     </div>
                                 </Card>
                             </div>
-                            <div className="flip-card-back">
-                                <h3 className="text-2xl font-bold">Coming Soon</h3>
+                            <div className="flip-card-back relative">
+                                <Image src="/images/girl.jpg" alt="uMemulo Coming Soon" fill className="object-cover" />
+                                <div className="absolute inset-0 bg-black/50" />
+                                <h3 className="text-2xl font-bold relative z-10">Coming Soon</h3>
                             </div>
                         </div>
                     </div>
@@ -84,17 +86,19 @@ export default function LandingPage() {
                     <div className="flip-card aspect-square" onClick={() => handleFlip('umgidi')}>
                         <div className={cn("flip-card-inner", { 'is-flipped': flippedCard === 'umgidi' })}>
                             <div className="flip-card-front">
-                                <Card className="overflow-hidden h-full relative">
+                                <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-square h-full">
                                     <Image src="/images/umgidi1.jpg" alt="uMgidi" fill className="object-cover" />
-                                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                                      <CardTitle className="text-2xl font-semibold flex items-center justify-center text-white">
+                                    <div className="absolute inset-0 flex items-end justify-center p-4">
+                                      <CardTitle className="text-2xl font-semibold text-white">
                                           uMgidi
                                       </CardTitle>
                                     </div>
                                 </Card>
                             </div>
-                            <div className="flip-card-back">
-                                <h3 className="text-2xl font-bold">Coming Soon</h3>
+                            <div className="flip-card-back relative">
+                                <Image src="/images/boy.jpg" alt="uMgidi Coming Soon" fill className="object-cover" />
+                                <div className="absolute inset-0 bg-black/50" />
+                                <h3 className="text-2xl font-bold relative z-10">Coming Soon</h3>
                             </div>
                         </div>
                     </div>
