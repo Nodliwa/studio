@@ -342,12 +342,12 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
 
           <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
              <div className="lg:col-span-1">
+                <p className="mt-2 mb-4 text-muted-foreground">This is your moment to bring everything together, and SimpliPlan is here to help you feel organised, confident, and ready for the big day.</p>
                 <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
              </div>
              <div className="lg:col-span-1 flex items-center">
                 <div className="p-4 rounded-lg">
                     <p className="text-lg font-semibold text-primary">{calculateDaysLeft()}</p>
-                    <p className="mt-2 text-muted-foreground">This is your moment to bring everything together, and SimpliPlan is here to help you feel organised, confident, and ready for the big day.</p>
                 </div>
              </div>
 
