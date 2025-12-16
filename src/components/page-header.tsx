@@ -173,11 +173,38 @@ export default function PageHeader() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-                <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
-                    <Link href="/login" className="text-base md:text-lg">Login</Link>
-                </Button>
-                <Button asChild size="sm">
+                <Button asChild size="sm" className="mr-1 md:mr-0">
                     <Link href="/register" className="text-base md:text-lg">Sign Up</Link>
+                </Button>
+                <Sheet>
+                    <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="md:hidden">
+                        <Menu className="h-6 w-6" />
+                        <span className="sr-only">Toggle Menu</span>
+                    </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right">
+                    <nav className="flex flex-col gap-6 text-lg font-medium mt-8">
+                        <SheetClose asChild>
+                            <Link href="/" className={cn("transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
+                            Home
+                            </Link>
+                        </SheetClose>
+                        <SheetClose asChild>
+                            <Link href="/my-plans" className={cn("transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
+                                MyPlans
+                            </Link>
+                        </SheetClose>
+                        <SheetClose asChild>
+                            <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                                Login
+                            </Link>
+                        </SheetClose>
+                    </nav>
+                    </SheetContent>
+                </Sheet>
+                 <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
+                    <Link href="/login" className="text-base md:text-lg">Login</Link>
                 </Button>
             </div>
           )}
@@ -200,18 +227,24 @@ export default function PageHeader() {
                         MyPlans
                     </Link>
                 </SheetClose>
-                 {user && !user.isAnonymous && (
+                 {user && !user.isAnonymous ? (
                     <Button variant="ghost" onClick={handleLogout} className="justify-start p-0 text-lg font-medium text-foreground/60 hover:text-foreground/80">
                         <LogOut className="mr-1 h-5 w-5" />
                         Logout
                     </Button>
-                 )}
-                 {!user && (
-                    <SheetClose asChild>
-                        <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60">
-                            Login
-                        </Link>
-                    </SheetClose>
+                 ) : (
+                    <>
+                        <SheetClose asChild>
+                            <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                                Login
+                            </Link>
+                        </SheetClose>
+                        <SheetClose asChild>
+                            <Button asChild size="sm">
+                                <Link href="/register" className="text-base md:text-lg">Sign Up</Link>
+                            </Button>
+                        </SheetClose>
+                    </>
                  )}
               </nav>
             </SheetContent>
