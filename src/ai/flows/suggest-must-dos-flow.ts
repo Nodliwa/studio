@@ -41,7 +41,7 @@ const suggestionPrompt = ai.definePrompt({
   
 
 // Define the flow
-export const suggestMustDosFlow = ai.defineFlow(
+const suggestMustDosFlow = ai.defineFlow(
   {
     name: 'suggestMustDosFlow',
     inputSchema: SuggestMustDosInputSchema,
