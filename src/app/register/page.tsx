@@ -228,7 +228,7 @@ export default function RegisterPage() {
                             <FacebookIcon className="mr-2" /> Facebook
                         </Button>
                         <Button type="button" variant="outline" className="w-full" onClick={() => alert('Coming soon!')}>
-                            <XIcon className="mr-2" /> X
+                            <XIcon className="mr-2" />
                         </Button>
                     </div>
 
