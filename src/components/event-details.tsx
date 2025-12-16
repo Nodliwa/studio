@@ -151,10 +151,13 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
   }
 
   const cardClasses = cn("shadow-lg border-border/60 h-full", {
-    "event-card-wedding": eventType === 'wedding',
-    "event-card-funeral": eventType === 'funeral',
+    "event-card-wedding text-white": eventType === 'wedding',
+    "event-card-funeral text-white": eventType === 'funeral',
   });
 
+  const labelClasses = cn({
+    "text-white/90": eventType === 'wedding' || eventType === 'funeral',
+  });
 
   return (
     <Card className={cardClasses}>
@@ -163,7 +166,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
           <CardTitle className="font-headline text-2xl">
             Event Details
           </CardTitle>
-           <p className="text-sm font-semibold text-primary mt-1">{daysLeftText}</p>
+           <p className={cn("text-sm font-semibold mt-1", eventType === 'wedding' || eventType === 'funeral' ? 'text-white/80' : 'text-primary')}>{daysLeftText}</p>
         </div>
         {!isEditing && !isTemplateMode && (
             <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>Edit</Button>
@@ -172,7 +175,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
       <CardContent className="p-4 pt-4">
         <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <Label htmlFor="name">My-Plan Name</Label>
+            <Label htmlFor="name" className={labelClasses}>My-Plan Name</Label>
             <Controller
               name="name"
               control={control}
@@ -181,7 +184,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
           </div>
           
           <div className="space-y-1">
-             <Label htmlFor="eventLocation">Event Location</Label>
+             <Label htmlFor="eventLocation" className={labelClasses}>Event Location</Label>
               <Controller
                 name="eventLocation"
                 control={control}
@@ -229,7 +232,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="eventDate">Event Date</Label>
+            <Label htmlFor="eventDate" className={labelClasses}>Event Date</Label>
             <Controller
               name="eventDate"
               control={control}
@@ -237,7 +240,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="expectedGuests">Number of Guests</Label>
+            <Label htmlFor="expectedGuests" className={labelClasses}>Number of Guests</Label>
             <Controller
               name="expectedGuests"
               control={control}
@@ -274,3 +277,5 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
     </Card>
   );
 }
+
+    

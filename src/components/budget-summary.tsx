@@ -31,8 +31,18 @@ export function BudgetSummary({ grandTotal, daysLeft, mustDosTotal, mustDosCompl
   };
   
   const cardClasses = cn("h-full", {
-    "event-card-wedding": eventType === 'wedding',
-    "event-card-funeral": eventType === 'funeral',
+    "event-card-wedding text-white": eventType === 'wedding',
+    "event-card-funeral text-white": eventType === 'funeral',
+  });
+
+  const summaryItemClasses = cn("flex items-center justify-between p-2 rounded-lg", {
+      "bg-black/20 backdrop-blur-sm": eventType === 'wedding' || eventType === 'funeral',
+      "bg-secondary": !eventType || (eventType !== 'wedding' && eventType !== 'funeral')
+  });
+
+  const iconClasses = cn({
+      "text-white": eventType === 'wedding' || eventType === 'funeral',
+      "text-primary": !eventType || (eventType !== 'wedding' && eventType !== 'funeral')
   });
 
   return (
@@ -41,23 +51,23 @@ export function BudgetSummary({ grandTotal, daysLeft, mustDosTotal, mustDosCompl
         <CardTitle className="font-headline text-2xl">Dashboard</CardTitle>
       </CardHeader>
       <CardContent className="p-4 grid gap-1">
-        <div className="flex items-center justify-between p-2 rounded-lg bg-secondary">
+        <div className={summaryItemClasses}>
             <div className="flex items-center gap-3">
-                <Wallet className="h-6 w-6 text-primary" />
+                <Wallet className={cn("h-6 w-6", iconClasses)} />
                 <span className="font-semibold">Grand Total</span>
             </div>
             <span className="font-mono text-lg font-bold">{formatCurrency(grandTotal)}</span>
         </div>
-        <div className="flex items-center justify-between p-2 rounded-lg bg-secondary">
+        <div className={summaryItemClasses}>
             <div className="flex items-center gap-3">
-                <CalendarClock className="h-6 w-6 text-primary" />
+                <CalendarClock className={cn("h-6 w-6", iconClasses)} />
                 <span className="font-semibold">Days Left</span>
             </div>
             <span className="font-semibold">{daysLeft ?? 'N/A'}</span>
         </div>
         <MustDoWrapper>
             <div className="flex items-center gap-3">
-                <ListChecks className="h-6 w-6 text-primary" />
+                <ListChecks className={cn("h-6 w-6", iconClasses)} />
                 <span className="font-semibold">Must-Do's</span>
             </div>
             <span className="font-semibold">{`${mustDosCompleted} / ${mustDosTotal}`}</span>
@@ -66,3 +76,5 @@ export function BudgetSummary({ grandTotal, daysLeft, mustDosTotal, mustDosCompl
     </Card>
   );
 }
+
+    
