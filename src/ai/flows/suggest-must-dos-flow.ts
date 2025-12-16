@@ -77,9 +77,12 @@ const suggestMustDosFlow = ai.defineFlow(
     outputSchema: SuggestMustDosOutputSchema,
   },
   async input => {
-    const {output} = await suggestMustDosPrompt(input);
+    const llmResponse = await suggestMustDosPrompt.generate({
+      input: input,
+    });
+    
+    const output = llmResponse.output();
 
-    // If the output is null or undefined, throw an error to be caught by the client.
     if (!output) {
       throw new Error('The AI model failed to return a valid structured response.');
     }
