@@ -137,7 +137,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
                       <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
                           <PriorityIcon priority={priority} />
-                          <span>{PriorityLevels[priority].label}</span>
+                          <span>{PriorityLevels[priority]?.label || 'Medium'}</span>
                       </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
