@@ -256,7 +256,9 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
             existingMustDos: existingTitles
         };
         const result = await suggestMustDos(input);
-        setAiSuggestions(result.suggestions);
+        if (result) {
+            setAiSuggestions(result.suggestions);
+        }
     });
   };
 

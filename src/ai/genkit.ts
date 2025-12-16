@@ -1,8 +1,7 @@
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { dotprompt } from '@genkit-ai/dotprompt';
-import { genkitEval } from 'genkit/eval';
-import { textEmbeddingGecko } from '@genkit-ai/vertexai';
+import { genkitEval, textEmbeddingGecko } from 'genkit/eval';
 
 // Initialize the Genkit framework and plugins
 export const ai = genkit({
