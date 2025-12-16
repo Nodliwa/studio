@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, Star, Trash2, Bell, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp, Mail, MessageSquare, Sparkles } from 'lucide-react';
+import { PlusCircle, Star, Trash2, Bell, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp, Mail, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentReference } from 'firebase/firestore';
 import { Calendar } from "@/components/ui/calendar"
@@ -21,15 +21,10 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
-import { SuggestionList } from '@/components/suggestion-list';
-import { suggestMustDos } from '@/ai/flows/suggest-must-dos-flow';
-import type { SuggestMustDosOutput } from '@/ai/flows/schemas';
-
 
 interface MustDosProps {
   budgetId: string;
   budgetRef: DocumentReference | null;
-  eventType?: string;
   isTemplateMode?: boolean;
   mustDos: MustDo[] | null;
 }
@@ -62,7 +57,11 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   const [title, setTitle] = useState(item.title);
   const [note, setNote] = useState(item.note || '');
   const [deadline, setDeadline] = useState(item.deadline ? new Date(item.deadline) : undefined);
-  const [reminderDays, setReminderDays] = useState(item.reminderDaysBefore || 1);
+  const [reminderDays, setReminderDays] = useState(1);
+
+  useEffect(() => {
+    setReminderDays(item.reminderDaysBefore || 1)
+  }, [item.reminderDaysBefore]);
   
   const priority = item.priority || 'medium';
   const reminderType = item.reminderType || 'none';
@@ -248,12 +247,10 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   );
 }
 
-export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMode = false, mustDos }: MustDosProps) {
+export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos }: MustDosProps) {
   const { user } = useUser();
   const [localMustDos, setLocalMustDos] = useState<MustDo[]>([]);
   const [isLoading, setIsLoading] = useState(!isTemplateMode && !mustDos);
-  const [suggestions, setSuggestions] = useState<SuggestMustDosOutput['suggestions']>([]);
-  const [isSuggesting, setIsSuggesting] = useState(false);
 
   useEffect(() => {
     if (!isTemplateMode) return;
@@ -325,26 +322,21 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
   const completedCount = useMemo(() => items.filter(item => item.status === 'done').length, [items]);
   const progress = items.length > 0 ? (completedCount / items.length) * 100 : 0;
 
-  const handleAddItem = (itemData?: Partial<Omit<MustDo, 'id'>>) => {
+  const handleAddItem = () => {
     const mustDosCollection = budgetRef ? collection(budgetRef, 'mustDos') : null;
-    
-    const newItemData = {
-        title: itemData?.title || '',
-        note: itemData?.note || '',
-        priority: itemData?.priority || 'medium' as const,
-        deadline: itemData?.deadline || '',
-        reminderType: itemData?.reminderType || 'none' as const,
-        reminderDaysBefore: itemData?.reminderDaysBefore || 1,
-    };
 
     if (isTemplateMode || !user || !mustDosCollection) {
         const newItem: MustDo = {
             id: `local-${Date.now()}`,
             budgetId,
             userId: '',
+            title: '',
             status: 'todo',
+            priority: 'medium',
+            deadline: '',
             createdAt: new Date(),
-            ...newItemData
+            reminderType: 'none',
+            reminderDaysBefore: 1,
         };
         setLocalMustDos(prev => [newItem, ...prev]);
         return;
@@ -353,9 +345,12 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
     const newItem: Omit<MustDo, 'id' > & { deadline?: string } = {
       budgetId,
       userId: user.uid,
+      title: '',
       status: 'todo',
+      priority: 'medium',
       createdAt: serverTimestamp(),
-      ...newItemData,
+      reminderType: 'none',
+      reminderDaysBefore: 1,
     };
     addDocumentNonBlocking(mustDosCollection, newItem);
   };
@@ -381,33 +376,6 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
     const docRef = doc(mustDosCollection, id);
     deleteDocument(docRef);
   };
-
-  const handleGetSuggestions = async () => {
-    if (isTemplateMode) return;
-    setIsSuggesting(true);
-    setSuggestions([]);
-    try {
-        const result = await suggestMustDos({
-            eventType: eventType,
-            existingMustDos: items.map(item => item.title),
-        });
-        setSuggestions(result.suggestions);
-    } catch (error) {
-        console.error("Error getting suggestions:", error);
-    } finally {
-        setIsSuggesting(false);
-    }
-  }
-
-  const handleAddSuggestion = (suggestion: SuggestMustDosOutput['suggestions'][number]) => {
-    handleAddItem({
-        title: suggestion.title,
-        note: suggestion.note,
-        priority: suggestion.priority,
-    });
-    setSuggestions(prev => prev.filter(s => s.title !== suggestion.title));
-  }
-
 
   return (
     <Card className="h-full bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
@@ -439,20 +407,11 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add a Must-Do
             </Button>
-            {!isTemplateMode && (
-                <Button variant="outline" onClick={handleGetSuggestions} disabled={isSuggesting} className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white hover:text-white border-purple-400/50 hover:bg-purple-500/30">
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    {isSuggesting ? 'Getting suggestions...' : 'AI Suggest'}
-                </Button>
-            )}
           </div>
-          <SuggestionList 
-            suggestions={suggestions}
-            onAdd={handleAddSuggestion}
-            onDismiss={(title) => setSuggestions(prev => prev.filter(s => s.title !== title))}
-          />
         </div>
       </CardContent>
     </Card>
   );
 }
+
+    
