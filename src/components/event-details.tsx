@@ -20,13 +20,11 @@ import {
   PopoverAnchor,
 } from "@/components/ui/popover";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
 
 interface EventDetailsProps {
   budget: Budget | null;
   budgetRef: DocumentReference | null;
   isTemplateMode?: boolean;
-  eventType?: string;
 }
 
 const formSchema = z.object({
@@ -41,7 +39,7 @@ type FormData = z.infer<typeof formSchema>;
 const DEFAULT_BUDGET_NAME = "My Celebration Plan";
 const libraries: "places"[] = ["places"];
 
-export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventType }: EventDetailsProps) {
+export function EventDetails({ budget, budgetRef, isTemplateMode = false }: EventDetailsProps) {
   const { user } = useUser();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(isTemplateMode);
@@ -150,23 +148,14 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
       clearSuggestions();
   }
 
-  const cardClasses = cn("shadow-lg border-border/60 h-full", {
-    "event-card-wedding text-white": eventType === 'wedding',
-    "event-card-funeral text-white": eventType === 'funeral',
-  });
-
-  const labelClasses = cn({
-    "text-white/90": eventType === 'wedding' || eventType === 'funeral',
-  });
-
   return (
-    <Card className={cardClasses}>
+    <Card className="shadow-lg border-border/60 h-full">
       <CardHeader className="flex flex-row items-start justify-between p-4 pb-0">
         <div className="flex-1">
           <CardTitle className="font-headline text-2xl">
             Event Details
           </CardTitle>
-           <p className={cn("text-sm font-semibold mt-1", eventType === 'wedding' || eventType === 'funeral' ? 'text-white/80' : 'text-primary')}>{daysLeftText}</p>
+           <p className="text-sm font-semibold mt-1 text-primary">{daysLeftText}</p>
         </div>
         {!isEditing && !isTemplateMode && (
             <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>Edit</Button>
@@ -175,7 +164,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
       <CardContent className="p-4 pt-4">
         <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <Label htmlFor="name" className={labelClasses}>My-Plan Name</Label>
+            <Label htmlFor="name">My-Plan Name</Label>
             <Controller
               name="name"
               control={control}
@@ -184,7 +173,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
           </div>
           
           <div className="space-y-1">
-             <Label htmlFor="eventLocation" className={labelClasses}>Event Location</Label>
+             <Label htmlFor="eventLocation">Event Location</Label>
               <Controller
                 name="eventLocation"
                 control={control}
@@ -232,7 +221,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="eventDate" className={labelClasses}>Event Date</Label>
+            <Label htmlFor="eventDate">Event Date</Label>
             <Controller
               name="eventDate"
               control={control}
@@ -240,7 +229,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="expectedGuests" className={labelClasses}>Number of Guests</Label>
+            <Label htmlFor="expectedGuests">Number of Guests</Label>
             <Controller
               name="expectedGuests"
               control={control}
