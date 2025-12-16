@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, Star, Trash2 } from 'lucide-react';
+import { PlusCircle, Star, Trash2, Bell, BellOff } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +25,8 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { Switch } from './ui/switch';
+import { Label } from './ui/label';
 
 interface MustDosProps {
   budgetId: string;
@@ -38,11 +40,18 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   const [title, setTitle] = useState(item.title);
   const [note, setNote] = useState(item.note || '');
   const [deadline, setDeadline] = useState(item.deadline ? new Date(item.deadline) : undefined);
+  const [reminderDays, setReminderDays] = useState(item.reminderDaysBefore || 1);
 
   const handleBlur = (field: 'title' | 'note') => {
     const value = field === 'title' ? title : note;
     if (value !== item[field]) {
       onUpdate(item.id, { [field]: value });
+    }
+  };
+  
+  const handleReminderDaysBlur = () => {
+    if (reminderDays !== item.reminderDaysBefore) {
+      onUpdate(item.id, { reminderDaysBefore: reminderDays });
     }
   };
 
@@ -58,85 +67,115 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   };
 
   return (
-    <div className="flex items-start gap-3 p-3 border-b border-border/20 last:border-b-0">
-      <Checkbox
-        id={`mustdo-${item.id}`}
-        checked={item.status === 'done'}
-        onCheckedChange={(checked) => onUpdate(item.id, { status: checked ? 'done' : 'todo' })}
-        className="mt-1 border-foreground/50"
-      />
-      <div className="flex-1 space-y-1">
-        <div className="flex items-center gap-2">
-            <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={() => handleBlur('title')}
+    <div className="flex flex-col p-3 border-b border-border/20 last:border-b-0">
+      <div className="flex items-start gap-3">
+        <Checkbox
+          id={`mustdo-${item.id}`}
+          checked={item.status === 'done'}
+          onCheckedChange={(checked) => onUpdate(item.id, { status: checked ? 'done' : 'todo' })}
+          className="mt-1 border-foreground/50"
+        />
+        <div className="flex-1 space-y-1">
+          <div className="flex items-center gap-2">
+              <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={() => handleBlur('title')}
+              className={cn(
+                  "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent flex-grow placeholder:text-foreground/60",
+                  item.status === 'done' && "line-through text-muted-foreground"
+              )}
+              readOnly={item.status === 'done'}
+              placeholder="New must-do..."
+              />
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
+                          <ImportanceIcon importance={item.importance} />
+                          <span>{ImportanceLevels[item.importance].label}</span>
+                      </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                      {Object.entries(ImportanceLevels).map(([key, { label }]) => (
+                          <DropdownMenuItem key={key} onSelect={() => onUpdate(item.id, { importance: key as Importance })}>
+                          {label}
+                          </DropdownMenuItem>
+                      ))}
+                      </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <Popover>
+                      <PopoverTrigger asChild>
+                          <Button
+                          variant={"ghost"}
+                          size="sm"
+                          className={cn(
+                              "h-auto p-1 text-foreground/80 hover:bg-white/10 hover:text-foreground",
+                              !deadline && "text-muted-foreground"
+                          )}
+                          >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {deadline ? format(deadline, "PPP") : <span>Set deadline</span>}
+                          </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                          <Calendar
+                          mode="single"
+                          selected={deadline}
+                          onSelect={handleDeadlineChange}
+                          initialFocus
+                          />
+                      </PopoverContent>
+                  </Popover>
+
+              </div>
+          </div>
+          <Textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            onBlur={() => handleBlur('note')}
+            placeholder="Add a note..."
+            rows={1}
             className={cn(
-                "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent flex-grow placeholder:text-foreground/60",
-                item.status === 'done' && "line-through text-muted-foreground"
+              "h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px] bg-transparent placeholder:text-foreground/50",
+              "read-only:cursor-default read-only:bg-transparent"
             )}
             readOnly={item.status === 'done'}
-            placeholder="New must-do..."
-            />
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
-                        <ImportanceIcon importance={item.importance} />
-                        <span>{ImportanceLevels[item.importance].label}</span>
-                    </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                    {Object.entries(ImportanceLevels).map(([key, { label }]) => (
-                        <DropdownMenuItem key={key} onSelect={() => onUpdate(item.id, { importance: key as Importance })}>
-                        {label}
-                        </DropdownMenuItem>
-                    ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                        variant={"ghost"}
-                        size="sm"
-                        className={cn(
-                            "h-auto p-1 text-foreground/80 hover:bg-white/10 hover:text-foreground",
-                            !deadline && "text-muted-foreground"
-                        )}
-                        >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {deadline ? format(deadline, "PPP") : <span>Set deadline</span>}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                        <Calendar
-                        mode="single"
-                        selected={deadline}
-                        onSelect={handleDeadlineChange}
-                        initialFocus
-                        />
-                    </PopoverContent>
-                </Popover>
-
-            </div>
+          />
         </div>
-        <Textarea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          onBlur={() => handleBlur('note')}
-          placeholder="Add a note..."
-          rows={1}
-          className={cn(
-            "h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px] bg-transparent placeholder:text-foreground/50",
-            "read-only:cursor-default read-only:bg-transparent"
-          )}
-          readOnly={item.status === 'done'}
-        />
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-foreground/80 hover:bg-white/10 hover:text-foreground" onClick={() => onDelete(item.id)}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </div>
-      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-foreground/80 hover:bg-white/10 hover:text-foreground" onClick={() => onDelete(item.id)}>
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      {deadline && (
+        <div className="pl-8 pt-2 flex items-center gap-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id={`reminder-${item.id}`}
+              checked={item.reminderEnabled}
+              onCheckedChange={(checked) => onUpdate(item.id, { reminderEnabled: checked })}
+            />
+            <Label htmlFor={`reminder-${item.id}`} className="flex items-center gap-1 text-sm text-muted-foreground">
+                {item.reminderEnabled ? <Bell className="h-4 w-4 text-primary" /> : <BellOff className="h-4 w-4" />}
+                Email Reminder
+            </Label>
+          </div>
+          {item.reminderEnabled && (
+             <div className="flex items-center gap-2">
+                <Input 
+                    type="number" 
+                    min="1"
+                    value={reminderDays}
+                    onChange={(e) => setReminderDays(parseInt(e.target.value, 10))}
+                    onBlur={handleReminderDaysBlur}
+                    className="h-7 w-16 text-center"
+                />
+                <Label className="text-sm text-muted-foreground">days before</Label>
+             </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -159,6 +198,8 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
           importance: 'important',
           deadline: new Date().toISOString().split('T')[0],
           createdAt: new Date(),
+          reminderEnabled: true,
+          reminderDaysBefore: 3,
         },
         {
           id: 'local-2',
@@ -170,6 +211,8 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
           importance: 'none',
           deadline: '',
           createdAt: new Date(),
+          reminderEnabled: false,
+          reminderDaysBefore: 1,
         }
       ]);
     }
@@ -214,6 +257,8 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
         note: '',
         importance: 'none' as Importance,
         deadline: '',
+        reminderEnabled: false,
+        reminderDaysBefore: 1,
     };
 
     if (isTemplateMode || !user || !mustDosCollection) {

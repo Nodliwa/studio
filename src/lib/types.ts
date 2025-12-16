@@ -58,5 +58,7 @@ export interface MustDo {
   importance: Importance;
   deadline?: string; // Replaces timing
   createdAt: any; // Firestore Timestamp
+  reminderEnabled: boolean;
+  reminderDaysBefore: number;
 }
     
