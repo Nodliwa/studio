@@ -101,9 +101,12 @@ export default function RegisterPage() {
   };
 
   useEffect(() => {
-    if (!auth) {
-      setIsProcessingGoogleSignIn(false);
-      return;
+    if (!auth || !firestore) {
+        // Firebase services are not ready yet.
+        setTimeout(() => {
+            if (!auth || !firestore) setIsProcessingGoogleSignIn(false);
+        }, 1000);
+        return;
     }
   
     handleGoogleRedirectResult(auth)
@@ -127,10 +130,10 @@ export default function RegisterPage() {
 
 
   useEffect(() => {
-    if (!isUserLoading && user && !user.isAnonymous) {
+    if (!isUserLoading && user && !user.isAnonymous && !isProcessingGoogleSignIn) {
       router.push('/my-plans');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, isProcessingGoogleSignIn]);
 
 
   const onSubmit = async (data: RegisterFormValues) => {
@@ -195,13 +198,13 @@ export default function RegisterPage() {
     }
   };
   
-    if (isUserLoading || (user && !user.isAnonymous) || isProcessingGoogleSignIn) {
-        return (
-          <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-              <p>Loading...</p>
-          </div>
-        );
-      }
+  if (isUserLoading || isProcessingGoogleSignIn || (user && !user.isAnonymous)) {
+    return (
+      <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
+          <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-secondary">

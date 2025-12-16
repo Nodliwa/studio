@@ -60,13 +60,22 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    if (!auth) return;
+    if (!auth || !firestore) {
+        // Firebase services are not ready yet. We will wait.
+        // We set processing to false only if we are sure there is no redirect happening.
+        // A simple way is to check after a short delay.
+        setTimeout(() => {
+            if (!auth || !firestore) setIsProcessingGoogleSignIn(false);
+        }, 1000);
+        return;
+    }
   
     handleGoogleRedirectResult(auth)
       .then((userCredential) => {
         if (userCredential) {
           processGoogleUser(userCredential);
         } else {
+          // No redirect result, so we are not in a redirect flow.
           setIsProcessingGoogleSignIn(false);
         }
       })
@@ -83,11 +92,11 @@ export default function LoginPage() {
 
 
    useEffect(() => {
-    // Redirect if a non-anonymous user is already logged in.
-    if (!isUserLoading && user && !user.isAnonymous) {
+    // Redirect if a non-anonymous user is already logged in, and we are not processing a sign-in.
+    if (!isUserLoading && user && !user.isAnonymous && !isProcessingGoogleSignIn) {
       router.push('/my-plans');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, isProcessingGoogleSignIn]);
 
   const onEmailSubmit = async (data: LoginFormValues) => {
     if (!auth) return;
@@ -115,7 +124,7 @@ export default function LoginPage() {
         }
     } catch (error) {
         if (error instanceof FirebaseError) {
-            if (error.code !== 'auth/popup-closed-by-user') {
+            if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
                 setFirebaseError(error.message);
             }
         } else {
@@ -125,7 +134,7 @@ export default function LoginPage() {
   };
 
   // Prevent form flash while loading or redirecting
-  if (isUserLoading || (user && !user.isAnonymous) || isProcessingGoogleSignIn) {
+  if (isUserLoading || isProcessingGoogleSignIn || (user && !user.isAnonymous)) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
           <p>Loading...</p>
