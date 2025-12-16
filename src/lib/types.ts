@@ -37,6 +37,7 @@ export interface User {
     id: string;
     email: string;
     displayName: string;
+    knownAs?: string;
     cellphone?: string;
 }
 

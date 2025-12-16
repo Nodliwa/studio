@@ -2,22 +2,33 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import MotivationalQuote from './motivational-quote';
+import type { User as AppUser } from '@/lib/types';
+import { doc } from 'firebase/firestore';
 
 const Greeter = ({ quote }: { quote?: string }) => {
-  const { user, isUserLoading } = useUser();
+  const { user: authUser, isUserLoading: isAuthUserLoading } = useUser();
+  const firestore = useFirestore();
+
+  const userDocRef = useMemoFirebase(() => (
+    firestore && authUser ? doc(firestore, 'users', authUser.uid) : null
+  ), [firestore, authUser]);
+
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<AppUser>(userDocRef);
+
   const [mainGreeting, setMainGreeting] = useState('');
   const [subGreeting, setSubGreeting] = useState('');
 
   useEffect(() => {
-    if (isUserLoading) {
+    const isLoading = isAuthUserLoading || isProfileLoading;
+    if (isLoading) {
         setMainGreeting('Welcome!');
         setSubGreeting("Let's get your planning done.");
         return;
     }
 
-    const name = user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
+    const name = userProfile?.knownAs || userProfile?.displayName?.split(' ')[0] || authUser?.email?.split('@')[0] || 'there';
     const hour = new Date().getHours();
     let timeOfDayGreeting = '';
 
@@ -32,7 +43,7 @@ const Greeter = ({ quote }: { quote?: string }) => {
     setMainGreeting(`${timeOfDayGreeting}, ${name}!`);
     setSubGreeting("Let's get your planning done.");
 
-  }, [user, isUserLoading]);
+  }, [authUser, userProfile, isAuthUserLoading, isProfileLoading]);
 
   return (
     <div className="mt-8 text-center">

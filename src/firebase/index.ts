@@ -52,7 +52,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
  * @param email The user's email.
  * @param displayName The user's full name.
  */
-export async function setUserData(userRef: DocumentReference, email: string, displayName: string) {
+export async function setUserData(userRef: DocumentReference, email: string, displayName: string, knownAs?: string) {
     if (!email) {
       console.warn('Cannot create user profile without an email.');
       return;
@@ -62,6 +62,7 @@ export async function setUserData(userRef: DocumentReference, email: string, dis
       id: userRef.id,
       email: email,
       displayName: displayName,
+      knownAs: knownAs || displayName.split(' ')[0],
     };
   
     // Use setDoc with merge:true to create or update the document.

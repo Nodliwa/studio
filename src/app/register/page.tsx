@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -166,7 +167,7 @@ export default function RegisterPage() {
       
       if (userCredential?.user) {
         const userRef = doc(firestore, 'users', userCredential.user.uid);
-        await setUserData(userRef, userCredential.user.email!, displayName);
+        await setUserData(userRef, userCredential.user.email!, displayName, data.firstName);
       }
       
     } catch (error) {

@@ -145,6 +145,10 @@
         "displayName": {
           "type": "string",
           "description": "Display name of the user."
+        },
+        "knownAs": {
+            "type": "string",
+            "description": "The name the user prefers to be called."
         }
       },
       "required": [

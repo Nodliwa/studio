@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -54,7 +55,7 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  const processGoogleUser = async (userCredential: UserCredential) => {
+  const processSocialUser = async (userCredential: UserCredential) => {
     if (!firestore || !userCredential.user.email) return;
     const userRef = doc(firestore, 'users', userCredential.user.uid);
     // This will create the user document if it doesn't exist, or merge if it does.
@@ -73,7 +74,7 @@ export default function LoginPage() {
       .then((userCredential) => {
         if (userCredential) {
           // User has just returned from Google redirect. Process their info.
-          processGoogleUser(userCredential);
+          processSocialUser(userCredential);
           // The onAuthStateChanged listener in the next useEffect will handle the redirect.
         } else {
           // No user from redirect, so we're not in that flow.
@@ -124,7 +125,7 @@ export default function LoginPage() {
     try {
         const userCredential = await initiateGoogleSignIn(auth, isMobile);
         if (userCredential) {
-            await processGoogleUser(userCredential);
+            await processSocialUser(userCredential);
         }
     } catch (error) {
         if (error instanceof FirebaseError) {
@@ -249,5 +250,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
