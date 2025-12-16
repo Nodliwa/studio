@@ -51,6 +51,9 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   const [note, setNote] = useState(item.note || '');
   const [deadline, setDeadline] = useState(item.deadline ? new Date(item.deadline) : undefined);
   const [reminderDays, setReminderDays] = useState(item.reminderDaysBefore || 1);
+  
+  // Safeguard: Ensure priority has a default value to prevent render errors.
+  const priority = item.priority || 'medium';
 
   const handleBlur = (field: 'title' | 'note') => {
     const value = field === 'title' ? title : note;
@@ -96,8 +99,8 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
-                          <PriorityIcon priority={item.priority} />
-                          <span>{PriorityLevels[item.priority].label}</span>
+                          <PriorityIcon priority={priority} />
+                          <span>{PriorityLevels[priority].label}</span>
                       </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
