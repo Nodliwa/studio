@@ -172,13 +172,13 @@ export default function PageHeader() {
                  </Button>
             </div>
           ) : (
-             <div className="flex items-center gap-2">
-              <Button asChild variant="outline" size="sm">
-                <Link href="/login" className="text-base md:text-lg">Login</Link>
-              </Button>
-              <Button asChild size="sm">
-                <Link href="/register" className="text-base md:text-lg">Sign Up</Link>
-              </Button>
+            <div className="flex items-center gap-2">
+                <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
+                    <Link href="/login" className="text-base md:text-lg">Login</Link>
+                </Button>
+                <Button asChild size="sm">
+                    <Link href="/register" className="text-base md:text-lg">Sign Up</Link>
+                </Button>
             </div>
           )}
           <Sheet>
@@ -205,6 +205,13 @@ export default function PageHeader() {
                         <LogOut className="mr-1 h-5 w-5" />
                         Logout
                     </Button>
+                 )}
+                 {!user && (
+                    <SheetClose asChild>
+                        <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                            Login
+                        </Link>
+                    </SheetClose>
                  )}
               </nav>
             </SheetContent>
