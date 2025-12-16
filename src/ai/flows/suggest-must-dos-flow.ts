@@ -58,7 +58,7 @@ const suggestMustDosPrompt = ai.definePrompt(
           (No existing tasks)
         {{/if}}
   
-        Generate creative, practical, and essential suggestions. For each suggestion, provide a concise title and a brief, helpful note.
+        Generate creative, practical, and essential suggestions. For each suggestion, provide a concise title and a brief, helpful note. For each suggestion, also provide default values for the reminder settings: reminderType should be 'email', and reminderDaysBefore should be 3.
       `,
     }
   );

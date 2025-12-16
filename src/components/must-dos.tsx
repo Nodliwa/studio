@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, ComponentType, useTransition } from 'react';
+import { useState, useMemo, useEffect, ComponentType } from 'react';
 import { useUser, useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocument } from '@/firebase';
-import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import type { MustDo } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, Star, Trash2, Bell, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp, Mail, MessageSquare, Sparkles, Loader2 } from 'lucide-react';
+import { PlusCircle, Trash2, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp, Mail, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentReference } from 'firebase/firestore';
 import { Calendar } from "@/components/ui/calendar"
@@ -21,7 +21,6 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
-import { useToast } from '@/hooks/use-toast';
 
 interface MustDosProps {
   budgetId: string;
@@ -50,7 +49,7 @@ const PriorityIcon = ({ priority }: { priority: MustDo['priority'] }) => {
 
 const WhatsappIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-        <path d="M16.75 13.96c.25.13.4.38.48.63.08.25.11.5.08.75-.03.25-.11.48-.25.7-.13.21-.3.38-.5.5-.2.13-.43.21-.68.25-.25.04-.5.03-.75-.03-.25-.06-.5-.18-.75-.33a10.66 10.66 0 01-3.6-2.04c-1.25-1.25-2.04-2.63-2.38-4.08-.03-.25-.03-.5.03-.75.05-.25.13-.48.25-.68.13-.2.3-.38.5-.5.2-.13.43-.21.68-.25.25-.04.5-.03.75.03.25.06.5.18.75.33.25.15.48.33.68.55.2.22.35.48.45.75.1.28.13.55.1.83-.03.28-.13.55-.28.8-.15.25-.35.48-.58.65-.23.18-.4.3-.5.38-.1.08-.15.14-.2.2-.05.06-.08.1-.08.13s0 .05.03.08c.03.03.05.05.08.08.25.25.5.5.75.75s.5.5.75.75c.03.03.05.05.08.08.03.03.05.05.08.08s.05.03.08.03.08-.03.13-.08c.05-.05.1-.13.2-.2.08-.08.2-.2.38-.5.18-.3.4-.55.65-.8.25-.25.5-.45.75-.58.28-.15.55-.25.83-.28.28-.03.55.03.8.1.28.08.53.2.75.35.22.15.4.35.55.55.15.2.28.43.33.68zM12 2a10 10 0 100 20 10 10 0 000-20zm0 18.13c-4.48 0-8.13-3.65-8.13-8.13S7.52 3.88 12 3.88c4.48 0 8.13 3.65 8.13 8.13s-3.65 8.12-8.13 8.12z" />
+        <path d="M16.75 13.96c.25.13.4.38.48.63.08.25.11.5.08.75-.03.25-.11.48-.25.7-.13.21-.3.38-.5.5-.2.13-.43.21-.68.25-.25.04-.5.03-.75-.03-.25-.06-.5-.18-.75-.33a10.66 10.66 0 01-3.6-2.04c-1.25-1.25-2.04-2.63-2.38-4.08-.03-.25-.03-.5.03-.75.05-.25.13-.48.25-.68.13-.2.3-.38.5-.5.2-.13-.43-.21-.68-.25.25-.04.5-.03.75.03.25.06.5.18.75.33.25.15.48.33.68.55.2.22.35.48.45.75.1.28.13.55.1.83-.03.28-.13.55-.28.8-.15.25-.35.48-.58.65-.23.18-.4.3-.5.38-.1.08-.15.14-.2.2-.05.06-.08.1-.08.13s0 .05.03.08c.03.03.05.05.08.08.25.25.5.5.75.75s.5.5.75.75c.03.03.05.05.08.08.03.03.05.05.08.08s.05.03.08.03.08-.03.13-.08c.05-.05.1-.13.2-.2.08-.08.2-.2.38-.5.18-.3.4-.55.65-.8.25-.25.5-.45.75-.58.28-.15.55-.25.83-.28.28-.03.55.03.8.1.28.08.53.2.75.35.22.15.4.35.55.55.15.2.28.43.33.68zM12 2a10 10 0 100 20 10 10 0 000-20zm0 18.13c-4.48 0-8.13-3.65-8.13-8.13S7.52 3.88 12 3.88c4.48 0 8.13 3.65 8.13 8.13s-3.65 8.12-8.13 8.12z" />
     </svg>
 );
 
@@ -106,7 +105,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
       sms: MessageSquare,
       whatsapp: WhatsappIcon,
       none: BellOff,
-  }[reminderType] || Bell;
+  }[reminderType] || BellOff;
 
   return (
     <div className="flex flex-col p-3 border-b border-border/20 last:border-b-0">
@@ -254,9 +253,6 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
   const firestore = useFirestore();
   const [localMustDos, setLocalMustDos] = useState<MustDo[]>([]);
   const [isLoading, setIsLoading] = useState(!isTemplateMode && !mustDos);
-  const [isSuggesting, startSuggestionTransition] = useTransition();
-  const { toast } = useToast();
-
 
   useEffect(() => {
     if (!isTemplateMode) return;
@@ -387,17 +383,6 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
     deleteDocument(docRef);
   };
 
-  const handleGetSuggestions = async () => {
-    if (isTemplateMode) {
-        toast({
-            title: 'Please sign up',
-            description: 'AI suggestions are available for registered users. Please create an account to use this feature.',
-            variant: 'destructive',
-        });
-        return;
-    }
-  };
-
   return (
     <Card className="h-full bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
       <CardHeader className="p-4">
@@ -434,5 +419,3 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
     </Card>
   );
 }
-
-    

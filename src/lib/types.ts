@@ -38,7 +38,6 @@ export interface User {
     email: string;
     displayName: string;
     knownAs?: string;
-    cellphone?: string;
 }
 
 export interface MustDo {
