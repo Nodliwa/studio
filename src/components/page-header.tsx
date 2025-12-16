@@ -98,7 +98,7 @@ export default function PageHeader() {
           </Link>
         </div>
         
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
             <nav className="hidden md:flex items-center justify-center gap-6 text-lg">
                 <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
                 Home
@@ -176,7 +176,10 @@ export default function PageHeader() {
                 </div>
             ) : (
                 <div className="flex items-center gap-2">
-                    <Button asChild size="sm" className="text-base md:text-lg mr-4">
+                    <Button asChild size="sm" className="text-base md:text-lg hidden md:inline-flex">
+                        <Link href="/login">Login</Link>
+                    </Button>
+                     <Button asChild size="sm" className="text-base md:text-lg mr-4">
                         <Link href="/register">Sign Up</Link>
                     </Button>
                 </div>
@@ -206,7 +209,7 @@ export default function PageHeader() {
                             Logout
                         </Button>
                     ) : (
-                        <SheetClose asChild>
+                       <SheetClose asChild>
                             <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60">
                                 Login
                             </Link>
