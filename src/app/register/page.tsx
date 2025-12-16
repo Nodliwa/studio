@@ -94,26 +94,27 @@ export default function RegisterPage() {
   });
 
   const processGoogleUser = async (userCredential: UserCredential) => {
-    if (!firestore) return;
+    if (!firestore || !userCredential.user.email) return;
     const userRef = doc(firestore, 'users', userCredential.user.uid);
-    await setUserData(userRef, userCredential.user.email!, userCredential.user.displayName || '');
-    router.push('/my-plans');
+    // This will create the user document if it doesn't exist, or merge if it does.
+    await setUserData(userRef, userCredential.user.email, userCredential.user.displayName || 'New User');
   };
 
   useEffect(() => {
+    // This effect handles the result from a Google Sign-In redirect.
     if (!auth || !firestore) {
-        // Firebase services are not ready yet.
-        setTimeout(() => {
-            if (!auth || !firestore) setIsProcessingGoogleSignIn(false);
-        }, 1000);
-        return;
+      // Services not ready yet.
+      return;
     }
   
     handleGoogleRedirectResult(auth)
       .then((userCredential) => {
         if (userCredential) {
+          // User has just returned from Google redirect. Process their info.
           processGoogleUser(userCredential);
+          // The onAuthStateChanged listener in the next useEffect will handle the redirect.
         } else {
+          // No user from redirect, so we're not in that flow.
           setIsProcessingGoogleSignIn(false);
         }
       })
@@ -121,19 +122,24 @@ export default function RegisterPage() {
         if (error instanceof FirebaseError) {
           setFirebaseError(error.message);
         } else {
-          setFirebaseError('An unexpected error occurred.');
+          setFirebaseError('An unexpected error occurred during Google sign-in.');
         }
         setIsProcessingGoogleSignIn(false);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth, firestore, router]);
+  }, [auth, firestore]);
 
 
   useEffect(() => {
-    if (!isUserLoading && user && !user.isAnonymous && !isProcessingGoogleSignIn) {
+    // This is the primary redirect logic, relying on the live auth state.
+    if (!isUserLoading && user && !user.isAnonymous) {
+      // If we have a signed-in, non-anonymous user, they should be on the plans page.
       router.push('/my-plans');
+    } else if (!isUserLoading && !user) {
+        // If auth is loaded and there's no user, we can stop processing.
+        setIsProcessingGoogleSignIn(false);
     }
-  }, [user, isUserLoading, router, isProcessingGoogleSignIn]);
+  }, [user, isUserLoading, router]);
 
 
   const onSubmit = async (data: RegisterFormValues) => {
@@ -142,14 +148,12 @@ export default function RegisterPage() {
 
     const validationResult = emailRegisterSchema.safeParse(data);
     if (!validationResult.success) {
-        // This can happen if the form state is manipulated outside the standard flow.
-        // We will manually set the errors to make them visible.
         if (recaptchaRef.current) recaptchaRef.current.reset();
         setValue('recaptcha', undefined);
-        const { formErrors } = validationResult.error;
-        if (formErrors.recaptcha) {
+        const { fieldErrors } = validationResult.error;
+        if (fieldErrors.recaptcha) {
              setFirebaseError("Please complete the reCAPTCHA.");
-        } else if (formErrors.consent) {
+        } else if (fieldErrors.consent) {
              setFirebaseError("You must accept the terms and conditions.");
         }
         return; 
@@ -157,12 +161,12 @@ export default function RegisterPage() {
     
     try {
       const displayName = `${data.firstName} ${data.lastName}`;
+      // onAuthStateChanged will handle the redirect after this completes
       const userCredential = await initiateEmailSignUp(auth, data.email, data.password, displayName);
       
       if (userCredential?.user) {
         const userRef = doc(firestore, 'users', userCredential.user.uid);
         await setUserData(userRef, userCredential.user.email!, displayName);
-        router.push('/my-plans');
       }
       
     } catch (error) {
@@ -183,10 +187,13 @@ export default function RegisterPage() {
     if (!auth) return;
     setFirebaseError(null);
     try {
+        // This function ONLY initiates the sign-in. It doesn't process the user.
         const userCredential = await initiateGoogleSignIn(auth, isMobile);
+        // For pop-up, process the user immediately. Redirect is handled by the useEffect.
         if (userCredential) {
             await processGoogleUser(userCredential);
         }
+        // Redirect will be handled by the onAuthStateChanged listener in the useEffect.
     } catch (error) {
         if (error instanceof FirebaseError) {
             if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
@@ -198,6 +205,7 @@ export default function RegisterPage() {
     }
   };
   
+  // Prevent UI flash while auth state is resolving or redirect is pending.
   if (isUserLoading || isProcessingGoogleSignIn || (user && !user.isAnonymous)) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">

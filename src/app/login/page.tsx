@@ -53,29 +53,27 @@ export default function LoginPage() {
   });
 
   const processGoogleUser = async (userCredential: UserCredential) => {
-    if (!firestore) return;
+    if (!firestore || !userCredential.user.email) return;
     const userRef = doc(firestore, 'users', userCredential.user.uid);
-    await setUserData(userRef, userCredential.user.email!, userCredential.user.displayName || '');
-    router.push('/my-plans');
+    // This will create the user document if it doesn't exist, or merge if it does.
+    await setUserData(userRef, userCredential.user.email, userCredential.user.displayName || 'New User');
   };
 
   useEffect(() => {
+    // This effect handles the result from a Google Sign-In redirect.
     if (!auth || !firestore) {
-        // Firebase services are not ready yet. We will wait.
-        // We set processing to false only if we are sure there is no redirect happening.
-        // A simple way is to check after a short delay.
-        setTimeout(() => {
-            if (!auth || !firestore) setIsProcessingGoogleSignIn(false);
-        }, 1000);
-        return;
+      // Services not ready yet.
+      return;
     }
   
     handleGoogleRedirectResult(auth)
       .then((userCredential) => {
         if (userCredential) {
+          // User has just returned from Google redirect. Process their info.
           processGoogleUser(userCredential);
+          // The onAuthStateChanged listener in the next useEffect will handle the redirect.
         } else {
-          // No redirect result, so we are not in a redirect flow.
+          // No user from redirect, so we're not in that flow.
           setIsProcessingGoogleSignIn(false);
         }
       })
@@ -83,27 +81,31 @@ export default function LoginPage() {
         if (error instanceof FirebaseError) {
           setFirebaseError(error.message);
         } else {
-          setFirebaseError('An unexpected error occurred.');
+          setFirebaseError('An unexpected error occurred during Google sign-in.');
         }
         setIsProcessingGoogleSignIn(false);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth, firestore, router]);
+  }, [auth, firestore]);
 
 
    useEffect(() => {
-    // Redirect if a non-anonymous user is already logged in, and we are not processing a sign-in.
-    if (!isUserLoading && user && !user.isAnonymous && !isProcessingGoogleSignIn) {
+    // This is the primary redirect logic, relying on the live auth state.
+    if (!isUserLoading && user && !user.isAnonymous) {
+      // If we have a signed-in, non-anonymous user, they should be on the plans page.
       router.push('/my-plans');
+    } else if (!isUserLoading && !user) {
+        // If auth is loaded and there's no user, we can stop processing.
+        setIsProcessingGoogleSignIn(false);
     }
-  }, [user, isUserLoading, router, isProcessingGoogleSignIn]);
+  }, [user, isUserLoading, router]);
 
   const onEmailSubmit = async (data: LoginFormValues) => {
     if (!auth) return;
     setFirebaseError(null);
     try {
+      // onAuthStateChanged will handle the redirect
       await signInWithEmailAndPassword(auth, data.email, data.password);
-      router.push('/my-plans');
     } catch (error) {
       if (error instanceof FirebaseError) {
         setFirebaseError(error.message);
@@ -117,11 +119,13 @@ export default function LoginPage() {
     if (!auth) return;
     setFirebaseError(null);
     try {
+        // This function ONLY initiates the sign-in. It doesn't process the user.
         const userCredential = await initiateGoogleSignIn(auth, isMobile);
-        // For pop-up, process the user immediately. For redirect, the useEffect will handle it.
+        // For pop-up, process the user immediately. Redirect is handled by the useEffect.
         if (userCredential) {
             await processGoogleUser(userCredential);
         }
+        // Redirect will be handled by the onAuthStateChanged listener in the useEffect.
     } catch (error) {
         if (error instanceof FirebaseError) {
             if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
@@ -133,7 +137,7 @@ export default function LoginPage() {
     }
   };
 
-  // Prevent form flash while loading or redirecting
+  // Prevent UI flash while auth state is resolving or redirect is pending.
   if (isUserLoading || isProcessingGoogleSignIn || (user && !user.isAnonymous)) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
