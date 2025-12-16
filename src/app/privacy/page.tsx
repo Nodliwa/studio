@@ -85,6 +85,7 @@ export default function PrivacyPolicyPage() {
             <ul>
               <li>Google Firebase – authentication, database, and hosting</li>
               <li>Google Maps & Places API – address autocomplete</li>
+              <li>Facebook Login & X (Twitter) Login - for authentication</li>
             </ul>
             <p className="text-justify">These providers process data in accordance with their own privacy policies and applicable laws.</p>
 
@@ -108,9 +109,17 @@ export default function PrivacyPolicyPage() {
               <li>Withdraw consent (where applicable)</li>
               <li>Lodge a complaint with the Information Regulator</li>
             </ul>
-            <p className="text-justify">To exercise your rights, contact us at <a href="mailto:privacy@simpliplan.africa">privacy@simpliplan.africa</a>.</p>
+            <p className="text-justify">To exercise your rights, contact us at <a href="mailto:privacy@simpliplan.co.za">privacy@simpliplan.co.za</a>.</p>
 
-            <h2 className="text-2xl font-bold font-headline mt-8 mb-4">10. Cookies & Analytics</h2>
+            <h2 className="text-2xl font-bold font-headline mt-8 mb-4">10. Managing & Deleting Your Data</h2>
+            <p className="text-justify">
+              You are in control of your personal information. You can delete your account and all associated data at any time. To request data deletion, please send an email with the subject line "Data Deletion Request" to <a href="mailto:support@simpliplan.co.za">support@simpliplan.co.za</a> from the email address associated with your SimpliPlan account. We will process your request within a reasonable timeframe in accordance with applicable laws.
+            </p>
+            <p className="text-justify">
+              When you configure your Facebook App, you can provide the following URL as your <strong>Data Deletion Instructions URL</strong>: <a href="https://studio-1406892914-3d877.firebaseapp.com/privacy">https://studio-1406892914-3d877.firebaseapp.com/privacy</a>
+            </p>
+
+            <h2 className="text-2xl font-bold font-headline mt-8 mb-4">11. Cookies & Analytics</h2>
             <p className="text-justify">SimpliPlan uses essential cookies and similar technologies to:</p>
             <ul>
               <li>Maintain login sessions</li>
@@ -118,15 +127,15 @@ export default function PrivacyPolicyPage() {
             </ul>
             <p className="text-justify">We do not use cookies for third-party advertising.</p>
 
-            <h2 className="text-2xl font-bold font-headline mt-8 mb-4">11. Children’s Information</h2>
+            <h2 className="text-2xl font-bold font-headline mt-8 mb-4">12. Children’s Information</h2>
             <p className="text-justify">SimpliPlan is not intended for children under the age of 18. We do not knowingly collect personal information from children.</p>
 
-            <h2 className="text-2xl font-bold font-headline mt-8 mb-4">12. Changes to This Policy</h2>
+            <h2 className="text-2xl font-bold font-headline mt-8 mb-4">13. Changes to This Policy</h2>
             <p className="text-justify">We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated date.</p>
 
-            <h2 className="text-2xl font-bold font-headline mt-8 mb-4">13. Contact Us</h2>
+            <h2 className="text-2xl font-bold font-headline mt-8 mb-4">14. Contact Us</h2>
             <p className="text-justify">If you have any questions or concerns about this Privacy Policy or how we handle your information, contact:</p>
-            <p>Email: <a href="mailto:privacy@simpliplan.africa">privacy@simpliplan.africa</a></p>
+            <p>Email: <a href="mailto:privacy@simpliplan.co.za">privacy@simpliplan.co.za</a></p>
             <br/>
             <p><strong>By using SimpliPlan, you acknowledge that you have read and understood this Privacy Policy.</strong></p>
           </article>
