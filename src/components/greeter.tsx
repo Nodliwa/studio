@@ -16,11 +16,11 @@ const Greeter = ({ quote }: { quote?: string }) => {
     let timeOfDayGreeting = '';
 
     if (hour >= 4 && hour < 12) {
-      timeOfDayGreeting = 'Good morning';
+      timeOfDayGreeting = 'Good Morning';
     } else if (hour >= 12 && hour < 18) {
-      timeOfDayGreeting = 'Good afternoon';
+      timeOfDayGreeting = 'Good Afternoon';
     } else {
-      timeOfDayGreeting = 'Good evening';
+      timeOfDayGreeting = 'Good Evening';
     }
     
     setMainGreeting(`${timeOfDayGreeting}, ${name}!`);
