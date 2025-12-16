@@ -13,10 +13,11 @@ import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PageHeader from '@/components/page-header';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { UserCredential } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -42,10 +43,12 @@ export default function LoginPage() {
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const [isProcessingGoogleSignIn, setIsProcessingGoogleSignIn] = useState(true);
+  const { toast } = useToast();
 
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -134,6 +137,30 @@ export default function LoginPage() {
     }
   };
 
+  const handlePasswordReset = async () => {
+    if (!auth) return;
+    setFirebaseError(null);
+    const email = getValues('email');
+    if (!email) {
+      setFirebaseError('Please enter your email address to reset your password.');
+      return;
+    }
+    
+    try {
+      await sendPasswordResetEmail(auth, email);
+      toast({
+        title: 'Password Reset Email Sent',
+        description: `If an account exists for ${email}, a password reset link has been sent to it.`,
+      });
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        setFirebaseError(error.message);
+      } else {
+        setFirebaseError('An unexpected error occurred while sending the password reset email.');
+      }
+    }
+  };
+
   // Prevent UI flash while auth state is resolving or redirect is pending.
   if (isUserLoading || isProcessingGoogleSignIn || (user && !user.isAnonymous)) {
     return (
@@ -179,7 +206,12 @@ export default function LoginPage() {
                         {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="password">Password</Label>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="password">Password</Label>
+                            <Button type="button" variant="link" className="h-auto p-0 text-xs" onClick={handlePasswordReset}>
+                                Forgot Password?
+                            </Button>
+                        </div>
                         <Input id="password" type="password" {...register('password')} />
                         {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
                     </div>
@@ -217,3 +249,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
