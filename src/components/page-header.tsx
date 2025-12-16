@@ -86,7 +86,7 @@ export default function PageHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm shadow-sm">
       <div className="container flex h-20 items-center justify-between mx-auto">
-        <div className="flex items-center ml-3">
+        <div className="flex items-center flex-shrink-0">
           <Link href="/" className="flex items-center space-x-2">
             <Image
               src="/images/brand2.png"
@@ -97,7 +97,8 @@ export default function PageHeader() {
             />
           </Link>
         </div>
-        <nav className="hidden md:flex items-center justify-center gap-6 text-lg absolute left-1/2 -translate-x-1/2">
+        
+        <nav className="hidden md:flex items-center justify-center gap-6 text-lg">
             <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
               Home
             </Link>
@@ -105,6 +106,7 @@ export default function PageHeader() {
                 MyPlans
             </Link>
         </nav>
+
         <div className="flex items-center justify-end gap-2">
           {isUserLoading ? (
             <div className="w-24 h-10 bg-muted rounded-md animate-pulse" />
@@ -173,38 +175,11 @@ export default function PageHeader() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-                <Button asChild size="sm" className="mr-1 md:mr-0">
-                    <Link href="/register" className="text-base md:text-lg">Sign Up</Link>
+                <Button asChild size="sm" className="mr-4 text-base md:text-lg">
+                    <Link href="/register">Sign Up</Link>
                 </Button>
-                <Sheet>
-                    <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="md:hidden">
-                        <Menu className="h-6 w-6" />
-                        <span className="sr-only">Toggle Menu</span>
-                    </Button>
-                    </SheetTrigger>
-                    <SheetContent side="right">
-                    <nav className="flex flex-col gap-6 text-lg font-medium mt-8">
-                        <SheetClose asChild>
-                            <Link href="/" className={cn("transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
-                            Home
-                            </Link>
-                        </SheetClose>
-                        <SheetClose asChild>
-                            <Link href="/my-plans" className={cn("transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
-                                MyPlans
-                            </Link>
-                        </SheetClose>
-                        <SheetClose asChild>
-                            <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60">
-                                Login
-                            </Link>
-                        </SheetClose>
-                    </nav>
-                    </SheetContent>
-                </Sheet>
-                 <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
-                    <Link href="/login" className="text-base md:text-lg">Login</Link>
+                 <Button asChild variant="outline" size="sm" className="hidden md:inline-flex text-base md:text-lg">
+                    <Link href="/login">Login</Link>
                 </Button>
             </div>
           )}
@@ -238,11 +213,6 @@ export default function PageHeader() {
                             <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60">
                                 Login
                             </Link>
-                        </SheetClose>
-                        <SheetClose asChild>
-                            <Button asChild size="sm">
-                                <Link href="/register" className="text-base md:text-lg">Sign Up</Link>
-                            </Button>
                         </SheetClose>
                     </>
                  )}
