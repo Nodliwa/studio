@@ -63,6 +63,7 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
                 budgetRef={budgetDocRef} 
                 isTemplateMode={false} 
                 mustDos={mustDos} 
+                eventType={budget?.eventType}
             />
           </div>
         </main>
