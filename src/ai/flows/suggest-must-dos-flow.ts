@@ -34,6 +34,56 @@ export const SuggestMustDosOutputSchema = z.object({
 });
 export type SuggestMustDosOutput = z.infer<typeof SuggestMustDosOutputSchema>;
 
+// Define the Genkit prompt for generating suggestions.
+const suggestMustDosPrompt = ai.definePrompt(
+    {
+      name: 'suggestMustDosPrompt',
+      input: { schema: SuggestMustDosInputSchema },
+      output: { schema: SuggestMustDosOutputSchema },
+      prompt: `
+        You are an expert event planner specializing in South African cultural events.
+        Your task is to suggest 3 to 5 critical, non-budgetary "must-do" action items for a {{eventType}}.
+  
+        These are tasks that need to be done, not items to be bought.
+        Good Suggestion: "Book a venue" or "Send out invitations".
+        Bad Suggestion: "Buy a cake" or "Flowers".
+  
+        The response MUST be in the JSON format described by the output schema.
+        Do not suggest any of the following tasks, as they already exist in the user's plan:
+        {{#if existingTitles}}
+          {{#each existingTitles}}
+            - {{this}}
+          {{/each}}
+        {{else}}
+          (No existing tasks)
+        {{/if}}
+  
+        Generate creative, practical, and essential suggestions. For each suggestion, provide a concise title and a brief, helpful note.
+      `,
+    }
+  );
+
+// Define the main Genkit flow.
+const suggestMustDosFlow = ai.defineFlow(
+  {
+    name: 'suggestMustDosFlow',
+    inputSchema: SuggestMustDosInputSchema,
+    outputSchema: SuggestMustDosOutputSchema,
+  },
+  async (input) => {
+    const llmResponse = await suggestMustDosPrompt(input);
+    const output = llmResponse.output;
+
+    if (!output) {
+      // Throw an error if the model returns no output, which will be caught by the client.
+      throw new Error('The AI model failed to return a valid structured response.');
+    }
+    
+    return output;
+  }
+);
+
+
 /**
  * An asynchronous wrapper function that executes the suggestMustDosFlow.
  * This is the primary function to be called from the UI.
@@ -43,48 +93,3 @@ export type SuggestMustDosOutput = z.infer<typeof SuggestMustDosOutputSchema>;
 export async function suggestMustDos(input: SuggestMustDosInput): Promise<SuggestMustDosOutput> {
   return suggestMustDosFlow(input);
 }
-
-// Define the main Genkit flow. This new implementation is more direct and robust.
-const suggestMustDosFlow = ai.defineFlow(
-  {
-    name: 'suggestMustDosFlow',
-    inputSchema: SuggestMustDosInputSchema,
-    outputSchema: SuggestMustDosOutputSchema,
-  },
-  async (input) => {
-    // Construct the prompt string using Handlebars-like syntax.
-    // This is a more direct way to build the prompt for the `generate` call.
-    const prompt = `
-      You are an expert event planner specializing in South African cultural events.
-      Your task is to suggest 3 to 5 critical, non-budgetary "must-do" action items for a ${input.eventType}.
-
-      These are tasks that need to be done, not items to be bought.
-      Good Suggestion: "Book a venue" or "Send out invitations".
-      Bad Suggestion: "Buy a cake" or "Flowers".
-
-      The response MUST be in the JSON format described by the output schema.
-      Do not suggest any of the following tasks, as they already exist in the user's plan:
-      ${input.existingTitles.length > 0 ? input.existingTitles.map(title => `- ${title}`).join('\n') : '(No existing tasks)'}
-
-      Generate creative, practical, and essential suggestions. For each suggestion, provide a concise title and a brief, helpful note.
-    `;
-
-    // Directly call the AI model with the structured prompt and output schema.
-    const llmResponse = await ai.generate({
-      prompt: prompt,
-      model: 'googleai/gemini-pro',
-      output: {
-        schema: SuggestMustDosOutputSchema,
-      },
-    });
-    
-    const output = llmResponse.output;
-
-    // Add explicit error handling to ensure a valid response is returned.
-    if (!output) {
-      throw new Error('The AI model failed to return a valid structured response. The output was empty.');
-    }
-    
-    return output;
-  }
-);
