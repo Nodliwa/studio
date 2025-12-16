@@ -86,8 +86,8 @@ export default function PageHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm shadow-sm">
       <div className="container flex h-20 items-center justify-between mx-auto">
-        <div className="flex items-center">
-          <Link href="/" className="flex items-center space-x-2">
+        <div className="flex items-center flex-1">
+          <Link href="/" className="flex items-center space-x-2" style={{ marginLeft: '20px' }}>
             <Image
               src="/images/brand2.png"
               alt="SimpliPlan Logo"
@@ -98,17 +98,16 @@ export default function PageHeader() {
           </Link>
         </div>
         
-        <div className="flex items-center gap-4">
-            <nav className="hidden md:flex items-center justify-center gap-6 text-lg">
-                <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
-                Home
-                </Link>
-                <Link href="/my-plans" className={cn("font-bold transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
-                    MyPlans
-                </Link>
-            </nav>
+        <nav className="hidden md:flex items-center justify-center gap-6 text-lg absolute left-1/2 -translate-x-1/2">
+            <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
+            Home
+            </Link>
+            <Link href="/my-plans" className={cn("font-bold transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
+                MyPlans
+            </Link>
+        </nav>
 
-            <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end flex-1">
             {isUserLoading ? (
                 <div className="w-24 h-10 bg-muted rounded-md animate-pulse" />
             ) : user && !user.isAnonymous ? (
@@ -176,10 +175,7 @@ export default function PageHeader() {
                 </div>
             ) : (
                 <div className="flex items-center gap-2">
-                    <Button asChild size="sm" className="text-base md:text-lg hidden md:inline-flex">
-                        <Link href="/login">Login</Link>
-                    </Button>
-                     <Button asChild size="sm" className="text-base md:text-lg mr-4">
+                    <Button asChild size="sm" className="text-base md:text-lg">
                         <Link href="/register">Sign Up</Link>
                     </Button>
                 </div>
@@ -209,16 +205,22 @@ export default function PageHeader() {
                             Logout
                         </Button>
                     ) : (
-                       <SheetClose asChild>
-                            <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60">
-                                Login
+                       <>
+                        <SheetClose asChild>
+                             <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                                 Login
+                             </Link>
+                         </SheetClose>
+                         <SheetClose asChild>
+                            <Link href="/register" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                                Sign Up
                             </Link>
                         </SheetClose>
+                       </>
                     )}
                 </nav>
                 </SheetContent>
             </Sheet>
-            </div>
         </div>
       </div>
     </header>
