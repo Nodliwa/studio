@@ -15,9 +15,9 @@ const Greeter = ({ quote }: { quote?: string }) => {
     const hour = new Date().getHours();
     let timeOfDayGreeting = '';
 
-    if (hour < 12) {
+    if (hour >= 4 && hour < 12) {
       timeOfDayGreeting = 'Good morning';
-    } else if (hour < 17) {
+    } else if (hour >= 12 && hour < 18) {
       timeOfDayGreeting = 'Good afternoon';
     } else {
       timeOfDayGreeting = 'Good evening';
