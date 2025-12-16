@@ -462,14 +462,6 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add a Must-Do
             </Button>
-            <Button variant="outline" onClick={handleSuggestMustDos} disabled={isSuggesting} className="bg-white/10 hover:bg-white/20 border-white/30">
-                {isSuggesting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <Sparkles className="mr-2 h-4 w-4" />
-                )}
-                Suggest with AI
-            </Button>
           </div>
         </div>
       </CardContent>
