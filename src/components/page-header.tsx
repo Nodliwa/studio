@@ -172,18 +172,14 @@ export default function PageHeader() {
                  </Button>
             </div>
           ) : (
-            <>
-              {pathname === '/' && (
-                <div className="hidden md:flex items-center gap-2">
-                    <Button asChild variant="outline" size="sm">
-                        <Link href="/login" className="text-lg">Login</Link>
-                    </Button>
-                    <Button asChild size="sm" className="mr-7">
-                        <Link href="/register" className="text-lg">Sign Up</Link>
-                    </Button>
-                </div>
-              )}
-            </>
+            <div className="hidden md:flex items-center gap-2">
+              <Button asChild variant="outline" size="sm">
+                  <Link href="/login" className="text-lg">Login</Link>
+              </Button>
+              <Button asChild size="sm">
+                  <Link href="/register" className="text-lg">Sign Up</Link>
+              </Button>
+            </div>
           )}
           <Sheet>
             <SheetTrigger asChild>

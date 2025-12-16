@@ -43,13 +43,6 @@ export default function LandingPage() {
                   Plan your Event
                 </Button>
               </Link>
-              {!isUserLoading && (!user || user.isAnonymous) && (
-                  <Link href="/register" className="inline-block">
-                    <Button size="lg" variant="outline" className="font-semibold text-lg py-4 px-4">
-                      Sign Up
-                    </Button>
-                  </Link>
-              )}
             </div>
 
             <div className="w-full mx-auto mt-8">
