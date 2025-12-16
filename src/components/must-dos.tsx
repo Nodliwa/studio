@@ -76,7 +76,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   };
   
   const handleReminderDaysBlur = () => {
-    const numericValue = Number.is.isFinite(reminderDays) ? reminderDays : 1;
+    const numericValue = Number.isFinite(reminderDays) ? reminderDays : 1;
     if (numericValue !== item.reminderDaysBefore) {
       onUpdate(item.id, { reminderDaysBefore: numericValue });
     }
@@ -130,10 +130,10 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
               readOnly={item.status === 'done'}
               placeholder="New must-do..."
               />
-              <div className="flex items-center gap-6 text-xs text-muted-foreground">
+              <div className="flex items-center gap-12 text-xs text-muted-foreground">
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-auto p-1 flex justify-start items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
+                      <Button variant="ghost" size="sm" className="h-auto w-24 p-1 flex justify-start items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
                           <PriorityIcon priority={priority} />
                           <span>{PriorityLevels[priority].label}</span>
                       </Button>
@@ -234,7 +234,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
                         value={reminderDays}
                         onChange={(e) => {
                             const value = parseInt(e.target.value, 10);
-                            setReminderDays(Number.is.isFinite(value) ? value : 1);
+                            setReminderDays(Number.isFinite(value) ? value : 1);
                         }}
                         onBlur={handleReminderDaysBlur}
                         className="h-9 w-16 text-center"
@@ -427,14 +427,6 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
             <Button variant="outline" onClick={() => handleAddItem()} className="bg-white/10 hover:bg-white/20 border-white/30">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add a Must-Do
-            </Button>
-            <Button variant="outline" onClick={handleGetSuggestions} disabled={true} className="bg-white/10 hover:bg-white/20 border-white/30">
-                {isSuggesting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <Sparkles className="mr-2 h-4 w-4" />
-                )}
-                Suggest with AI
             </Button>
           </div>
         </div>
