@@ -110,8 +110,8 @@ export default function LoginPage() {
                 <CardTitle>Login</CardTitle>
                 <CardDescription>Access your celebration plans.</CardDescription>
             </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
+            <CardContent className="px-0">
+                <div className="space-y-4 px-6">
                     <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn}>
                         <GoogleIcon className="mr-2" />
                         Sign in with Google
@@ -145,28 +145,30 @@ export default function LoginPage() {
                     </div>
 
                     {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
-
-                    <Button type="submit" className="w-full" disabled={isSubmitting}>
-                        {isSubmitting ? 'Logging in...' : 'Login'}
-                    </Button>
+                    
+                    <div className="px-6 pb-6 pt-2">
+                        <Button type="submit" className="w-full" disabled={isSubmitting}>
+                            {isSubmitting ? 'Logging in...' : 'Login'}
+                        </Button>
+                         <div className="mt-4 text-center text-sm">
+                            Don't have an account?{' '}
+                            <Link href="/register" className="underline">
+                                Sign up
+                            </Link>
+                        </div>
+                        <div className="mt-6 text-center text-xs text-muted-foreground">
+                        By continuing, you agree to our{' '}
+                        <Link href="/terms" className="underline hover:text-primary">
+                            Terms of Service
+                        </Link>{' '}
+                        and{' '}
+                        <Link href="/privacy" className="underline hover:text-primary">
+                            Privacy Policy
+                        </Link>
+                        .
+                        </div>
+                    </div>
                     </form>
-                </div>
-                <div className="mt-4 text-center text-sm">
-                    Don't have an account?{' '}
-                    <Link href="/register" className="underline">
-                        Sign up
-                    </Link>
-                </div>
-                <div className="mt-6 text-center text-xs text-muted-foreground">
-                  By continuing, you agree to our{' '}
-                  <Link href="/terms" className="underline hover:text-primary">
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link href="/privacy" className="underline hover:text-primary">
-                    Privacy Policy
-                  </Link>
-                  .
                 </div>
             </CardContent>
             </Card>
@@ -175,5 +177,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
