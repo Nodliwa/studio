@@ -4,11 +4,12 @@ import {
   Auth,
   signInAnonymously,
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
   updateProfile,
   UserCredential,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
 } from 'firebase/auth';
 
 /** Initiate anonymous sign-in (non-blocking). */
@@ -42,16 +43,36 @@ export async function initiateEmailSignUp(authInstance: Auth, email: string, pas
 }
 
 /**
- * Initiates Google Sign-In using a popup.
- * Returns the user credential on successful authentication.
+ * Initiates Google Sign-In.
+ * Uses redirect on mobile and popup on desktop.
  */
-export async function initiateGoogleSignIn(authInstance: Auth): Promise<UserCredential> {
+export async function initiateGoogleSignIn(authInstance: Auth, isMobile: boolean): Promise<UserCredential | null> {
     const provider = new GoogleAuthProvider();
     try {
-        const result = await signInWithPopup(authInstance, provider);
+        if (isMobile) {
+            await signInWithRedirect(authInstance, provider);
+            // signInWithRedirect doesn't return a credential directly.
+            // The result is retrieved after the redirect.
+            return null; 
+        } else {
+            const result = await signInWithPopup(authInstance, provider);
+            return result;
+        }
+    } catch (error) {
+        console.error("Error during Google sign-in initiation:", error);
+        throw error;
+    }
+}
+
+/**
+ * Handles the result of a Google Sign-In redirect.
+ */
+export async function handleGoogleRedirectResult(auth: Auth): Promise<UserCredential | null> {
+    try {
+        const result = await getRedirectResult(auth);
         return result;
     } catch (error) {
-        console.error("Error during Google sign-in:", error);
+        console.error('Error handling Google redirect result:', error);
         throw error;
     }
 }

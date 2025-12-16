@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useAuth, initiateEmailSignUp, useUser, setUserData, useFirestore, initiateGoogleSignIn } from '@/firebase';
+import { useAuth, initiateEmailSignUp, useUser, setUserData, useFirestore, initiateGoogleSignIn, handleGoogleRedirectResult } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -18,6 +18,8 @@ import PageHeader from '@/components/page-header';
 import { doc } from 'firebase/firestore';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { Separator } from '@/components/ui/separator';
+import { useIsMobile } from '@/hooks/use-mobile';
+import type { UserCredential } from 'firebase/auth';
 
 const emailRegisterSchema = z.object({
   firstName: z.string().min(1, 'Known as is required'),
@@ -62,6 +64,9 @@ export default function RegisterPage() {
   const { user, isUserLoading } = useUser();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const isMobile = useIsMobile();
+  const [isProcessingGoogleSignIn, setIsProcessingGoogleSignIn] = useState(true);
+
 
   const {
     register,
@@ -75,6 +80,31 @@ export default function RegisterPage() {
       consent: false,
     }
   });
+
+  const processGoogleUser = async (userCredential: UserCredential) => {
+    const userRef = doc(firestore, 'users', userCredential.user.uid);
+    await setUserData(userRef, userCredential.user.email!, userCredential.user.displayName || '');
+    router.push('/my-plans');
+  };
+
+  useEffect(() => {
+    handleGoogleRedirectResult(auth)
+      .then((userCredential) => {
+        if (userCredential) {
+          processGoogleUser(userCredential);
+        } else {
+          setIsProcessingGoogleSignIn(false);
+        }
+      })
+      .catch((error) => {
+        if (error instanceof FirebaseError) {
+          setFirebaseError(error.message);
+        } else {
+          setFirebaseError('An unexpected error occurred.');
+        }
+        setIsProcessingGoogleSignIn(false);
+      });
+  }, [auth]);
 
   useEffect(() => {
     if (!isUserLoading && user && !user.isAnonymous) {
@@ -128,17 +158,13 @@ export default function RegisterPage() {
   const handleGoogleSignIn = async () => {
     setFirebaseError(null);
     try {
-      const userCredential = await initiateGoogleSignIn(auth);
-      if (userCredential?.user) {
-        const userRef = doc(firestore, 'users', userCredential.user.uid);
-        // Use existing display name and email from Google profile
-        await setUserData(userRef, userCredential.user.email!, userCredential.user.displayName || '');
-        router.push('/my-plans');
-      }
+        const userCredential = await initiateGoogleSignIn(auth, isMobile);
+        if (userCredential) {
+            await processGoogleUser(userCredential);
+        }
     } catch (error) {
         if (error instanceof FirebaseError) {
-            // Handle specific Firebase errors, e.g., 'auth/popup-closed-by-user'
-            if (error.code !== 'auth/popup-closed-by-user') {
+            if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
                 setFirebaseError(error.message);
             }
         } else {
@@ -147,7 +173,7 @@ export default function RegisterPage() {
     }
   };
   
-    if (isUserLoading || (user && !user.isAnonymous)) {
+    if (isUserLoading || (user && !user.isAnonymous) || isProcessingGoogleSignIn) {
         return (
           <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
               <p>Loading...</p>
@@ -266,5 +292,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-
-    

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth, useUser, useFirestore, initiateGoogleSignIn, setUserData } from '@/firebase';
+import { useAuth, useUser, useFirestore, initiateGoogleSignIn, setUserData, handleGoogleRedirectResult } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -17,6 +17,8 @@ import PageHeader from '@/components/page-header';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Separator } from '@/components/ui/separator';
 import { doc } from 'firebase/firestore';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { UserCredential } from 'firebase/auth';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -40,6 +42,8 @@ export default function LoginPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
+  const [isProcessingGoogleSignIn, setIsProcessingGoogleSignIn] = useState(true);
 
   const {
     register,
@@ -48,6 +52,31 @@ export default function LoginPage() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
+
+  const processGoogleUser = async (userCredential: UserCredential) => {
+    const userRef = doc(firestore, 'users', userCredential.user.uid);
+    await setUserData(userRef, userCredential.user.email!, userCredential.user.displayName || '');
+    router.push('/my-plans');
+  };
+
+  useEffect(() => {
+    handleGoogleRedirectResult(auth)
+      .then((userCredential) => {
+        if (userCredential) {
+          processGoogleUser(userCredential);
+        } else {
+          setIsProcessingGoogleSignIn(false);
+        }
+      })
+      .catch((error) => {
+        if (error instanceof FirebaseError) {
+          setFirebaseError(error.message);
+        } else {
+          setFirebaseError('An unexpected error occurred.');
+        }
+        setIsProcessingGoogleSignIn(false);
+      });
+  }, [auth]);
 
    useEffect(() => {
     // Redirect if a non-anonymous user is already logged in.
@@ -73,13 +102,11 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setFirebaseError(null);
     try {
-      const userCredential = await initiateGoogleSignIn(auth);
-      if (userCredential?.user) {
-        const userRef = doc(firestore, 'users', userCredential.user.uid);
-        // Ensure user data is in Firestore (it might not be if they only registered)
-        await setUserData(userRef, userCredential.user.email!, userCredential.user.displayName || '');
-        router.push('/my-plans');
-      }
+        const userCredential = await initiateGoogleSignIn(auth, isMobile);
+        // For pop-up, process the user immediately. For redirect, the useEffect will handle it.
+        if (userCredential) {
+            await processGoogleUser(userCredential);
+        }
     } catch (error) {
         if (error instanceof FirebaseError) {
             if (error.code !== 'auth/popup-closed-by-user') {
@@ -92,7 +119,7 @@ export default function LoginPage() {
   };
 
   // Prevent form flash while loading or redirecting
-  if (isUserLoading || (user && !user.isAnonymous)) {
+  if (isUserLoading || (user && !user.isAnonymous) || isProcessingGoogleSignIn) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
           <p>Loading...</p>
@@ -111,7 +138,7 @@ export default function LoginPage() {
                 <CardDescription>Access your celebration plans.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="space-y-4 px-6">
+                <div className="space-y-4">
                     <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn}>
                         <GoogleIcon className="mr-2" />
                         Sign in with Google
@@ -146,7 +173,7 @@ export default function LoginPage() {
 
                     {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
                     
-                    <div className="pb-6 pt-2">
+                     <div className="pb-6 pt-2 px-6">
                         <Button type="submit" className="w-full" disabled={isSubmitting}>
                             {isSubmitting ? 'Logging in...' : 'Login'}
                         </Button>
