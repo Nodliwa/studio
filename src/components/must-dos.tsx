@@ -300,19 +300,23 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos }
     const allItems = isTemplateMode ? localMustDos : serverItems;
     
     return [...allItems].sort((a, b) => {
-        if (a.status === 'done' && b.status !== 'done') return 1;
-        if (a.status !== 'done' && b.status === 'done') return -1;
-  
+        // Primary sort: by priority
         const priorityA = a.priority || 'medium';
         const priorityB = b.priority || 'medium';
         if (PriorityLevels[priorityA].order < PriorityLevels[priorityB].order) return -1;
         if (PriorityLevels[priorityA].order > PriorityLevels[priorityB].order) return 1;
+
+        // Secondary sort: by status (todo before done)
+        if (a.status === 'todo' && b.status === 'done') return -1;
+        if (a.status === 'done' && b.status === 'todo') return 1;
   
+        // Tertiary sort: by deadline (earlier dates first)
         const dateA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
         const dateB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
         if (dateA < dateB) return -1;
         if (dateA > dateB) return 1;
   
+        // Final sort: by creation time (newest first)
         const aTime = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
         const bTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
         return bTime - aTime;
@@ -413,5 +417,3 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos }
     </Card>
   );
 }
-
-    
