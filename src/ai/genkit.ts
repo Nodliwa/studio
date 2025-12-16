@@ -11,4 +11,3 @@ export const ai = genkit({
     logLevel: "debug",
     enableTracingAndMetrics: true,
 });
-

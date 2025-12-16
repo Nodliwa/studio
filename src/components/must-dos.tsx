@@ -456,5 +456,3 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
     </Card>
   );
 }
-
-    
