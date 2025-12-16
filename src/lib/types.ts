@@ -40,14 +40,6 @@ export interface User {
     cellphone?: string;
 }
 
-export const PriorityLevels = {
-  Low: { label: 'Low', color: 'text-gray-500' },
-  Medium: { label: 'Medium', color: 'text-yellow-500' },
-  High: { label: 'High', color: 'text-red-500' },
-};
-
-export type Priority = keyof typeof PriorityLevels;
-
 export interface MustDo {
   id: string;
   budgetId: string;
@@ -55,7 +47,6 @@ export interface MustDo {
   title: string;
   note?: string;
   status: 'todo' | 'done';
-  priority: Priority;
   deadline?: string;
   createdAt: any; // Firestore Timestamp
   reminderEnabled: boolean;

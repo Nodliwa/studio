@@ -4,8 +4,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useUser, useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocument } from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
-import type { MustDo, Priority } from '@/lib/types';
-import { PriorityLevels } from '@/lib/types';
+import type { MustDo } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,12 +12,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { PlusCircle, Star, Trash2, Bell, BellOff } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
 import type { DocumentReference } from 'firebase/firestore';
 import { Calendar } from "@/components/ui/calendar"
@@ -60,11 +53,6 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
     onUpdate(item.id, { deadline: date ? date.toISOString().split('T')[0] : '' });
   };
 
-  const PriorityIcon = ({ priority }: { priority: Priority }) => {
-    const level = PriorityLevels[priority];
-    return <Star className={cn("h-4 w-4", level.color, priority !== 'Low' && 'fill-current')} />;
-  };
-
   return (
     <div className="flex flex-col p-3 border-b border-border/20 last:border-b-0">
       <div className="flex items-start gap-3">
@@ -88,22 +76,6 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
               placeholder="New must-do..."
               />
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
-                          <PriorityIcon priority={item.priority} />
-                          <span>{PriorityLevels[item.priority].label}</span>
-                      </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                      {Object.entries(PriorityLevels).map(([key, { label }]) => (
-                          <DropdownMenuItem key={key} onSelect={() => onUpdate(item.id, { priority: key as Priority })}>
-                          {label}
-                          </DropdownMenuItem>
-                      ))}
-                      </DropdownMenuContent>
-                  </DropdownMenu>
-
                   <Popover>
                       <PopoverTrigger asChild>
                           <Button
@@ -194,7 +166,6 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
           title: 'Confirm venue access time',
           note: 'Key collection is with security',
           status: 'todo',
-          priority: 'High',
           deadline: new Date().toISOString().split('T')[0],
           createdAt: new Date(),
           reminderEnabled: true,
@@ -207,7 +178,6 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
           title: 'Pick up decorations',
           note: '',
           status: 'todo',
-          priority: 'Medium',
           deadline: '',
           createdAt: new Date(),
           reminderEnabled: false,
@@ -232,11 +202,6 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
       if (a.status === 'done' && b.status !== 'done') return 1;
       if (a.status !== 'done' && b.status === 'done') return -1;
       
-      const priorityOrder = { High: 0, Medium: 1, Low: 2 };
-      if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
-      }
-
       const aTime = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
       const bTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
 
@@ -253,7 +218,6 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
     const newItemData = {
         title: '',
         note: '',
-        priority: 'Medium' as Priority,
         deadline: '',
         reminderEnabled: false,
         reminderDaysBefore: 1,
