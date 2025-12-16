@@ -235,15 +235,15 @@ export default function RegisterPage() {
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    <div className="grid grid-cols-3 gap-2">
-                        <Button type="button" variant="outline" className="w-full" onClick={() => handleSocialSignIn('google')}>
-                            <GoogleIcon className="mr-2" /> Google
+                    <div className="flex justify-center gap-4">
+                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('google')}>
+                            <GoogleIcon />
                         </Button>
-                        <Button type="button" variant="outline" className="w-full" onClick={() => handleSocialSignIn('facebook')}>
-                            <FacebookIcon className="mr-2" /> Facebook
+                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('facebook')}>
+                            <FacebookIcon />
                         </Button>
-                        <Button type="button" variant="outline" className="w-full" onClick={() => handleSocialSignIn('twitter')}>
-                            <XIcon className="mr-2" /> X
+                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('twitter')}>
+                            <XIcon />
                         </Button>
                     </div>
 

@@ -155,10 +155,11 @@ export default function LoginPage() {
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn}>
-                        <GoogleIcon className="mr-2" />
-                        Sign in with Google
+                  <div className="flex justify-center">
+                    <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={handleGoogleSignIn}>
+                        <GoogleIcon />
                     </Button>
+                  </div>
 
                     <div className="relative">
                         <div className="absolute inset-0 flex items-center">
