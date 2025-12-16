@@ -56,6 +56,19 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
   );
 
+const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 1200 1227" fill="currentColor" aria-hidden="true" {...props}  width="20px" height="20px">
+      <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.163 519.284ZM569.165 687.828L521.697 619.934L144.011 79.6902H306.615L596.021 389.542L643.489 457.436L1029.51 1142.1H866.905L569.165 687.828Z" />
+    </svg>
+);
+
+const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="24" height="24" viewBox="0 0 48 48" {...props}>
+        <linearGradient id="Ld6sqrtcxMyckEl6oeKdma_uLSV39Q_YoEn_gr1" x1="9.993" x2="40.615" y1="9.993" y2="40.615" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#2aa4f4"></stop><stop offset="1" stopColor="#007ad9"></stop></linearGradient><path fill="url(#Ld6sqrtcxMyckEl6oeKdma_uLSV39Q_YoEn_gr1)" d="M24,4C12.954,4,4,12.954,4,24s8.954,20,20,20s20-8.954,20-20S35.046,4,24,4z"></path><path fill="#fff" d="M26.707,26.707v11.729h5.895V26.707h4.228l0.58-4.885h-4.808v-2.883c0-1.428,0.395-2.399,2.444-2.399h2.583v-4.364c-0.445-0.059-1.979-0.19-3.757-0.19c-3.717,0-6.257,2.272-6.257,6.425v3.411h-4.25v4.885h4.25V26.707z"></path>
+    </svg>
+);
+
+
 export default function RegisterPage() {
   const auth = useAuth();
   const firestore = useFirestore();
@@ -207,6 +220,29 @@ export default function RegisterPage() {
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-2">
+                        <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+                            <GoogleIcon className="mr-2" /> Google
+                        </Button>
+                        <Button type="button" variant="outline" className="w-full" onClick={() => alert('Coming soon!')}>
+                            <FacebookIcon className="mr-2" /> Facebook
+                        </Button>
+                        <Button type="button" variant="outline" className="w-full" onClick={() => alert('Coming soon!')}>
+                            <XIcon className="mr-2" /> X
+                        </Button>
+                    </div>
+
+                     <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-card px-2 text-muted-foreground">
+                            Or continue with
+                            </span>
+                        </div>
+                    </div>
+
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
