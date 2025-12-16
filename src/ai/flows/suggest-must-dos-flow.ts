@@ -58,7 +58,7 @@ const suggestMustDosPrompt = ai.definePrompt({
     - {{this}}
     {{/each}}
 
-    Provide creative, practical, and essential suggestions. For each suggestion, provide a concise title and a brief, helpful note.
+    Provide creative, practical, and essential suggestions. For each suggestion, provide a concise title and a brief, helpful note. Your response MUST be in the format described by the output schema.
   `,
 });
 
