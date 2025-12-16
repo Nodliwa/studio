@@ -1,3 +1,4 @@
+
 'use client';
 import Image from "next/image";
 import Link from "next/link";
@@ -97,7 +98,7 @@ export default function PageHeader() {
           </Link>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
             <nav className="hidden md:flex items-center justify-center gap-6 text-lg">
                 <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
                 Home
@@ -175,10 +176,7 @@ export default function PageHeader() {
                 </div>
             ) : (
                 <div className="flex items-center gap-2">
-                    <Button asChild size="sm" className="hidden md:flex text-base md:text-lg">
-                        <Link href="/login">Login</Link>
-                    </Button>
-                    <Button asChild size="sm" className="text-base md:text-lg mr-2">
+                    <Button asChild size="sm" className="text-base md:text-lg mr-4">
                         <Link href="/register">Sign Up</Link>
                     </Button>
                 </div>
