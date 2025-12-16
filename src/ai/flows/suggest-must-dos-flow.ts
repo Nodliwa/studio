@@ -4,16 +4,51 @@
  *
  * - suggestMustDos - A function that suggests tasks based on event type and existing tasks.
  */
-
-// This functionality is temporarily disabled due to dependency conflicts.
-// The AI features will be restored once the conflicts are resolved.
-
+import { ai } from '@/ai/genkit';
 import {
+  SuggestMustDosInputSchema,
   type SuggestMustDosInput,
+  SuggestMustDosOutputSchema,
   type SuggestMustDosOutput,
 } from './schemas';
 
+// Define the prompt for the AI
+const suggestionPrompt = ai.definePrompt({
+    name: 'mustDoSuggestionPrompt',
+    input: { schema: SuggestMustDosInputSchema },
+    output: { schema: SuggestMustDosOutputSchema },
+    prompt: `You are an expert event planner. Based on the event type, suggest a list of 3-5 critical "must-do" tasks.
+  
+    Event Type: {{eventType}}
+    
+    Do not suggest any of the following tasks that already exist:
+    {{#if existingMustDos}}
+    {{#each existingMustDos}}
+    - {{this}}
+    {{/each}}
+    {{else}}
+    (No existing tasks)
+    {{/if}}
+    
+    Provide creative, practical, and essential tasks that are not obvious but are crucial for a successful event.
+    Focus on tasks related to coordination, guest experience, and logistical details that are often overlooked.`,
+  });
+  
+
+// Define the flow
+export const suggestMustDosFlow = ai.defineFlow(
+  {
+    name: 'suggestMustDosFlow',
+    inputSchema: SuggestMustDosInputSchema,
+    outputSchema: SuggestMustDosOutputSchema,
+  },
+  async (input) => {
+    const { output } = await suggestionPrompt(input);
+    return output!;
+  }
+);
+
+// Expose the flow as a server function
 export async function suggestMustDos(input: SuggestMustDosInput): Promise<SuggestMustDosOutput> {
-  console.warn("AI suggestions are temporarily disabled.");
-  return { suggestions: [] };
+  return await suggestMustDosFlow(input);
 }
