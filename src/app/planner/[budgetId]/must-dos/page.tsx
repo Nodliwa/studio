@@ -9,7 +9,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@
 import { collection, doc, query, orderBy } from 'firebase/firestore';
 import Greeter from '@/components/greeter';
 import { Budget } from '@/lib/types';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
@@ -17,6 +17,7 @@ import { ArrowLeft } from 'lucide-react';
 export default function MustDosPage({ params: { budgetId } }: { params: { budgetId: string } }) {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const router = useRouter();
   
   const budgetDocRef = useMemoFirebase(() => (
     user && budgetId ? doc(firestore, 'users', user.uid, 'budgets', budgetId) : null
@@ -50,11 +51,9 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
           <Greeter />
           
            <div className="mt-8">
-            <Button asChild variant="outline">
-              <Link href={`/planner/${budgetId}`}>
+            <Button variant="outline" onClick={() => router.back()}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Budget Planner
-              </Link>
+                Back
             </Button>
           </div>
 
@@ -71,5 +70,3 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
-
-    
