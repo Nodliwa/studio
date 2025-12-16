@@ -46,15 +46,7 @@ export const ImportanceLevels = {
   critical: { label: 'Critical', color: 'text-red-500' },
 };
 
-export const TimingOptions = {
-  anytime: 'Anytime',
-  'before-event': 'Before Event',
-  'day-before': 'Day Before',
-  'on-the-day': 'On the Day',
-};
-
 export type Importance = keyof typeof ImportanceLevels;
-export type Timing = keyof typeof TimingOptions;
 
 export interface MustDo {
   id: string;
@@ -64,7 +56,7 @@ export interface MustDo {
   note?: string;
   status: 'todo' | 'done';
   importance: Importance;
-  timing: Timing;
+  deadline?: string; // Replaces timing
   createdAt: any; // Firestore Timestamp
 }
     

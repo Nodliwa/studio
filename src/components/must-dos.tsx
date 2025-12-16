@@ -4,8 +4,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useUser, useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocument } from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
-import type { MustDo, Importance, Timing } from '@/lib/types';
-import { ImportanceLevels, TimingOptions } from '@/lib/types';
+import type { MustDo, Importance } from '@/lib/types';
+import { ImportanceLevels } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
 import type { DocumentReference } from 'firebase/firestore';
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface MustDosProps {
   budgetId: string;
@@ -33,12 +37,18 @@ interface MustDosProps {
 function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id: string, data: Partial<MustDo>) => void, onDelete: (id: string) => void }) {
   const [title, setTitle] = useState(item.title);
   const [note, setNote] = useState(item.note || '');
+  const [deadline, setDeadline] = useState(item.deadline ? new Date(item.deadline) : undefined);
 
   const handleBlur = (field: 'title' | 'note') => {
     const value = field === 'title' ? title : note;
     if (value !== item[field]) {
       onUpdate(item.id, { [field]: value });
     }
+  };
+
+  const handleDeadlineChange = (date: Date | undefined) => {
+    setDeadline(date);
+    onUpdate(item.id, { deadline: date ? date.toISOString().split('T')[0] : '' });
   };
 
   const ImportanceIcon = ({ importance }: { importance: Importance }) => {
@@ -85,18 +95,30 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
                     </DropdownMenuContent>
                 </DropdownMenu>
 
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-auto p-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">{TimingOptions[item.timing]}</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                    {Object.entries(TimingOptions).map(([key, label]) => (
-                        <DropdownMenuItem key={key} onSelect={() => onUpdate(item.id, { timing: key as Timing })}>
-                        {label}
-                        </DropdownMenuItem>
-                    ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                        variant={"ghost"}
+                        size="sm"
+                        className={cn(
+                            "h-auto p-1 text-foreground/80 hover:bg-white/10 hover:text-foreground",
+                            !deadline && "text-muted-foreground"
+                        )}
+                        >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {deadline ? format(deadline, "PPP") : <span>Set deadline</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar
+                        mode="single"
+                        selected={deadline}
+                        onSelect={handleDeadlineChange}
+                        initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
+
             </div>
         </div>
         <Textarea
@@ -135,7 +157,7 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
           note: 'Key collection is with security',
           status: 'todo',
           importance: 'important',
-          timing: 'before-event',
+          deadline: new Date().toISOString().split('T')[0],
           createdAt: new Date(),
         },
         {
@@ -146,7 +168,7 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
           note: '',
           status: 'todo',
           importance: 'none',
-          timing: 'on-the-day',
+          deadline: '',
           createdAt: new Date(),
         }
       ]);
@@ -191,7 +213,7 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
         title: '',
         note: '',
         importance: 'none' as Importance,
-        timing: 'anytime' as Timing,
+        deadline: '',
     };
 
     if (isTemplateMode || !user || !mustDosCollection) {
@@ -207,12 +229,12 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
         return;
     };
     
-    const newItem: Omit<MustDo, 'id'> = {
+    const newItem: Omit<MustDo, 'id' | 'timing'> & { deadline?: string } = {
       budgetId,
       userId: user.uid,
       status: 'todo',
       createdAt: serverTimestamp(),
-      ...newItemData
+      ...newItemData,
     };
     addDocumentNonBlocking(mustDosCollection, newItem);
   };

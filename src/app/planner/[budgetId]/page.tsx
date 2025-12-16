@@ -193,8 +193,8 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
           
            if (!mustDos || mustDos.length === 0) {
                 const mustDoTemplate = [
-                    { title: 'Confirm venue access time', note: 'Key collection is with security', importance: 'important', timing: 'before-event' },
-                    { title: 'Pick up decorations', note: '', importance: 'none', timing: 'on-the-day' }
+                    { title: 'Confirm venue access time', note: 'Key collection is with security', importance: 'important', deadline: '' },
+                    { title: 'Pick up decorations', note: '', importance: 'none', deadline: '' }
                 ];
                 mustDoTemplate.forEach(item => {
                     const mustDoRef = doc(collection(budgetDocRef, 'mustDos'));
@@ -360,11 +360,11 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
-            <div>
+            <div className="lg:col-span-1">
               <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
             </div>
 
-            <div>
+            <div className="lg:col-span-1">
                <BudgetSummary 
                 grandTotal={grandTotal}
                 daysLeft={daysLeft}

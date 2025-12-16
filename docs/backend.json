@@ -165,10 +165,10 @@
         "note": { "type": "string", "description": "Optional context or details about the task." },
         "status": { "type": "string", "enum": ["todo", "done"], "description": "The completion status of the task." },
         "importance": { "type": "string", "enum": ["none", "important", "critical"], "description": "The priority level of the task." },
-        "timing": { "type": "string", "enum": ["anytime", "before-event", "day-before", "on-the-day"], "description": "A relative sense of when the task should be done." },
+        "deadline": { "type": "string", "format": "date", "description": "The deadline for the task." },
         "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the item was created." }
       },
-      "required": ["id", "budgetId", "userId", "title", "status", "importance", "timing", "createdAt"]
+      "required": ["id", "budgetId", "userId", "title", "status", "importance", "createdAt"]
     }
   },
   "auth": {
