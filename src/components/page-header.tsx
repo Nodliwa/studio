@@ -86,8 +86,8 @@ export default function PageHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm shadow-sm">
       <div className="container flex h-20 items-center justify-between mx-auto">
-        <div className="flex items-center flex-1">
-          <Link href="/" className="flex items-center space-x-2" style={{ marginLeft: '20px' }}>
+        <div className="flex items-center justify-start flex-1">
+          <Link href="/" className="flex items-center space-x-2 ml-[20px]">
             <Image
               src="/images/brand2.png"
               alt="SimpliPlan Logo"
@@ -98,7 +98,7 @@ export default function PageHeader() {
           </Link>
         </div>
         
-        <nav className="hidden md:flex items-center justify-center gap-6 text-lg absolute left-1/2 -translate-x-1/2">
+        <nav className="hidden md:flex items-center justify-center gap-6 text-lg">
             <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
             Home
             </Link>
@@ -175,7 +175,7 @@ export default function PageHeader() {
                 </div>
             ) : (
                 <div className="hidden md:flex items-center gap-2">
-                     <Button asChild variant="ghost" className="text-base md:text-lg">
+                     <Button asChild variant="ghost" className="text-base md:text-lg mr-[5px]">
                         <Link href="/login">Login</Link>
                     </Button>
                     <Button asChild size="sm" className="text-base md:text-lg mr-4">
@@ -183,47 +183,49 @@ export default function PageHeader() {
                     </Button>
                 </div>
             )}
-            <Sheet>
-                <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                    <Menu className="h-6 w-6" />
-                    <span className="sr-only">Toggle Menu</span>
-                </Button>
-                </SheetTrigger>
-                <SheetContent side="right">
-                <nav className="flex flex-col gap-6 text-lg font-medium mt-8">
-                    <SheetClose asChild>
-                        <Link href="/" className={cn("transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
-                        Home
-                        </Link>
-                    </SheetClose>
-                    <SheetClose asChild>
-                        <Link href="/my-plans" className={cn("transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
-                            MyPlans
-                        </Link>
-                    </SheetClose>
-                    {user && !user.isAnonymous ? (
-                        <Button variant="ghost" onClick={handleLogout} className="justify-start p-0 text-lg font-medium text-foreground/60 hover:text-foreground/80">
-                            <LogOut className="mr-1 h-5 w-5" />
-                            Logout
-                        </Button>
-                    ) : (
-                       <>
+            <div className="flex items-center md:hidden">
+                {!isUserLoading && !user && (
+                    <Button asChild size="sm" className="text-base mr-4">
+                        <Link href="/register">Sign Up</Link>
+                    </Button>
+                )}
+                 <Sheet>
+                    <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Menu className="h-6 w-6" />
+                        <span className="sr-only">Toggle Menu</span>
+                    </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right">
+                    <nav className="flex flex-col gap-6 text-lg font-medium mt-8">
                         <SheetClose asChild>
-                             <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60">
-                                 Login
-                             </Link>
-                         </SheetClose>
-                         <SheetClose asChild>
-                            <Link href="/register" className="transition-colors hover:text-foreground/80 text-foreground/60">
-                                Sign Up
+                            <Link href="/" className={cn("transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
+                            Home
                             </Link>
                         </SheetClose>
-                       </>
-                    )}
-                </nav>
-                </SheetContent>
-            </Sheet>
+                        <SheetClose asChild>
+                            <Link href="/my-plans" className={cn("transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
+                                MyPlans
+                            </Link>
+                        </SheetClose>
+                        {user && !user.isAnonymous ? (
+                            <Button variant="ghost" onClick={handleLogout} className="justify-start p-0 text-lg font-medium text-foreground/60 hover:text-foreground/80">
+                                <LogOut className="mr-1 h-5 w-5" />
+                                Logout
+                            </Button>
+                        ) : (
+                        <>
+                            <SheetClose asChild>
+                                <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                                    Login
+                                </Link>
+                            </SheetClose>
+                        </>
+                        )}
+                    </nav>
+                    </SheetContent>
+                </Sheet>
+            </div>
         </div>
       </div>
     </header>
