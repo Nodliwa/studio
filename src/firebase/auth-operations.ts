@@ -7,6 +7,8 @@ import {
   updateProfile,
   UserCredential,
   GoogleAuthProvider,
+  FacebookAuthProvider,
+  OAuthProvider,
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
@@ -51,8 +53,6 @@ export async function initiateGoogleSignIn(authInstance: Auth, isMobile: boolean
     try {
         if (isMobile) {
             await signInWithRedirect(authInstance, provider);
-            // signInWithRedirect doesn't return a credential directly.
-            // The result is retrieved after the redirect.
             return null; 
         } else {
             const result = await signInWithPopup(authInstance, provider);
@@ -65,14 +65,51 @@ export async function initiateGoogleSignIn(authInstance: Auth, isMobile: boolean
 }
 
 /**
- * Handles the result of a Google Sign-In redirect.
+ * Initiates Facebook Sign-In.
+ */
+export async function initiateFacebookSignIn(authInstance: Auth, isMobile: boolean): Promise<UserCredential | null> {
+    const provider = new FacebookAuthProvider();
+    try {
+        if (isMobile) {
+            await signInWithRedirect(authInstance, provider);
+            return null;
+        } else {
+            return await signInWithPopup(authInstance, provider);
+        }
+    } catch (error) {
+        console.error("Error during Facebook sign-in initiation:", error);
+        throw error;
+    }
+}
+
+/**
+ * Initiates Twitter (X) Sign-In.
+ */
+export async function initiateTwitterSignIn(authInstance: Auth, isMobile: boolean): Promise<UserCredential | null> {
+    const provider = new OAuthProvider('twitter.com');
+    try {
+        if (isMobile) {
+            await signInWithRedirect(authInstance, provider);
+            return null;
+        } else {
+            return await signInWithPopup(authInstance, provider);
+        }
+    } catch (error) {
+        console.error("Error during Twitter/X sign-in initiation:", error);
+        throw error;
+    }
+}
+
+
+/**
+ * Handles the result of a Sign-In redirect for any provider.
  */
 export async function handleGoogleRedirectResult(auth: Auth): Promise<UserCredential | null> {
     try {
         const result = await getRedirectResult(auth);
         return result;
     } catch (error) {
-        console.error('Error handling Google redirect result:', error);
+        console.error('Error handling social sign-in redirect result:', error);
         throw error;
     }
 }

@@ -9,14 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useAuth, initiateEmailSignUp, useUser, setUserData, useFirestore, initiateGoogleSignIn, handleGoogleRedirectResult } from '@/firebase';
+import { useAuth, initiateEmailSignUp, useUser, setUserData, useFirestore, initiateGoogleSignIn, handleGoogleRedirectResult, initiateFacebookSignIn, initiateTwitterSignIn } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PageHeader from '@/components/page-header';
 import { doc } from 'firebase/firestore';
 import ReCAPTCHA from 'react-google-recaptcha';
-import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { UserCredential } from 'firebase/auth';
 
@@ -64,7 +63,7 @@ const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="24" height="24" viewBox="0 0 48 48" {...props}>
-        <linearGradient id="register-fb-grad" x1="9.993" x2="40.615" y1="9.993" y2="40.615" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#2aa4f4"></stop><stop offset="1" stopColor="#007ad9"></stop></linearGradient><path fill="url(#register-fb-grad)" d="M24,4C12.954,4,4,12.954,4,24s8.954,20,20,20s20-8.954,20-20S35.046,4,24,4z"></path><path fill="#fff" d="M26.707,26.707v11.729h5.895V26.707h4.228l0.58-4.885h-4.808v-2.883c0-1.428,0.395-2.399,2.444-2.399h2.583v-4.364c-0.445-0.059-1.979-0.19-3.757-0.19c-3.717,0-6.257,2.272-6.257,6.425v3.411h-4.25v4.885h4.25V26.707z"></path>
+        <linearGradient id="register-fb-grad-unique" x1="9.993" x2="40.615" y1="9.993" y2="40.615" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#2aa4f4"></stop><stop offset="1" stopColor="#007ad9"></stop></linearGradient><path fill="url(#register-fb-grad-unique)" d="M24,4C12.954,4,4,12.954,4,24s8.954,20,20,20s20-8.954,20-20S35.046,4,24,4z"></path><path fill="#fff" d="M26.707,26.707v11.729h5.895V26.707h4.228l0.58-4.885h-4.808v-2.883c0-1.428,0.395-2.399,2.444-2.399h2.583v-4.364c-0.445-0.059-1.979-0.19-3.757-0.19c-3.717,0-6.257,2.272-6.257,6.425v3.411h-4.25v4.885h4.25V26.707z"></path>
     </svg>
 );
 
@@ -104,6 +103,7 @@ export default function RegisterPage() {
     // This effect handles the result from a Google Sign-In redirect.
     if (!auth || !firestore) {
       // Services not ready yet.
+      setIsProcessingGoogleSignIn(false);
       return;
     }
   
@@ -122,7 +122,7 @@ export default function RegisterPage() {
         if (error instanceof FirebaseError) {
           setFirebaseError(error.message);
         } else {
-          setFirebaseError('An unexpected error occurred during Google sign-in.');
+          setFirebaseError('An unexpected error occurred during social sign-in.');
         }
         setIsProcessingGoogleSignIn(false);
       });
@@ -183,24 +183,28 @@ export default function RegisterPage() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleSocialSignIn = async (provider: 'google' | 'facebook' | 'twitter') => {
     if (!auth) return;
     setFirebaseError(null);
+
+    const signInFunction = {
+        google: initiateGoogleSignIn,
+        facebook: initiateFacebookSignIn,
+        twitter: initiateTwitterSignIn,
+    }[provider];
+
     try {
-        // This function ONLY initiates the sign-in. It doesn't process the user.
-        const userCredential = await initiateGoogleSignIn(auth, isMobile);
-        // For pop-up, process the user immediately. Redirect is handled by the useEffect.
+        const userCredential = await signInFunction(auth, isMobile);
         if (userCredential) {
             await processGoogleUser(userCredential);
         }
-        // Redirect will be handled by the onAuthStateChanged listener in the useEffect.
     } catch (error) {
         if (error instanceof FirebaseError) {
             if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
                 setFirebaseError(error.message);
             }
         } else {
-            setFirebaseError('An unexpected error occurred during Google sign-in.');
+            setFirebaseError(`An unexpected error occurred during ${provider} sign-in.`);
         }
     }
   };
@@ -232,14 +236,14 @@ export default function RegisterPage() {
             <CardContent>
                 <div className="space-y-4">
                     <div className="grid grid-cols-3 gap-2">
-                        <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+                        <Button type="button" variant="outline" className="w-full" onClick={() => handleSocialSignIn('google')}>
                             <GoogleIcon className="mr-2" /> Google
                         </Button>
-                        <Button type="button" variant="outline" className="w-full" onClick={() => alert('Coming soon!')}>
+                        <Button type="button" variant="outline" className="w-full" onClick={() => handleSocialSignIn('facebook')}>
                             <FacebookIcon className="mr-2" /> Facebook
                         </Button>
-                        <Button type="button" variant="outline" className="w-full" onClick={() => alert('Coming soon!')}>
-                            <XIcon className="mr-2" />
+                        <Button type="button" variant="outline" className="w-full" onClick={() => handleSocialSignIn('twitter')}>
+                            <XIcon className="mr-2" /> X
                         </Button>
                     </div>
 

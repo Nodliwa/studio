@@ -14,7 +14,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PageHeader from '@/components/page-header';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { Separator } from '@/components/ui/separator';
 import { doc } from 'firebase/firestore';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { UserCredential } from 'firebase/auth';
@@ -63,6 +62,7 @@ export default function LoginPage() {
     // This effect handles the result from a Google Sign-In redirect.
     if (!auth || !firestore) {
       // Services not ready yet.
+       setIsProcessingGoogleSignIn(false);
       return;
     }
   
@@ -119,13 +119,10 @@ export default function LoginPage() {
     if (!auth) return;
     setFirebaseError(null);
     try {
-        // This function ONLY initiates the sign-in. It doesn't process the user.
         const userCredential = await initiateGoogleSignIn(auth, isMobile);
-        // For pop-up, process the user immediately. Redirect is handled by the useEffect.
         if (userCredential) {
             await processGoogleUser(userCredential);
         }
-        // Redirect will be handled by the onAuthStateChanged listener in the useEffect.
     } catch (error) {
         if (error instanceof FirebaseError) {
             if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
@@ -179,10 +176,6 @@ export default function LoginPage() {
                         <Label htmlFor="email">Email</Label>
                         <Input id="email" type="email" {...register('email')} />
                         {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="cellphone">Cellphone (Optional)</Label>
-                        <Input id="cellphone" type="tel" />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="password">Password</Label>
