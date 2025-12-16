@@ -205,7 +205,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
                         status: 'todo',
                         priority: 'medium',
                         createdAt: serverTimestamp(),
-                        reminderEnabled: false,
+                        reminderType: 'none',
                         reminderDaysBefore: 1,
                     });
                 });

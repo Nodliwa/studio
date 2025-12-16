@@ -50,7 +50,7 @@ export interface MustDo {
   priority: 'low' | 'medium' | 'high';
   deadline?: string;
   createdAt: any; // Firestore Timestamp
-  reminderEnabled: boolean;
+  reminderType: 'none' | 'email' | 'sms' | 'whatsapp';
   reminderDaysBefore: number;
 }
     

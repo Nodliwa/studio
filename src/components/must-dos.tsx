@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, Star, Trash2, Bell, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp } from 'lucide-react';
+import { PlusCircle, Star, Trash2, Bell, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp, Mail, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentReference } from 'firebase/firestore';
 import { Calendar } from "@/components/ui/calendar"
@@ -48,6 +48,13 @@ const PriorityIcon = ({ priority }: { priority: MustDo['priority'] }) => {
     return <Icon className={cn('h-4 w-4', colorClass)} />;
 };
 
+const WhatsappIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path d="M16.75 13.96c.25.13.4.38.48.63.08.25.11.5.08.75-.03.25-.11.48-.25.7-.13.21-.3.38-.5.5-.2.13-.43.21-.68.25-.25.04-.5.03-.75-.03-.25-.06-.5-.18-.75-.33a10.66 10.66 0 01-3.6-2.04c-1.25-1.25-2.04-2.63-2.38-4.08-.03-.25-.03-.5.03-.75.05-.25.13-.48.25-.68.13-.2.3-.38.5-.5.2-.13.43-.21.68-.25.25-.04.5-.03.75.03.25.06.5.18.75.33.25.15.48.33.68.55.2.22.35.48.45.75.1.28.13.55.1.83-.03.28-.13.55-.28.8-.15.25-.35.48-.58.65-.23.18-.4.3-.5.38-.1.08-.15.14-.2.2-.05.06-.08.1-.08.13s0 .05.03.08c.03.03.05.05.08.08.25.25.5.5.75.75s.5.5.75.75c.03.03.05.05.08.08.03.03.05.05.08.08s.05.03.08.03.08-.03.13-.08c.05-.05.1-.13.2-.2.08-.08.2-.2.38-.5.18-.3.4-.55.65-.8.25-.25.5-.45.75-.58.28-.15.55-.25.83-.28.28-.03.55.03.8.1.28.08.53.2.75.35.22.15.4.35.55.55.15.2.28.43.33.68zM12 2a10 10 0 100 20 10 10 0 000-20zm0 18.13c-4.48 0-8.13-3.65-8.13-8.13S7.52 3.88 12 3.88c4.48 0 8.13 3.65 8.13 8.13s-3.65 8.12-8.13 8.12z" />
+    </svg>
+);
+
+
 function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id: string, data: Partial<MustDo>) => void, onDelete: (id: string) => void }) {
   const [title, setTitle] = useState(item.title);
   const [note, setNote] = useState(item.note || '');
@@ -56,6 +63,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   
   // Safeguard: Ensure priority has a default value to prevent render errors.
   const priority = item.priority || 'medium';
+  const reminderType = item.reminderType || 'none';
 
   const handleBlur = (field: 'title' | 'note') => {
     const value = field === 'title' ? title : note;
@@ -73,6 +81,10 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   const handleDeadlineChange = (date: Date | undefined) => {
     setDeadline(date);
     onUpdate(item.id, { deadline: date ? date.toISOString().split('T')[0] : '' });
+  };
+  
+  const handleReminderTypeChange = (type: MustDo['reminderType']) => {
+    onUpdate(item.id, { reminderType: item.reminderType === type ? 'none' : type });
   };
 
   return (
@@ -163,18 +175,18 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
       </div>
       {deadline && (
         <div className="pl-8 pt-2 flex items-center gap-4">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id={`reminder-${item.id}`}
-              checked={item.reminderEnabled}
-              onCheckedChange={(checked) => onUpdate(item.id, { reminderEnabled: checked })}
-            />
-            <Label htmlFor={`reminder-${item.id}`} className="flex items-center gap-1 text-sm text-muted-foreground">
-                {item.reminderEnabled ? <Bell className="h-4 w-4 text-primary" /> : <BellOff className="h-4 w-4" />}
-                Email Reminder
-            </Label>
+          <div className="flex items-center space-x-1">
+              <Button variant="ghost" size="icon" className={cn('h-8 w-8', reminderType === 'email' && 'bg-accent text-accent-foreground')} onClick={() => handleReminderTypeChange('email')}>
+                <Mail className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className={cn('h-8 w-8', reminderType === 'sms' && 'bg-accent text-accent-foreground')} onClick={() => handleReminderTypeChange('sms')}>
+                <MessageSquare className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className={cn('h-8 w-8', reminderType === 'whatsapp' && 'bg-accent text-accent-foreground')} onClick={() => handleReminderTypeChange('whatsapp')}>
+                <WhatsappIcon className="h-4 w-4" />
+              </Button>
           </div>
-          {item.reminderEnabled && (
+          {reminderType !== 'none' && (
              <div className="flex items-center gap-2">
                 <Input 
                     type="number" 
@@ -211,7 +223,7 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
           priority: 'high',
           deadline: new Date().toISOString().split('T')[0],
           createdAt: new Date(),
-          reminderEnabled: true,
+          reminderType: 'email',
           reminderDaysBefore: 3,
         },
         {
@@ -224,7 +236,7 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
           priority: 'medium',
           deadline: '',
           createdAt: new Date(),
-          reminderEnabled: false,
+          reminderType: 'none',
           reminderDaysBefore: 1,
         }
       ]);
@@ -277,7 +289,7 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
         note: '',
         priority: 'medium' as const,
         deadline: '',
-        reminderEnabled: false,
+        reminderType: 'none' as const,
         reminderDaysBefore: 1,
     };
 
@@ -362,5 +374,3 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
     </Card>
   );
 }
-
-    
