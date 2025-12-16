@@ -11,7 +11,7 @@ export const ai = genkit({
             apiVersion: "v1beta",
         }),
         dotprompt,
-        genkitEval,
+        genkitEval(),
     ],
     logLevel: "debug",
     enableTracingAndMetrics: true,
