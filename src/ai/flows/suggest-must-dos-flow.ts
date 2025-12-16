@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to suggest 'must-do' tasks for event planning.
@@ -11,6 +12,7 @@ import {
   SuggestMustDosOutputSchema,
   type SuggestMustDosOutput,
 } from './schemas';
+import { gemini15Flash } from 'genkitx-googleai';
 
 // Define the prompt for the AI
 const suggestionPrompt = ai.definePrompt({
@@ -32,6 +34,9 @@ const suggestionPrompt = ai.definePrompt({
     
     Provide creative, practical, and essential tasks that are not obvious but are crucial for a successful event.
     Focus on tasks related to coordination, guest experience, and logistical details that are often overlooked.`,
+      config: {
+        model: 'gemini-1.5-flash-latest',
+    }
   });
   
 
