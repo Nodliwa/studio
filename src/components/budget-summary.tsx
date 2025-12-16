@@ -15,9 +15,10 @@ interface BudgetSummaryProps {
   mustDosCompleted: number;
   budgetId?: string;
   isTemplateMode?: boolean;
+  eventType?: string;
 }
 
-export function BudgetSummary({ grandTotal, daysLeft, mustDosTotal, mustDosCompleted, budgetId, isTemplateMode }: BudgetSummaryProps) {
+export function BudgetSummary({ grandTotal, daysLeft, mustDosTotal, mustDosCompleted, budgetId, isTemplateMode, eventType }: BudgetSummaryProps) {
   const MustDoWrapper = ({ children }: { children: React.ReactNode }) => {
     if (isTemplateMode) {
       return <div className="flex items-center justify-between p-2 rounded-lg bg-secondary">{children}</div>;
@@ -29,8 +30,13 @@ export function BudgetSummary({ grandTotal, daysLeft, mustDosTotal, mustDosCompl
     );
   };
   
+  const cardClasses = cn("h-full", {
+    "event-card-wedding": eventType === 'wedding',
+    "event-card-funeral": eventType === 'funeral',
+  });
+
   return (
-    <Card className="h-full">
+    <Card className={cardClasses}>
       <CardHeader className="p-4 pb-0">
         <CardTitle className="font-headline text-2xl">Dashboard</CardTitle>
       </CardHeader>

@@ -20,11 +20,13 @@ import {
   PopoverAnchor,
 } from "@/components/ui/popover";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 interface EventDetailsProps {
   budget: Budget | null;
   budgetRef: DocumentReference | null;
   isTemplateMode?: boolean;
+  eventType?: string;
 }
 
 const formSchema = z.object({
@@ -39,7 +41,7 @@ type FormData = z.infer<typeof formSchema>;
 const DEFAULT_BUDGET_NAME = "My Celebration Plan";
 const libraries: "places"[] = ["places"];
 
-export function EventDetails({ budget, budgetRef, isTemplateMode = false }: EventDetailsProps) {
+export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventType }: EventDetailsProps) {
   const { user } = useUser();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(isTemplateMode);
@@ -148,8 +150,14 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
       clearSuggestions();
   }
 
+  const cardClasses = cn("shadow-lg border-border/60 h-full", {
+    "event-card-wedding": eventType === 'wedding',
+    "event-card-funeral": eventType === 'funeral',
+  });
+
+
   return (
-    <Card className="shadow-lg border-border/60 h-full">
+    <Card className={cardClasses}>
       <CardHeader className="flex flex-row items-start justify-between p-4 pb-0">
         <div className="flex-1">
           <CardTitle className="font-headline text-2xl">

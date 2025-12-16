@@ -364,7 +364,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
             <div className="lg:col-span-1 flex flex-col">
-              <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
+              <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} eventType={eventType} />
             </div>
 
             <div className="lg:col-span-1 flex flex-col">
@@ -375,6 +375,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
                 mustDosCompleted={mustDosCount.completed}
                 budgetId={isTemplateMode ? undefined : budgetId}
                 isTemplateMode={isTemplateMode}
+                eventType={eventType}
               />
             </div>
           </div>
