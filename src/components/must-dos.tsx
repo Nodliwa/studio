@@ -84,8 +84,27 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   };
   
   const handleReminderTypeChange = (type: MustDo['reminderType']) => {
-    onUpdate(item.id, { reminderType: item.reminderType === type ? 'none' : type });
+    onUpdate(item.id, { reminderType: type });
   };
+
+  const handleReminderToggle = (checked: boolean) => {
+    if (checked) {
+        // If turning on, default to email if no preference is set
+        if (reminderType === 'none') {
+            handleReminderTypeChange('email');
+        }
+    } else {
+        // If turning off, set to none
+        handleReminderTypeChange('none');
+    }
+  }
+
+  const ReminderIcon = {
+      email: Mail,
+      sms: MessageSquare,
+      whatsapp: WhatsappIcon,
+      none: BellOff,
+  }[reminderType] || Bell;
 
   return (
     <div className="flex flex-col p-3 border-b border-border/20 last:border-b-0">
@@ -175,30 +194,50 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
       </div>
       {deadline && (
         <div className="pl-8 pt-2 flex items-center gap-4">
-          <div className="flex items-center space-x-1">
-              <Button variant="ghost" size="icon" className={cn('h-8 w-8', reminderType === 'email' && 'bg-accent text-accent-foreground')} onClick={() => handleReminderTypeChange('email')}>
-                <Mail className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className={cn('h-8 w-8', reminderType === 'sms' && 'bg-accent text-accent-foreground')} onClick={() => handleReminderTypeChange('sms')}>
-                <MessageSquare className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className={cn('h-8 w-8', reminderType === 'whatsapp' && 'bg-accent text-accent-foreground')} onClick={() => handleReminderTypeChange('whatsapp')}>
-                <WhatsappIcon className="h-4 w-4" />
-              </Button>
-          </div>
-          {reminderType !== 'none' && (
-             <div className="flex items-center gap-2">
-                <Input 
-                    type="number" 
-                    min="1"
-                    value={reminderDays}
-                    onChange={(e) => setReminderDays(parseInt(e.target.value, 10))}
-                    onBlur={handleReminderDaysBlur}
-                    className="h-7 w-16 text-center"
+             <div className="flex items-center space-x-2">
+                <Switch 
+                    id={`reminder-switch-${item.id}`}
+                    checked={reminderType !== 'none'}
+                    onCheckedChange={handleReminderToggle}
                 />
-                <Label className="text-sm text-muted-foreground">days before</Label>
-             </div>
-          )}
+                <Label htmlFor={`reminder-switch-${item.id}`} className="text-sm text-muted-foreground">Reminders</Label>
+            </div>
+
+            {reminderType !== 'none' && (
+                <>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="flex items-center gap-2">
+                            <ReminderIcon className="h-4 w-4" />
+                            <span>{reminderType.charAt(0).toUpperCase() + reminderType.slice(1)}</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => handleReminderTypeChange('email')}>
+                            <Mail className="mr-2 h-4 w-4" /> Email
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleReminderTypeChange('sms')}>
+                            <MessageSquare className="mr-2 h-4 w-4" /> SMS
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleReminderTypeChange('whatsapp')}>
+                            <WhatsappIcon className="mr-2 h-4 w-4" /> WhatsApp
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+                <div className="flex items-center gap-2">
+                    <Input 
+                        type="number" 
+                        min="1"
+                        value={reminderDays}
+                        onChange={(e) => setReminderDays(parseInt(e.target.value, 10))}
+                        onBlur={handleReminderDaysBlur}
+                        className="h-9 w-16 text-center"
+                    />
+                    <Label className="text-sm text-muted-foreground">days before</Label>
+                </div>
+                </>
+            )}
         </div>
       )}
     </div>
