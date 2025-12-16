@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useTransition } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useUser, useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocument } from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import type { MustDo, Importance, Timing } from '@/lib/types';
@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, Star, Trash2, Sparkles, Wand2 } from 'lucide-react';
+import { PlusCircle, Star, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,8 +21,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
 import type { DocumentReference } from 'firebase/firestore';
-import { suggestMustDos } from '@/ai/flows/suggest-must-dos-flow';
-import type { SuggestMustDosInput, SuggestMustDosOutput } from '@/ai/flows/schemas';
 
 interface MustDosProps {
   budgetId: string;
@@ -125,8 +123,6 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
   const { user } = useUser();
   const [localMustDos, setLocalMustDos] = useState<MustDo[]>([]);
   const [isLoading, setIsLoading] = useState(!isTemplateMode && !mustDos);
-  const [isAiLoading, startAiTransition] = useTransition();
-  const [aiSuggestions, setAiSuggestions] = useState<SuggestMustDosOutput['suggestions']>([]);
 
   useEffect(() => {
     if (isTemplateMode && localMustDos.length === 0) {
@@ -188,14 +184,14 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
   const completedCount = useMemo(() => items.filter(item => item.status === 'done').length, [items]);
   const progress = items.length > 0 ? (completedCount / items.length) * 100 : 0;
 
-  const handleAddItem = (suggestion?: SuggestMustDosOutput['suggestions'][0]) => {
+  const handleAddItem = () => {
     const mustDosCollection = budgetRef ? collection(budgetRef, 'mustDos') : null;
     
     const newItemData = {
-        title: suggestion?.title || '',
-        note: suggestion?.note || '',
-        importance: suggestion?.importance || 'none',
-        timing: suggestion?.timing || 'anytime',
+        title: '',
+        note: '',
+        importance: 'none' as Importance,
+        timing: 'anytime' as Timing,
     };
 
     if (isTemplateMode || !user || !mustDosCollection) {
@@ -221,11 +217,6 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
     addDocumentNonBlocking(mustDosCollection, newItem);
   };
 
-  const handleAddSuggestion = (suggestion: SuggestMustDosOutput['suggestions'][0]) => {
-    handleAddItem(suggestion);
-    setAiSuggestions(prev => prev.filter(s => s.title !== suggestion.title));
-  };
-
   const handleUpdateItem = (id: string, data: Partial<MustDo>) => {
      const mustDosCollection = budgetRef ? collection(budgetRef, 'mustDos') : null;
     if (isTemplateMode) {
@@ -246,20 +237,6 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
     if (!user || !mustDosCollection) return;
     const docRef = doc(mustDosCollection, id);
     deleteDocument(docRef);
-  };
-
-  const handleGetAiSuggestions = () => {
-    startAiTransition(async () => {
-        const existingTitles = items.map(item => item.title);
-        const input: SuggestMustDosInput = {
-            eventType: eventType,
-            existingMustDos: existingTitles
-        };
-        const result = await suggestMustDos(input);
-        if (result) {
-            setAiSuggestions(result.suggestions);
-        }
-    });
   };
 
   return (
@@ -292,35 +269,7 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add a Must-Do
             </Button>
-            <Button variant="outline" onClick={handleGetAiSuggestions} disabled={isAiLoading} className="bg-white/10 hover:bg-white/20 border-white/30">
-                <Wand2 className="mr-2 h-4 w-4" />
-                {isAiLoading ? 'Thinking...' : 'Get AI Suggestions'}
-            </Button>
           </div>
-
-           {aiSuggestions.length > 0 && (
-            <div className="mt-4 space-y-2">
-              <h4 className="font-semibold text-sm text-foreground/90">AI Suggestions:</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {aiSuggestions.map((suggestion, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleAddSuggestion(suggestion)}
-                    className="h-auto justify-start text-left flex items-start gap-2 bg-primary/10 hover:bg-primary/20 border-primary/30"
-                  >
-                    <PlusCircle className="h-4 w-4 mt-1 shrink-0" />
-                    <div>
-                      <span className="font-semibold">{suggestion.title}</span>
-                      <p className="text-xs text-muted-foreground">{suggestion.note}</p>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            </div>
-           )}
-
         </div>
       </CardContent>
     </Card>
