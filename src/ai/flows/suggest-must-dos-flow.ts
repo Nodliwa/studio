@@ -26,6 +26,9 @@ export type SuggestMustDosInput = z.infer<typeof SuggestMustDosInputSchema>;
 const SuggestionSchema = z.object({
     title: z.string().describe('A short, actionable title for the task (e.g., "Book photographer").'),
     note: z.string().describe('A brief, helpful note or context for the task (e.g., "Get quotes from at least 3 vendors.").'),
+    priority: z.enum(['low', 'medium', 'high']).describe("The suggested priority for the task."),
+    reminderType: z.enum(['none', 'email', 'sms', 'whatsapp']).describe("The default reminder type, which should be 'email'."),
+    reminderDaysBefore: z.number().describe("How many days before a deadline to send a reminder. Default to 3."),
 });
 
 // Define the schema for the output of the flow.
@@ -49,6 +52,10 @@ const suggestMustDosPrompt = ai.definePrompt(
         Bad Suggestion: "Buy a cake" or "Flowers".
   
         The response MUST be in the JSON format described by the output schema.
+        For each suggestion, provide a concise title and a brief, helpful note.
+        Also provide a default priority, which should be 'medium'.
+        For each suggestion, also provide default values for the reminder settings: reminderType should be 'email', and reminderDaysBefore should be 3.
+
         Do not suggest any of the following tasks, as they already exist in the user's plan:
         {{#if existingTitles}}
           {{#each existingTitles}}
@@ -57,8 +64,6 @@ const suggestMustDosPrompt = ai.definePrompt(
         {{else}}
           (No existing tasks)
         {{/if}}
-  
-        Generate creative, practical, and essential suggestions. For each suggestion, provide a concise title and a brief, helpful note. For each suggestion, also provide default values for the reminder settings: reminderType should be 'email', and reminderDaysBefore should be 3.
       `,
     }
   );
