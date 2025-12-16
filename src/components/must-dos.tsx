@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, Star, Trash2, Bell, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp, Mail, MessageSquare } from 'lucide-react';
+import { PlusCircle, Star, Trash2, Bell, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp, Mail, MessageSquare, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentReference } from 'firebase/firestore';
 import { Calendar } from "@/components/ui/calendar"
@@ -21,6 +21,10 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
+import { SuggestionList } from '@/components/suggestion-list';
+import { suggestMustDos } from '@/ai/flows/suggest-must-dos-flow';
+import type { SuggestMustDosOutput } from '@/ai/flows/schemas';
+
 
 interface MustDosProps {
   budgetId: string;
@@ -248,6 +252,8 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
   const { user } = useUser();
   const [localMustDos, setLocalMustDos] = useState<MustDo[]>([]);
   const [isLoading, setIsLoading] = useState(!isTemplateMode && !mustDos);
+  const [suggestions, setSuggestions] = useState<SuggestMustDosOutput['suggestions']>([]);
+  const [isSuggesting, setIsSuggesting] = useState(false);
 
   useEffect(() => {
     if (isTemplateMode && localMustDos.length === 0) {
@@ -320,16 +326,16 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
   const completedCount = useMemo(() => items.filter(item => item.status === 'done').length, [items]);
   const progress = items.length > 0 ? (completedCount / items.length) * 100 : 0;
 
-  const handleAddItem = () => {
+  const handleAddItem = (itemData?: Partial<Omit<MustDo, 'id'>>) => {
     const mustDosCollection = budgetRef ? collection(budgetRef, 'mustDos') : null;
     
     const newItemData = {
-        title: '',
-        note: '',
-        priority: 'medium' as const,
-        deadline: '',
-        reminderType: 'none' as const,
-        reminderDaysBefore: 1,
+        title: itemData?.title || '',
+        note: itemData?.note || '',
+        priority: itemData?.priority || 'medium' as const,
+        deadline: itemData?.deadline || '',
+        reminderType: itemData?.reminderType || 'none' as const,
+        reminderDaysBefore: itemData?.reminderDaysBefore || 1,
     };
 
     if (isTemplateMode || !user || !mustDosCollection) {
@@ -377,6 +383,33 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
     deleteDocument(docRef);
   };
 
+  const handleGetSuggestions = async () => {
+    if (isTemplateMode) return;
+    setIsSuggesting(true);
+    setSuggestions([]);
+    try {
+        const result = await suggestMustDos({
+            eventType: eventType,
+            existingMustDos: items.map(item => item.title),
+        });
+        setSuggestions(result.suggestions);
+    } catch (error) {
+        console.error("Error getting suggestions:", error);
+    } finally {
+        setIsSuggesting(false);
+    }
+  }
+
+  const handleAddSuggestion = (suggestion: SuggestMustDosOutput['suggestions'][number]) => {
+    handleAddItem({
+        title: suggestion.title,
+        note: suggestion.note,
+        priority: suggestion.priority,
+    });
+    setSuggestions(prev => prev.filter(s => s.title !== suggestion.title));
+  }
+
+
   return (
     <Card className="h-full bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
       <CardHeader className="p-4">
@@ -402,12 +435,23 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
             )}
           </div>
           
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 pt-2">
             <Button variant="outline" onClick={() => handleAddItem()} className="bg-white/10 hover:bg-white/20 border-white/30">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add a Must-Do
             </Button>
+            {!isTemplateMode && (
+                <Button variant="outline" onClick={handleGetSuggestions} disabled={isSuggesting} className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white hover:text-white border-purple-400/50 hover:bg-purple-500/30">
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    {isSuggesting ? 'Getting suggestions...' : 'AI Suggest'}
+                </Button>
+            )}
           </div>
+          <SuggestionList 
+            suggestions={suggestions}
+            onAdd={handleAddSuggestion}
+            onDismiss={(title) => setSuggestions(prev => prev.filter(s => s.title !== title))}
+          />
         </div>
       </CardContent>
     </Card>

@@ -19,6 +19,7 @@ const suggestionPrompt = ai.definePrompt({
     input: { schema: SuggestMustDosInputSchema },
     output: { schema: SuggestMustDosOutputSchema },
     prompt: `You are an expert event planner. Based on the event type, suggest a list of 3-5 critical "must-do" tasks.
+    Each suggestion must have a title, a short note, and a priority (low, medium, or high).
   
     Event Type: {{eventType}}
     

@@ -9,8 +9,7 @@ import { z } from 'genkit';
 const SuggestedMustDoSchema = z.object({
   title: z.string().describe('The concise title of the suggested task.'),
   note: z.string().describe('A brief, helpful note or detail for the task.'),
-  importance: z.enum(['none', 'important', 'critical']).describe('The suggested priority of the task.'),
-  timing: z.enum(['anytime', 'before-event', 'day-before', 'on-the-day']).describe('The suggested timing for the task relative to the event.'),
+  priority: z.enum(['low', 'medium', 'high']).describe('The suggested priority of the task.'),
 });
 
 export const SuggestMustDosInputSchema = z.object({
