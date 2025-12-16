@@ -203,7 +203,10 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
                         budgetId: newBudgetId,
                         userId: user.uid,
                         status: 'todo',
-                        createdAt: serverTimestamp()
+                        priority: item.priority || 'Medium',
+                        createdAt: serverTimestamp(),
+                        reminderEnabled: false,
+                        reminderDaysBefore: 1,
                     });
                 });
             }
@@ -360,11 +363,11 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 flex">
               <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
             </div>
 
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 flex">
                <BudgetSummary 
                 grandTotal={grandTotal}
                 daysLeft={daysLeft}
@@ -417,3 +420,5 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
+
+    
