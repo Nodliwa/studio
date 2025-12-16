@@ -86,7 +86,7 @@ export default function PageHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm shadow-sm">
       <div className="container flex h-20 items-center justify-between mx-auto">
-        <div className="flex items-center flex-shrink-0">
+        <div className="flex items-center">
           <Link href="/" className="flex items-center space-x-2">
             <Image
               src="/images/brand2.png"
@@ -98,7 +98,7 @@ export default function PageHeader() {
           </Link>
         </div>
         
-        <nav className="hidden md:flex items-center justify-center gap-6 text-lg">
+        <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center justify-center gap-6 text-lg">
             <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
               Home
             </Link>
@@ -177,9 +177,6 @@ export default function PageHeader() {
             <div className="flex items-center gap-2">
                 <Button asChild size="sm" className="mr-4 text-base md:text-lg">
                     <Link href="/register">Sign Up</Link>
-                </Button>
-                 <Button asChild variant="outline" size="sm" className="hidden md:inline-flex text-base md:text-lg">
-                    <Link href="/login">Login</Link>
                 </Button>
             </div>
           )}
