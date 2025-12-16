@@ -131,7 +131,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
               readOnly={item.status === 'done'}
               placeholder="New must-do..."
               />
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
@@ -388,6 +388,62 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
     deleteDocument(docRef);
   };
 
+  const handleGetSuggestions = async () => {
+    if (isTemplateMode) {
+        toast({
+            title: 'Please sign up',
+            description: 'AI suggestions are available for registered users. Please create an account to use this feature.',
+            variant: 'destructive',
+        });
+        return;
+    }
+    
+    if (!eventType || !budgetRef || !user) return;
+
+    startSuggestionTransition(async () => {
+        try {
+            const existingTitles = (mustDos || []).map(item => item.title);
+            const result = await suggestMustDos({ eventType, existingTitles });
+            
+            if (result && result.suggestions.length > 0) {
+                const batch = writeBatch(firestore);
+                result.suggestions.forEach(suggestion => {
+                    const docRef = doc(collection(budgetRef, 'mustDos'));
+                    const newItem: Omit<MustDo, 'id'> = {
+                        budgetId,
+                        userId: user.uid,
+                        title: suggestion.title,
+                        note: suggestion.note,
+                        status: 'todo',
+                        priority: 'medium',
+                        createdAt: serverTimestamp(),
+                        reminderType: 'none',
+                        reminderDaysBefore: 1,
+                    };
+                    batch.set(docRef, newItem);
+                });
+                await batch.commit();
+                toast({
+                    title: 'Suggestions Added',
+                    description: `${result.suggestions.length} new must-do items have been added to your list.`,
+                });
+            } else {
+                 toast({
+                    title: 'No new suggestions',
+                    description: 'The AI could not find any new suggestions for you right now.',
+                });
+            }
+        } catch (error) {
+            console.error('AI suggestion failed:', error);
+            toast({
+                title: 'AI suggestion failed',
+                description: 'Could not get suggestions from the AI. Please try again later.',
+                variant: 'destructive',
+            });
+        }
+    });
+  };
+
   return (
     <Card className="h-full bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
       <CardHeader className="p-4">
@@ -418,9 +474,19 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add a Must-Do
             </Button>
+            <Button variant="outline" onClick={handleGetSuggestions} disabled={isSuggesting} className="bg-white/10 hover:bg-white/20 border-white/30">
+                {isSuggesting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                Suggest with AI
+            </Button>
           </div>
         </div>
       </CardContent>
     </Card>
   );
 }
+
+    
