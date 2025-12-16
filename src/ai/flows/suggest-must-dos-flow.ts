@@ -7,8 +7,8 @@
  * and a list of existing task titles to avoid duplicates.
  *
  * - suggestMustDos: The main function to call the AI flow.
- * - SuggestMustDosInput: The Zod schema for the input.
- * - SuggestMustDosOutput: The Zod schema for the output.
+ * - SuggestMustDosInputSchema: The Zod schema for the input.
+ * - SuggestMustDosOutputSchema: The Zod schema for the output.
  */
 
 import {ai} from '@/ai/genkit';
@@ -77,11 +77,18 @@ const suggestMustDosFlow = ai.defineFlow(
     outputSchema: SuggestMustDosOutputSchema,
   },
   async input => {
-    const llmResponse = await suggestMustDosPrompt.generate({
-      input: input,
+    const llmResponse = await ai.generate({
+      prompt: {
+        ...suggestMustDosPrompt,
+        input,
+      },
+      model: 'googleai/gemini-pro',
+      output: {
+        schema: suggestMustDosPrompt.output.schema,
+      },
     });
     
-    const output = llmResponse.output();
+    const output = llmResponse.output;
 
     if (!output) {
       throw new Error('The AI model failed to return a valid structured response.');
