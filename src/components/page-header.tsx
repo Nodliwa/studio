@@ -175,6 +175,9 @@ export default function PageHeader() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
+                <Button asChild size="sm" className="hidden md:flex text-base md:text-lg">
+                    <Link href="/login">Login</Link>
+                </Button>
                 <Button asChild size="sm" className="mr-4 text-base md:text-lg">
                     <Link href="/register">Sign Up</Link>
                 </Button>
