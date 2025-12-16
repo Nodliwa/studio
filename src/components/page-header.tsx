@@ -172,12 +172,12 @@ export default function PageHeader() {
                  </Button>
             </div>
           ) : (
-            <div className="hidden md:flex items-center gap-2">
+             <div className="flex items-center gap-2">
               <Button asChild variant="outline" size="sm">
-                  <Link href="/login" className="text-lg">Login</Link>
+                <Link href="/login" className="text-base md:text-lg">Login</Link>
               </Button>
               <Button asChild size="sm">
-                  <Link href="/register" className="text-lg">Sign Up</Link>
+                <Link href="/register" className="text-base md:text-lg">Sign Up</Link>
               </Button>
             </div>
           )}
@@ -200,24 +200,11 @@ export default function PageHeader() {
                         MyPlans
                     </Link>
                 </SheetClose>
-                 {user && !user.isAnonymous ? (
+                 {user && !user.isAnonymous && (
                     <Button variant="ghost" onClick={handleLogout} className="justify-start p-0 text-lg font-medium text-foreground/60 hover:text-foreground/80">
                         <LogOut className="mr-1 h-5 w-5" />
                         Logout
                     </Button>
-                 ) : (
-                   <>
-                    <SheetClose asChild>
-                      <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60 font-medium">
-                        Login
-                      </Link>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <Link href="/register" className="transition-colors hover:text-foreground/80 text-foreground/60 font-medium">
-                        Sign Up
-                      </Link>
-                    </SheetClose>
-                   </>
                  )}
               </nav>
             </SheetContent>
