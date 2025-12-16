@@ -10,10 +10,12 @@ import PageHeader from '@/components/page-header';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/firebase';
 
 export default function LandingPage() {
     const { toast } = useToast();
     const [flippedCard, setFlippedCard] = useState<string | null>(null);
+    const { user, isUserLoading } = useUser();
 
     const handleFlip = (cardId: string) => {
         if (flippedCard === cardId) {
@@ -35,11 +37,20 @@ export default function LandingPage() {
             <p className="mt-4 mb-8 max-w-2xl mx-auto text-lg text-muted-foreground">
               SimpliPlan helps you budget for life's most important moments. From Weddings to Funerals, plan your celebration with ease and confidence.
             </p>
-            <Link href="/planner" className="inline-block">
-              <Button size="lg" className="font-semibold text-lg py-4 px-4">
-                Plan your Event
-              </Button>
-            </Link>
+            <div className="flex justify-center items-center gap-4">
+              <Link href="/planner" className="inline-block">
+                <Button size="lg" className="font-semibold text-lg py-4 px-4">
+                  Plan your Event
+                </Button>
+              </Link>
+              {!isUserLoading && (!user || user.isAnonymous) && (
+                  <Link href="/register" className="inline-block">
+                    <Button size="lg" variant="outline" className="font-semibold text-lg py-4 px-4">
+                      Sign Up
+                    </Button>
+                  </Link>
+              )}
+            </div>
 
             <div className="w-full mx-auto mt-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
