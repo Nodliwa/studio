@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -82,12 +81,15 @@ export default function RegisterPage() {
   });
 
   const processGoogleUser = async (userCredential: UserCredential) => {
+    if (!firestore) return;
     const userRef = doc(firestore, 'users', userCredential.user.uid);
     await setUserData(userRef, userCredential.user.email!, userCredential.user.displayName || '');
     router.push('/my-plans');
   };
 
   useEffect(() => {
+    if (!auth) return;
+  
     handleGoogleRedirectResult(auth)
       .then((userCredential) => {
         if (userCredential) {
@@ -104,7 +106,9 @@ export default function RegisterPage() {
         }
         setIsProcessingGoogleSignIn(false);
       });
-  }, [auth]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth, firestore, router]);
+
 
   useEffect(() => {
     if (!isUserLoading && user && !user.isAnonymous) {
@@ -114,6 +118,7 @@ export default function RegisterPage() {
 
 
   const onSubmit = async (data: RegisterFormValues) => {
+    if (!auth || !firestore) return;
     setFirebaseError(null);
 
     const validationResult = emailRegisterSchema.safeParse(data);
@@ -156,6 +161,7 @@ export default function RegisterPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!auth) return;
     setFirebaseError(null);
     try {
         const userCredential = await initiateGoogleSignIn(auth, isMobile);

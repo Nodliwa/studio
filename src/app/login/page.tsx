@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -54,12 +53,15 @@ export default function LoginPage() {
   });
 
   const processGoogleUser = async (userCredential: UserCredential) => {
+    if (!firestore) return;
     const userRef = doc(firestore, 'users', userCredential.user.uid);
     await setUserData(userRef, userCredential.user.email!, userCredential.user.displayName || '');
     router.push('/my-plans');
   };
 
   useEffect(() => {
+    if (!auth) return;
+  
     handleGoogleRedirectResult(auth)
       .then((userCredential) => {
         if (userCredential) {
@@ -76,7 +78,9 @@ export default function LoginPage() {
         }
         setIsProcessingGoogleSignIn(false);
       });
-  }, [auth]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth, firestore, router]);
+
 
    useEffect(() => {
     // Redirect if a non-anonymous user is already logged in.
@@ -86,6 +90,7 @@ export default function LoginPage() {
   }, [user, isUserLoading, router]);
 
   const onEmailSubmit = async (data: LoginFormValues) => {
+    if (!auth) return;
     setFirebaseError(null);
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
@@ -100,6 +105,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!auth) return;
     setFirebaseError(null);
     try {
         const userCredential = await initiateGoogleSignIn(auth, isMobile);
