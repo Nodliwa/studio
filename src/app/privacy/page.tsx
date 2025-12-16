@@ -113,7 +113,7 @@ export default function PrivacyPolicyPage() {
 
             <h2 className="text-2xl font-bold font-headline mt-8 mb-4">10. Managing & Deleting Your Data</h2>
             <p className="text-justify">
-              You are in control of your personal information. You can delete your account and all associated data at any time. To request data deletion, please send an email with the subject line "Data Deletion Request" to <a href="mailto:support@simpliplan.co.za">support@simpliplan.co.za</a> from the email address associated with your SimpliPlan account. We will process your request within a reasonable timeframe in accordance with applicable laws.
+              You are in control of your personal information. You can delete your account and all associated data at any time. To request data deletion, please send an email with the subject line "Data Deletion Request" to <a href="mailto:hello@simpliplan.co.za">hello@simpliplan.co.za</a> from the email address associated with your SimpliPlan account. We will process your request within a reasonable timeframe in accordance with applicable laws.
             </p>
             <p className="text-justify">
               When you configure your Facebook App, you can provide the following URL as your <strong>Data Deletion Instructions URL</strong>: https://studio-1406892914-3d877.web.app/privacy
