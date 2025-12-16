@@ -110,7 +110,7 @@ export default function LoginPage() {
                 <CardTitle>Login</CardTitle>
                 <CardDescription>Access your celebration plans.</CardDescription>
             </CardHeader>
-            <CardContent className="px-0">
+            <CardContent>
                 <div className="space-y-4 px-6">
                     <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn}>
                         <GoogleIcon className="mr-2" />
@@ -146,7 +146,7 @@ export default function LoginPage() {
 
                     {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
                     
-                    <div className="px-6 pb-6 pt-2">
+                    <div className="pb-6 pt-2">
                         <Button type="submit" className="w-full" disabled={isSubmitting}>
                             {isSubmitting ? 'Logging in...' : 'Login'}
                         </Button>
