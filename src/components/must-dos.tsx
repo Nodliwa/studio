@@ -30,19 +30,21 @@ interface MustDosProps {
   mustDos: MustDo[] | null;
 }
 
-const PriorityLevels: Record<MustDo['priority'], { label: string; icon: ComponentType<{className?: string}> }> = {
-    low: { label: 'Low', icon: ArrowDown },
-    medium: { label: 'Medium', icon: ArrowRight },
-    high: { label: 'High', icon: ArrowUp },
+const PriorityLevels: Record<MustDo['priority'], { label: string; icon: ComponentType<{className?: string}>, order: number }> = {
+    low: { label: 'Low', icon: ArrowDown, order: 3 },
+    medium: { label: 'Medium', icon: ArrowRight, order: 2 },
+    high: { label: 'High', icon: ArrowUp, order: 1 },
 };
 
 const PriorityIcon = ({ priority }: { priority: MustDo['priority'] }) => {
-    const Icon = PriorityLevels[priority]?.icon || Flag;
+    // Safeguard: Ensure priority has a default value to prevent render errors.
+    const safePriority = priority || 'medium';
+    const Icon = PriorityLevels[safePriority]?.icon || Flag;
     const colorClass = {
         low: 'text-green-500',
         medium: 'text-yellow-500',
         high: 'text-red-500',
-    }[priority];
+    }[safePriority];
     return <Icon className={cn('h-4 w-4', colorClass)} />;
 };
 
@@ -241,14 +243,27 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
     const allItems = isTemplateMode ? localMustDos : serverItems;
     
     return [...allItems].sort((a, b) => {
-      if (a.status === 'done' && b.status !== 'done') return 1;
-      if (a.status !== 'done' && b.status === 'done') return -1;
-      
-      const aTime = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
-      const bTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
-
-      return bTime - aTime;
-    });
+        // Sort done items to the bottom
+        if (a.status === 'done' && b.status !== 'done') return 1;
+        if (a.status !== 'done' && b.status === 'done') return -1;
+  
+        // Sort by priority (High > Medium > Low)
+        const priorityA = a.priority || 'medium';
+        const priorityB = b.priority || 'medium';
+        if (PriorityLevels[priorityA].order < PriorityLevels[priorityB].order) return -1;
+        if (PriorityLevels[priorityA].order > PriorityLevels[priorityB].order) return 1;
+  
+        // Sort by deadline (earlier dates first)
+        const dateA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+        const dateB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+        if (dateA < dateB) return -1;
+        if (dateA > dateB) return 1;
+  
+        // Fallback to creation date for items with same priority and deadline
+        const aTime = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+        const bTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+        return bTime - aTime; // Newest first as a final tie-breaker
+      });
   }, [mustDos, isTemplateMode, localMustDos]);
 
   const completedCount = useMemo(() => items.filter(item => item.status === 'done').length, [items]);
@@ -347,3 +362,5 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
     </Card>
   );
 }
+
+    
