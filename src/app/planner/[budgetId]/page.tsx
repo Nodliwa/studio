@@ -370,6 +370,8 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
                 daysLeft={daysLeft}
                 mustDosTotal={mustDosCount.total}
                 mustDosCompleted={mustDosCount.completed}
+                budgetId={isTemplateMode ? undefined : budgetId}
+                isTemplateMode={isTemplateMode}
               />
             </div>
           </div>
