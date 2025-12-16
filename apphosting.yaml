@@ -5,3 +5,13 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+
+# This section ensures that all paths are correctly routed to your Next.js
+# application, which is important for the SSL certificate verification process.
+headers:
+  - headers:
+      - key: "Cache-Control"
+        value: "no-store"
+rewrites:
+  - source: "**"
+    destination: "/index.html"
