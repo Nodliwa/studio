@@ -10,7 +10,7 @@ export const ai = genkit({
         googleAI({
             apiVersion: "v1beta",
         }),
-        dotprompt(),
+        dotprompt,
         genkitEval({
             judge: 'gemini-1.5-pro-latest',
             metrics: ['ragas'],
