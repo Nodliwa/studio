@@ -88,7 +88,10 @@ export default function RegisterPage() {
   };
 
   useEffect(() => {
-    if (!auth) return;
+    if (!auth) {
+      setIsProcessingGoogleSignIn(false);
+      return;
+    }
   
     handleGoogleRedirectResult(auth)
       .then((userCredential) => {
@@ -204,22 +207,6 @@ export default function RegisterPage() {
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn}>
-                        <GoogleIcon className="mr-2" />
-                        Sign up with Google
-                    </Button>
-                    
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-card px-2 text-muted-foreground">
-                            Or continue with
-                            </span>
-                        </div>
-                    </div>
-
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
