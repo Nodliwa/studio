@@ -359,12 +359,12 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
             <Greeter quote={eventQuote} />
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8 mt-8 lg:items-stretch">
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 mt-8">
+            <div>
               <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} />
             </div>
 
-            <div className="row-start-1 lg:row-start-auto">
+            <div>
                <BudgetSummary 
                 grandTotal={grandTotal}
                 daysLeft={daysLeft}
