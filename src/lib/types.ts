@@ -40,13 +40,13 @@ export interface User {
     cellphone?: string;
 }
 
-export const ImportanceLevels = {
-  none: { label: 'None', color: '' },
-  important: { label: 'Important', color: 'text-blue-500' },
-  critical: { label: 'Critical', color: 'text-red-500' },
+export const PriorityLevels = {
+  Low: { label: 'Low', color: 'text-gray-500' },
+  Medium: { label: 'Medium', color: 'text-yellow-500' },
+  High: { label: 'High', color: 'text-red-500' },
 };
 
-export type Importance = keyof typeof ImportanceLevels;
+export type Priority = keyof typeof PriorityLevels;
 
 export interface MustDo {
   id: string;
@@ -55,8 +55,8 @@ export interface MustDo {
   title: string;
   note?: string;
   status: 'todo' | 'done';
-  importance: Importance;
-  deadline?: string; // Replaces timing
+  priority: Priority;
+  deadline?: string;
   createdAt: any; // Firestore Timestamp
   reminderEnabled: boolean;
   reminderDaysBefore: number;

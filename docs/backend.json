@@ -164,13 +164,13 @@
         "title": { "type": "string", "description": "A short, action-oriented title for the task." },
         "note": { "type": "string", "description": "Optional context or details about the task." },
         "status": { "type": "string", "enum": ["todo", "done"], "description": "The completion status of the task." },
-        "importance": { "type": "string", "enum": ["none", "important", "critical"], "description": "The priority level of the task." },
+        "priority": { "type": "string", "enum": ["Low", "Medium", "High"], "description": "The priority level of the task." },
         "deadline": { "type": "string", "format": "date", "description": "The deadline for the task." },
         "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the item was created." },
         "reminderEnabled": { "type": "boolean", "description": "Whether an email reminder is enabled for this task." },
         "reminderDaysBefore": { "type": "number", "description": "How many days before the deadline to send the reminder." }
       },
-      "required": ["id", "budgetId", "userId", "title", "status", "importance", "createdAt", "reminderEnabled", "reminderDaysBefore"]
+      "required": ["id", "budgetId", "userId", "title", "status", "priority", "createdAt", "reminderEnabled", "reminderDaysBefore"]
     }
   },
   "auth": {
