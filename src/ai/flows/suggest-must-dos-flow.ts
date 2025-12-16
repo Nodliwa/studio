@@ -23,16 +23,16 @@ const suggestionPrompt = ai.definePrompt({
   
     Event Type: {{eventType}}
     
-    Do not suggest any of the following tasks that already exist:
-    {{#if existingMustDos}}
+    IMPORTANT: Do not suggest any of the following tasks because they already exist.
+    {{#if existingMustDos.length}}
     {{#each existingMustDos}}
     - {{this}}
     {{/each}}
     {{else}}
-    (No existing tasks)
+    (No existing tasks to exclude)
     {{/if}}
     
-    Provide creative, practical, and essential tasks that are not obvious but are crucial for a successful event.
+    Your goal is to provide creative, practical, and essential new ideas that are not on the existing list.
     Focus on tasks related to coordination, guest experience, and logistical details that are often overlooked.`,
     config: {
         model: 'gemini-1.5-flash-latest',
