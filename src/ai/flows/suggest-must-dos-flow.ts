@@ -48,17 +48,24 @@ const suggestMustDosPrompt = ai.definePrompt({
   input: {schema: SuggestMustDosInputSchema},
   output: {schema: SuggestMustDosOutputSchema},
   prompt: `
-    You are an expert event planner for various cultural events in South Africa.
+    You are an expert event planner specializing in South African cultural events.
     Your task is to suggest 3 to 5 critical, non-budgetary "must-do" action items for a {{eventType}}.
 
-    These are tasks that need to be done, not items to be bought. For example, "Book a venue" is a great suggestion, but "Buy a cake" is not.
+    These are tasks that need to be done, not items to be bought.
+    Good Suggestion: "Book a venue" or "Send out invitations".
+    Bad Suggestion: "Buy a cake" or "Flowers".
 
-    Do not suggest any of the following tasks, as they already exist:
-    {{#each existingTitles}}
-    - {{this}}
-    {{/each}}
+    The response MUST be in the JSON format described by the output schema.
+    Do not suggest any of the following tasks, as they already exist in the user's plan:
+    {{#if existingTitles}}
+      {{#each existingTitles}}
+      - {{this}}
+      {{/each}}
+    {{else}}
+      (No existing tasks)
+    {{/if}}
 
-    Provide creative, practical, and essential suggestions. For each suggestion, provide a concise title and a brief, helpful note. Your response MUST be in the format described by the output schema.
+    Generate creative, practical, and essential suggestions. For each suggestion, provide a concise title and a brief, helpful note.
   `,
 });
 
@@ -71,7 +78,12 @@ const suggestMustDosFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await suggestMustDosPrompt(input);
-    // Ensure the output is not null. If it is, return an empty array.
-    return output ?? { suggestions: [] };
+
+    // If the output is null or undefined, throw an error to be caught by the client.
+    if (!output) {
+      throw new Error('The AI model failed to return a valid structured response.');
+    }
+    
+    return output;
   }
 );
