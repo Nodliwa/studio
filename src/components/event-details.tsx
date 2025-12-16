@@ -149,7 +149,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
   }
 
   return (
-    <Card className="shadow-lg border-border/60 h-full">
+    <Card className="shadow-lg h-full card-glass">
       <CardHeader className="flex flex-row items-start justify-between p-4 pb-0">
         <div className="flex-1">
           <CardTitle className="font-headline text-2xl">
@@ -266,5 +266,3 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     </Card>
   );
 }
-
-    

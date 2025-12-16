@@ -72,6 +72,15 @@
   .text-shadow-sm {
     text-shadow: 1px 1px 2px rgb(0 0 0 / 0.4);
   }
+
+  .card-glass {
+    @apply border-white/20 bg-white/10 backdrop-blur-lg;
+    background-image: 
+      radial-gradient(circle at 10% 10%, hsla(var(--primary) / 0.1), hsla(var(--primary) / 0) 30%),
+      radial-gradient(circle at 90% 20%, hsla(var(--primary) / 0.15), hsla(var(--primary) / 0) 25%),
+      radial-gradient(circle at 20% 80%, hsla(var(--primary) / 0.2), hsla(var(--primary) / 0) 20%),
+      radial-gradient(circle at 80% 90%, hsla(var(--primary) / 0.1), hsla(var(--primary) / 0) 20%);
+  }
 }
 
 
@@ -121,7 +130,6 @@
     justify-content: center;
   }
 }
-
     
 
     
