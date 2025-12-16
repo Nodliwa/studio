@@ -49,7 +49,16 @@ const suggestMustDosFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await suggestionPrompt(input);
-    return output!;
+    
+    // Safer return - if output is falsy, return an empty array.
+    if (!output || !output.suggestions) {
+      return { suggestions: [] };
+    }
+    
+    // Also ensuring we don't return more than a reasonable number of suggestions
+    return {
+      suggestions: output.suggestions.slice(0, 5),
+    };
   }
 );
 
@@ -57,3 +66,5 @@ const suggestMustDosFlow = ai.defineFlow(
 export async function suggestMustDos(input: SuggestMustDosInput): Promise<SuggestMustDosOutput> {
   return await suggestMustDosFlow(input);
 }
+
+    

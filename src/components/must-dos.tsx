@@ -41,7 +41,6 @@ const PriorityLevels: Record<MustDo['priority'], { label: string; icon: Componen
 };
 
 const PriorityIcon = ({ priority }: { priority: MustDo['priority'] }) => {
-    // Safeguard: Ensure priority has a default value to prevent render errors.
     const safePriority = priority || 'medium';
     const Icon = PriorityLevels[safePriority]?.icon || Flag;
     const colorClass = {
@@ -65,7 +64,6 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   const [deadline, setDeadline] = useState(item.deadline ? new Date(item.deadline) : undefined);
   const [reminderDays, setReminderDays] = useState(item.reminderDaysBefore || 1);
   
-  // Safeguard: Ensure priority has a default value to prevent render errors.
   const priority = item.priority || 'medium';
   const reminderType = item.reminderType || 'none';
 
@@ -77,8 +75,9 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   };
   
   const handleReminderDaysBlur = () => {
-    if (reminderDays !== item.reminderDaysBefore) {
-      onUpdate(item.id, { reminderDaysBefore: reminderDays });
+    const numericValue = Number.isFinite(reminderDays) ? reminderDays : 1;
+    if (numericValue !== item.reminderDaysBefore) {
+      onUpdate(item.id, { reminderDaysBefore: numericValue });
     }
   };
 
@@ -93,12 +92,10 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
 
   const handleReminderToggle = (checked: boolean) => {
     if (checked) {
-        // If turning on, default to email if no preference is set
         if (reminderType === 'none') {
             handleReminderTypeChange('email');
         }
     } else {
-        // If turning off, set to none
         handleReminderTypeChange('none');
     }
   }
@@ -137,7 +134,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
                       <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
                           <PriorityIcon priority={priority} />
-                          <span>{PriorityLevels[priority]?.label || 'Medium'}</span>
+                          <span>{PriorityLevels[priority].label}</span>
                       </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
@@ -234,7 +231,10 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
                         type="number" 
                         min="1"
                         value={reminderDays}
-                        onChange={(e) => setReminderDays(parseInt(e.target.value, 10))}
+                        onChange={(e) => {
+                            const value = parseInt(e.target.value, 10);
+                            setReminderDays(Number.isFinite(value) ? value : 1);
+                        }}
                         onBlur={handleReminderDaysBlur}
                         className="h-9 w-16 text-center"
                     />
@@ -256,37 +256,40 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
   const [isSuggesting, setIsSuggesting] = useState(false);
 
   useEffect(() => {
-    if (isTemplateMode && localMustDos.length === 0) {
-      setLocalMustDos([
-        {
-          id: 'local-1',
-          budgetId,
-          userId: '',
-          title: 'Confirm venue access time',
-          note: 'Key collection is with security',
-          status: 'todo',
-          priority: 'high',
-          deadline: new Date().toISOString().split('T')[0],
-          createdAt: new Date(),
-          reminderType: 'email',
-          reminderDaysBefore: 3,
-        },
-        {
-          id: 'local-2',
-          budgetId,
-          userId: '',
-          title: 'Pick up decorations',
-          note: '',
-          status: 'todo',
-          priority: 'medium',
-          deadline: '',
-          createdAt: new Date(),
-          reminderType: 'none',
-          reminderDaysBefore: 1,
-        }
-      ]);
-    }
-  }, [isTemplateMode, budgetId, localMustDos.length]);
+    if (!isTemplateMode) return;
+    
+    setLocalMustDos(prev => {
+        if (prev.length > 0) return prev; // Already initialized
+        return [
+            {
+              id: 'local-1',
+              budgetId,
+              userId: '',
+              title: 'Confirm venue access time',
+              note: 'Key collection is with security',
+              status: 'todo',
+              priority: 'high',
+              deadline: new Date().toISOString().split('T')[0],
+              createdAt: new Date(),
+              reminderType: 'email',
+              reminderDaysBefore: 3,
+            },
+            {
+              id: 'local-2',
+              budgetId,
+              userId: '',
+              title: 'Pick up decorations',
+              note: '',
+              status: 'todo',
+              priority: 'medium',
+              deadline: '',
+              createdAt: new Date(),
+              reminderType: 'none',
+              reminderDaysBefore: 1,
+            }
+        ];
+    });
+  }, [isTemplateMode, budgetId]);
 
   useEffect(() => {
     if (mustDos !== null) {
@@ -300,26 +303,22 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
     const allItems = isTemplateMode ? localMustDos : serverItems;
     
     return [...allItems].sort((a, b) => {
-        // Sort done items to the bottom
         if (a.status === 'done' && b.status !== 'done') return 1;
         if (a.status !== 'done' && b.status === 'done') return -1;
   
-        // Sort by priority (High > Medium > Low)
         const priorityA = a.priority || 'medium';
         const priorityB = b.priority || 'medium';
         if (PriorityLevels[priorityA].order < PriorityLevels[priorityB].order) return -1;
         if (PriorityLevels[priorityA].order > PriorityLevels[priorityB].order) return 1;
   
-        // Sort by deadline (earlier dates first)
         const dateA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
         const dateB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
         if (dateA < dateB) return -1;
         if (dateA > dateB) return 1;
   
-        // Fallback to creation date for items with same priority and deadline
         const aTime = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
         const bTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
-        return bTime - aTime; // Newest first as a final tie-breaker
+        return bTime - aTime;
       });
   }, [mustDos, isTemplateMode, localMustDos]);
 
@@ -457,3 +456,5 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
     </Card>
   );
 }
+
+    
