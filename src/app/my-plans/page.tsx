@@ -74,24 +74,29 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
           })
         : null;
 
+    const handleCardClick = () => {
+        router.push(`/planner/${budget.id}`);
+    };
+
     return (
-        <Card className="overflow-hidden group relative flex flex-col bg-card shadow-sm">
+        <Card 
+            className="overflow-hidden group relative flex flex-col bg-card shadow-sm transition-shadow duration-300 hover:shadow-xl cursor-pointer"
+            onClick={handleCardClick}
+        >
             <div className="relative w-full aspect-[4/3]">
-                <Link href={`/planner/${budget.id}`} className="block w-full h-full">
-                    {imageUrl ? (
-                        <>
-                            <Image
-                                src={imageUrl}
-                                alt={budget.name || 'Event image'}
-                                fill
-                                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/10" />
-                        </>
-                    ) : (
-                        <div className="h-full w-full bg-gradient-to-t from-primary/80 to-primary/40" />
-                    )}
-                </Link>
+                {imageUrl ? (
+                    <>
+                        <Image
+                            src={imageUrl}
+                            alt={budget.name || 'Event image'}
+                            fill
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/10" />
+                    </>
+                ) : (
+                    <div className="h-full w-full bg-gradient-to-t from-primary/80 to-primary/40" />
+                )}
 
                 <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
                     <div className="space-y-2">
@@ -123,7 +128,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
             </div>
 
             <AlertDialog>
-                <div className="absolute top-2 right-2 z-30">
+                <div className="absolute top-2 right-2 z-30" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="relative h-8 w-8 hover:bg-white/20 text-white">
@@ -131,13 +136,12 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-background/80 backdrop-blur text-foreground">
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/planner/${budget.id}`); }}>
+                            <DropdownMenuItem onClick={() => router.push(`/planner/${budget.id}`)}>
                                 Edit Budget
                             </DropdownMenuItem>
                             <AlertDialogTrigger asChild>
                                 <DropdownMenuItem 
                                     className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                                    onClick={(e) => e.stopPropagation()}
                                 >
                                     Delete
                                 </DropdownMenuItem>
@@ -160,7 +164,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
             </AlertDialog>
             
              <CardFooter className="p-0 border-t bg-card">
-                <Button variant="default" className="w-full rounded-t-none text-lg font-bold py-4" onClick={() => router.push(`/planner/${budget.id}/must-dos`)}>
+                <Button variant="default" className="w-full rounded-t-none text-lg font-bold py-4 z-10" onClick={(e) => { e.stopPropagation(); router.push(`/planner/${budget.id}/must-dos`); }}>
                     <ListChecks className="mr-2 h-4 w-4" />
                     Must-Do's
                 </Button>
@@ -414,5 +418,3 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
-
-    
