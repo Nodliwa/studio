@@ -47,6 +47,7 @@ export interface MustDo {
   title: string;
   note?: string;
   status: 'todo' | 'done';
+  priority: 'low' | 'medium' | 'high';
   deadline?: string;
   createdAt: any; // Firestore Timestamp
   reminderEnabled: boolean;

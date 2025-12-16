@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, ComponentType } from 'react';
 import { useUser, useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocument } from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import type { MustDo } from '@/lib/types';
@@ -11,11 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, Star, Trash2, Bell, BellOff } from 'lucide-react';
+import { PlusCircle, Star, Trash2, Bell, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentReference } from 'firebase/firestore';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Switch } from './ui/switch';
@@ -28,6 +29,22 @@ interface MustDosProps {
   isTemplateMode?: boolean;
   mustDos: MustDo[] | null;
 }
+
+const PriorityLevels: Record<MustDo['priority'], { label: string; icon: ComponentType<{className?: string}> }> = {
+    low: { label: 'Low', icon: ArrowDown },
+    medium: { label: 'Medium', icon: ArrowRight },
+    high: { label: 'High', icon: ArrowUp },
+};
+
+const PriorityIcon = ({ priority }: { priority: MustDo['priority'] }) => {
+    const Icon = PriorityLevels[priority]?.icon || Flag;
+    const colorClass = {
+        low: 'text-green-500',
+        medium: 'text-yellow-500',
+        high: 'text-red-500',
+    }[priority];
+    return <Icon className={cn('h-4 w-4', colorClass)} />;
+};
 
 function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id: string, data: Partial<MustDo>) => void, onDelete: (id: string) => void }) {
   const [title, setTitle] = useState(item.title);
@@ -76,6 +93,26 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
               placeholder="New must-do..."
               />
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
+                          <PriorityIcon priority={item.priority} />
+                          <span>{PriorityLevels[item.priority].label}</span>
+                      </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => onUpdate(item.id, { priority: 'low' })}>
+                              <ArrowDown className="mr-2 h-4 w-4 text-green-500" /> Low
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onUpdate(item.id, { priority: 'medium' })}>
+                              <ArrowRight className="mr-2 h-4 w-4 text-yellow-500" /> Medium
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onUpdate(item.id, { priority: 'high' })}>
+                              <ArrowUp className="mr-2 h-4 w-4 text-red-500" /> High
+                          </DropdownMenuItem>
+                      </DropdownMenuContent>
+                  </DropdownMenu>
+
                   <Popover>
                       <PopoverTrigger asChild>
                           <Button
@@ -166,6 +203,7 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
           title: 'Confirm venue access time',
           note: 'Key collection is with security',
           status: 'todo',
+          priority: 'high',
           deadline: new Date().toISOString().split('T')[0],
           createdAt: new Date(),
           reminderEnabled: true,
@@ -178,6 +216,7 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
           title: 'Pick up decorations',
           note: '',
           status: 'todo',
+          priority: 'medium',
           deadline: '',
           createdAt: new Date(),
           reminderEnabled: false,
@@ -218,6 +257,7 @@ export function MustDos({ budgetId, budgetRef, eventType = 'other', isTemplateMo
     const newItemData = {
         title: '',
         note: '',
+        priority: 'medium' as const,
         deadline: '',
         reminderEnabled: false,
         reminderDaysBefore: 1,
