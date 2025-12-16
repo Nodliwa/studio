@@ -6,12 +6,18 @@ import { useUser } from '@/firebase';
 import MotivationalQuote from './motivational-quote';
 
 const Greeter = ({ quote }: { quote?: string }) => {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const [mainGreeting, setMainGreeting] = useState('');
   const [subGreeting, setSubGreeting] = useState('');
 
   useEffect(() => {
-    const name = user?.displayName?.split(' ')[0] || 'there';
+    if (isUserLoading) {
+        setMainGreeting('Welcome!');
+        setSubGreeting("Let's get your planning done.");
+        return;
+    }
+
+    const name = user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
     const hour = new Date().getHours();
     let timeOfDayGreeting = '';
 
@@ -26,7 +32,7 @@ const Greeter = ({ quote }: { quote?: string }) => {
     setMainGreeting(`${timeOfDayGreeting}, ${name}!`);
     setSubGreeting("Let's get your planning done.");
 
-  }, [user]);
+  }, [user, isUserLoading]);
 
   return (
     <div className="mt-8 text-center">
