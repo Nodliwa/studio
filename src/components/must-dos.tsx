@@ -163,7 +163,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
                           )}
                           >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {deadline ? format(deadline, "PPP") : <span>Set deadline</span>}
+                          {deadline ? format(deadline, "dd-MMM-yyyy") : <span>Set deadline</span>}
                           </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
@@ -387,50 +387,6 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
     const docRef = doc(mustDosCollection, id);
     deleteDocument(docRef);
   };
-
-  const handleSuggestMustDos = () => {
-    if (!eventType) {
-      toast({ variant: 'destructive', title: 'Cannot suggest tasks', description: 'Event type is not set.' });
-      return;
-    }
-    if (isTemplateMode) {
-        toast({ title: 'Sign up to use AI features', description: 'AI suggestions are available for saved plans.'});
-        return;
-    }
-
-    startSuggestionTransition(async () => {
-      try {
-        const existingTitles = items.map(item => item.title);
-        const result = await suggestMustDos({ eventType, existingTitles });
-        
-        if (result.suggestions.length > 0 && budgetRef && user && firestore) {
-          const batch = writeBatch(firestore);
-          result.suggestions.forEach(suggestion => {
-            const docRef = doc(collection(budgetRef, 'mustDos'));
-            const newMustDo: Omit<MustDo, 'id' | 'createdAt'> = {
-              budgetId,
-              userId: user.uid,
-              title: suggestion.title,
-              note: suggestion.note,
-              status: 'todo',
-              priority: 'medium',
-              reminderType: 'none',
-              reminderDaysBefore: 1,
-            };
-            batch.set(docRef, { ...newMustDo, createdAt: serverTimestamp() });
-          });
-          await batch.commit();
-          toast({ title: 'AI Suggestions Added!', description: `${result.suggestions.length} new tasks have been added to your list.` });
-        } else {
-            toast({ title: 'No new suggestions', description: 'The AI could not find any new tasks to suggest at this time.' });
-        }
-      } catch (error) {
-        console.error("Error getting AI suggestions:", error);
-        toast({ variant: 'destructive', title: 'AI Suggestion Failed', description: 'Could not get suggestions from the AI. Please try again.' });
-      }
-    });
-  };
-
 
   return (
     <Card className="h-full bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
