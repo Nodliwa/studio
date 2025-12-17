@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useAuth, initiateEmailSignUp, useUser, setUserData, useFirestore, initiateGoogleSignIn, handleGoogleRedirectResult, initiateFacebookSignIn, initiateTwitterSignIn, useFirebase } from '@/firebase';
+import { initiateEmailSignUp, setUserData, handleGoogleRedirectResult, useFirebase } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -17,6 +18,7 @@ import PageHeader from '@/components/page-header';
 import { doc } from 'firebase/firestore';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { UserCredential } from 'firebase/auth';
+import { initiateGoogleSignIn, initiateFacebookSignIn, initiateTwitterSignIn } from '@/firebase/auth-operations';
 
 const emailRegisterSchema = z.object({
   firstName: z.string().min(1, 'Known as is required'),
@@ -29,21 +31,7 @@ const emailRegisterSchema = z.object({
   }),
 });
 
-const socialRegisterSchema = z.object({
-    firstName: z.string().min(1, 'Known as is required'),
-    lastName: z.string().min(1, 'Surname is required'),
-    email: z.string().email('Invalid email address'),
-    cellphone: z.string().optional(),
-    password: z.string().min(6, 'Password must be at least 6 characters long').optional(),
-    consent: z.literal(true, {
-      errorMap: () => ({ message: "You must accept the terms and conditions." }),
-    }),
-});
-
 type RegisterFormValues = z.infer<typeof emailRegisterSchema>;
-
-
-const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
@@ -73,14 +61,12 @@ export default function RegisterPage() {
   const { user, isUserLoading } = useUser();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
   const isMobile = useIsMobile();
-  const [isProcessingGoogleSignIn, setIsProcessingGoogleSignIn] = useState(true);
-
+  const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] = useState(true);
 
   const {
     register,
     handleSubmit,
     setValue,
-    control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(emailRegisterSchema),
@@ -89,7 +75,7 @@ export default function RegisterPage() {
     }
   });
 
-  const processGoogleUser = async (userCredential: UserCredential) => {
+  const processSocialUser = async (userCredential: UserCredential) => {
     if (!firestore || !userCredential.user.email) return;
     const userRef = doc(firestore, 'users', userCredential.user.uid);
     // This will create the user document if it doesn't exist, or merge if it does.
@@ -97,21 +83,22 @@ export default function RegisterPage() {
   };
 
   useEffect(() => {
-    // This effect handles the result from a Google Sign-In redirect.
-    if (!areServicesAvailable || !auth || !firestore) {
-      // Services not ready yet, wait.
+    // This effect handles the result from a social sign-in redirect.
+    // It now correctly waits for services to be available before proceeding.
+    if (!areServicesAvailable) {
+      // Services not ready yet, wait. It will re-run when they are.
       return;
     }
   
     handleGoogleRedirectResult(auth)
       .then((userCredential) => {
         if (userCredential) {
-          // User has just returned from Google redirect. Process their info.
-          processGoogleUser(userCredential);
-          // The onAuthStateChanged listener in the next useEffect will handle the redirect.
+          // User has just returned from a social sign-in redirect.
+          // Process their info. The onAuthStateChanged listener will handle the app redirect.
+          processSocialUser(userCredential);
         } else {
-          // No user from redirect, so we're not in that flow.
-          setIsProcessingGoogleSignIn(false);
+          // No user from redirect, so we're not in that flow. Stop the loading indicator.
+          setIsProcessingSocialSignIn(false);
         }
       })
       .catch((error) => {
@@ -120,10 +107,10 @@ export default function RegisterPage() {
         } else {
           setFirebaseError('An unexpected error occurred during social sign-in.');
         }
-        setIsProcessingGoogleSignIn(false);
+        setIsProcessingSocialSignIn(false);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [areServicesAvailable, auth, firestore]);
+  }, [areServicesAvailable]);
 
 
   useEffect(() => {
@@ -133,7 +120,7 @@ export default function RegisterPage() {
       router.push('/my-plans');
     } else if (!isUserLoading && !user) {
         // If auth is loaded and there's no user, we can stop processing.
-        setIsProcessingGoogleSignIn(false);
+        setIsProcessingSocialSignIn(false);
     }
   }, [user, isUserLoading, router]);
 
@@ -141,15 +128,6 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     if (!auth || !firestore) return;
     setFirebaseError(null);
-
-    const validationResult = emailRegisterSchema.safeParse(data);
-    if (!validationResult.success) {
-        const { fieldErrors } = validationResult.error;
-        if (fieldErrors.consent) {
-             setFirebaseError("You must accept the terms and conditions.");
-        }
-        return; 
-    }
     
     try {
       const displayName = `${data.firstName} ${data.lastName}`;
@@ -183,7 +161,7 @@ export default function RegisterPage() {
     try {
         const userCredential = await signInFunction(auth, isMobile);
         if (userCredential) {
-            await processGoogleUser(userCredential);
+            await processSocialUser(userCredential);
         }
     } catch (error) {
         if (error instanceof FirebaseError) {
@@ -197,7 +175,7 @@ export default function RegisterPage() {
   };
   
   // Prevent UI flash while auth state is resolving or redirect is pending.
-  if (isUserLoading || isProcessingGoogleSignIn || (user && !user.isAnonymous)) {
+  if (isUserLoading || isProcessingSocialSignIn || (user && !user.isAnonymous)) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
           <p>Loading...</p>
@@ -310,3 +288,5 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+    

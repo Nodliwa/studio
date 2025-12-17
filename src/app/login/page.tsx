@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,16 +9,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth, useUser, useFirestore, initiateGoogleSignIn, setUserData, handleGoogleRedirectResult, useFirebase } from '@/firebase';
+import { useUser, setUserData, handleGoogleRedirectResult, useFirebase } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PageHeader from '@/components/page-header';
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail, type UserCredential } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { UserCredential } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
+import { initiateGoogleSignIn } from '@/firebase/auth-operations';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -61,20 +62,21 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    // This effect handles the result from a Google Sign-In redirect.
-    if (!areServicesAvailable || !auth || !firestore) {
-      // Services not ready yet, wait.
+    // This effect handles the result from a social sign-in redirect.
+    // It now correctly waits for services to be available before proceeding.
+    if (!areServicesAvailable) {
+      // Services not ready yet, wait. It will re-run when they are.
       return;
     }
   
     handleGoogleRedirectResult(auth)
       .then((userCredential) => {
         if (userCredential) {
-          // User has just returned from Google redirect. Process their info.
+          // User has just returned from a social sign-in redirect.
+          // Process their info. The onAuthStateChanged listener will handle the app redirect.
           processSocialUser(userCredential);
-          // The onAuthStateChanged listener in the next useEffect will handle the redirect.
         } else {
-          // No user from redirect, so we're not in that flow.
+          // No user from redirect, so we're not in that flow. Stop the loading indicator.
           setIsProcessingGoogleSignIn(false);
         }
       })
@@ -82,12 +84,12 @@ export default function LoginPage() {
         if (error instanceof FirebaseError) {
           setFirebaseError(error.message);
         } else {
-          setFirebaseError('An unexpected error occurred during Google sign-in.');
+          setFirebaseError('An unexpected error occurred during social sign-in.');
         }
         setIsProcessingGoogleSignIn(false);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [areServicesAvailable, auth, firestore]);
+  }, [areServicesAvailable]);
 
 
    useEffect(() => {
@@ -247,3 +249,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
