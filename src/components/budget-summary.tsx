@@ -15,6 +15,7 @@ interface BudgetSummaryProps {
   mustDosCompleted: number;
   budgetId?: string;
   isTemplateMode?: boolean;
+  eventType?: string;
 }
 
 export function BudgetSummary({ grandTotal, daysLeft, mustDosTotal, mustDosCompleted, budgetId, isTemplateMode }: BudgetSummaryProps) {

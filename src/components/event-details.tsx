@@ -25,6 +25,7 @@ interface EventDetailsProps {
   budget: Budget | null;
   budgetRef: DocumentReference | null;
   isTemplateMode?: boolean;
+  eventType?: string;
 }
 
 const formSchema = z.object({
@@ -39,7 +40,7 @@ type FormData = z.infer<typeof formSchema>;
 const DEFAULT_BUDGET_NAME = "My Celebration Plan";
 const libraries: "places"[] = ["places"];
 
-export function EventDetails({ budget, budgetRef, isTemplateMode = false }: EventDetailsProps) {
+export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventType }: EventDetailsProps) {
   const { user } = useUser();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(isTemplateMode);
@@ -91,6 +92,11 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
     if (diffDays === 1) return "You have 1 day to your event.";
     return `You have ${diffDays} days to your event.`;
   }, [budget?.eventDate]);
+
+  const eventTitle = useMemo(() => {
+    if (!eventType) return "Event Details";
+    return `${eventType.charAt(0).toUpperCase() + eventType.slice(1)} Details`;
+  }, [eventType]);
 
   useEffect(() => {
     if (eventLocationValue) {
@@ -153,7 +159,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false }: Even
       <CardHeader className="flex flex-row items-start justify-between p-4 pb-0">
         <div className="flex-1">
           <CardTitle className="font-headline text-2xl">
-            Event Details
+            {eventTitle}
           </CardTitle>
            <p className="text-sm font-semibold mt-1 text-primary">{daysLeftText}</p>
         </div>

@@ -375,7 +375,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
                 mustDosCompleted={mustDosCount.completed}
                 budgetId={isTemplateMode ? undefined : budgetId}
                 isTemplateMode={isTemplateMode}
-                eventType={eventType}
               />
             </div>
           </div>
