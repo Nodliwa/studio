@@ -37,7 +37,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-const DEFAULT_BUDGET_NAME = "My Celebration Plan";
+const DEFAULT_BUDGET_NAME = "";
 const libraries: "places"[] = ["places"];
 
 export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventType }: EventDetailsProps) {
@@ -174,7 +174,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
             <Controller
               name="name"
               control={control}
-              render={({ field }) => <Input id="name" {...field} disabled={!isEditing} />}
+              render={({ field }) => <Input id="name" {...field} placeholder="Life you are celebrating..." disabled={!isEditing} />}
             />
           </div>
           

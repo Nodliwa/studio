@@ -100,7 +100,7 @@ function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string)
 
                 <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
                     <div className="space-y-2">
-                        <h3 className="text-xl font-bold truncate text-shadow" title={budget.name}>{budget.name}</h3>
+                        <h3 className="text-xl font-bold truncate text-shadow" title={budget.name}>{budget.name || 'My Celebration Plan'}</h3>
                         <div className='space-y-1 text-sm text-white/90 text-shadow-sm'>
                             {formattedDate ? (
                                 <p className="flex items-center gap-2"><CalendarDays className="h-4 w-4 shrink-0" /> {formattedDate}</p>
@@ -204,7 +204,7 @@ function MyPlansPage() {
 
             const newBudget: Budget = {
                 id: newBudgetId,
-                name: "My Celebration Plan",
+                name: "",
                 grandTotal: initialTotal,
                 userId: user.uid,
                 eventType: eventType,

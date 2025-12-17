@@ -169,7 +169,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
         const { categories: templateCategories, grandTotal: initialTotal } = calculateTotals(JSON.parse(JSON.stringify(template)));
         
         const newBudget: Partial<Budget> = {
-          name: "My Celebration Plan",
+          name: "",
           grandTotal: initialTotal,
           userId: user.uid,
           eventType: eventType,

@@ -68,7 +68,7 @@ export default function PageHeader() {
 
       const newBudget: Budget = {
         id: newBudgetId,
-        name: "My Celebration Plan",
+        name: "",
         grandTotal: initialTotal,
         userId: user.uid,
         eventType: eventType,
