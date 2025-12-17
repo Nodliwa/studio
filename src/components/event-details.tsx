@@ -163,7 +163,9 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
           </CardTitle>
            <p className="text-sm font-semibold mt-1 text-primary">{daysLeftText}</p>
         </div>
-        {!isEditing && !isTemplateMode && (
+        {isTemplateMode ? (
+             <Button onClick={() => router.push('/register')} size="sm">Sign Up to Save</Button>
+        ) : !isEditing && (
             <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>Edit</Button>
         )}
       </CardHeader>
@@ -245,25 +247,23 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
             />
           </div>
           
-          {isEditing && (
+          {isEditing && !isTemplateMode && (
             <div className="md:col-span-2 flex justify-end gap-2 mt-4">
-               {!isTemplateMode && (
-                <Button type="button" variant="ghost" onClick={() => {
-                  if (budget) {
-                     const initialValues = {
-                        name: budget.name || DEFAULT_BUDGET_NAME,
-                        eventLocation: budget.eventLocation || "",
-                        eventDate: budget.eventDate ? new Date(budget.eventDate).toISOString().split('T')[0] : "",
-                        expectedGuests: budget.expectedGuests || 0,
-                    };
-                    reset(initialValues);
-                  }
-                  setIsEditing(false);
-                  clearSuggestions();
-                }}>Cancel</Button>
-               )}
+              <Button type="button" variant="ghost" onClick={() => {
+                if (budget) {
+                    const initialValues = {
+                      name: budget.name || DEFAULT_BUDGET_NAME,
+                      eventLocation: budget.eventLocation || "",
+                      eventDate: budget.eventDate ? new Date(budget.eventDate).toISOString().split('T')[0] : "",
+                      expectedGuests: budget.expectedGuests || 0,
+                  };
+                  reset(initialValues);
+                }
+                setIsEditing(false);
+                clearSuggestions();
+              }}>Cancel</Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isTemplateMode ? 'Sign Up to Save' : 'Save Changes'}
+                Save Changes
               </Button>
             </div>
           )}
