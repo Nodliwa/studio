@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { initiateEmailSignUp, setUserData, handleGoogleRedirectResult, useFirebase } from '@/firebase';
+import { initiateEmailSignUp, setUserData, handleGoogleRedirectResult, useFirebase, useUser } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
