@@ -189,9 +189,9 @@ const weddingBudgetData: BudgetCategory[] = [
     },
     {
         id: "meat", name: "Meat", total: 0, order: 5, items: [
-            { id: "meat-1", name: "Sheep", metric: "per sheep", quantity: 5, unitPrice: 3000, total: 0, comment: "" },
-            { id: "meat-2", name: "Goat", metric: "per goat", quantity: 1, unitPrice: 4000, total: 0, comment: "" },
-            { id: "meat-3", name: "Cow", metric: "per cow", quantity: 1, unitPrice: 8500, total: 0, comment: "" },
+            { id: "meat-1", name: "Lamb", metric: "per sheep", quantity: 5, unitPrice: 3000, total: 0, comment: "" },
+            { id: "meat-2", name: "Pork", metric: "per goat", quantity: 1, unitPrice: 4000, total: 0, comment: "" },
+            { id: "meat-3", name: "Beef", metric: "per cow", quantity: 1, unitPrice: 8500, total: 0, comment: "" },
             { id: "meat-4", name: "Chicken", metric: "5kg", quantity: 10, unitPrice: 250, total: 0, comment: "" },
         ]
     },
@@ -241,7 +241,7 @@ const weddingBudgetData: BudgetCategory[] = [
             { id: "service-10", name: "Decorations", metric: "per day", quantity: 1, unitPrice: 10000, total: 0, comment: "" },
             { id: "service-11", name: "Invites", metric: "per item", quantity: 25, unitPrice: 250, total: 0, comment: "" },
             { id: "service-12", name: "Music / DJ", metric: "per day", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
-            { id: "service-13", name: "Imbongi", metric: "per day", quantity: 1, unitPrice: 1000, total: 0, comment: "" },
+            { id: "service-13", name: "Praise Singer", metric: "per day", quantity: 1, unitPrice: 1000, total: 0, comment: "" },
         ]
     },
     {
