@@ -120,20 +120,20 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
           onCheckedChange={(checked) => onUpdate(item.id, { status: checked ? 'done' : 'todo' })}
           className="mt-1 border-foreground/50"
         />
-        <div className="flex-1 space-y-1">
-          <div className="flex items-center gap-2">
+        <div className="flex-1 space-y-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onBlur={() => handleBlur('title')}
               className={cn(
-                  "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent flex-grow font-bold placeholder:font-bold placeholder:text-foreground/60 w-full",
+                  "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent flex-grow font-bold placeholder:font-bold placeholder:text-foreground/60 min-w-[120px]",
                   item.status === 'done' && "line-through text-muted-foreground"
               )}
               readOnly={item.status === 'done'}
               placeholder="New must-do..."
               />
-              <div className="flex items-center gap-4 text-xs text-muted-foreground ml-auto">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground ml-auto">
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-auto w-auto p-1 flex justify-start items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
