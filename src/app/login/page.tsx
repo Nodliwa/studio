@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth, useUser, useFirestore, initiateGoogleSignIn, setUserData, handleGoogleRedirectResult } from '@/firebase';
+import { useAuth, useUser, useFirestore, initiateGoogleSignIn, setUserData, handleGoogleRedirectResult, useFirebase } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -37,8 +36,7 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   );
 
 export default function LoginPage() {
-  const auth = useAuth();
-  const firestore = useFirestore();
+  const { auth, firestore, areServicesAvailable } = useFirebase();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
@@ -64,9 +62,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     // This effect handles the result from a Google Sign-In redirect.
-    if (!auth || !firestore) {
-      // Services not ready yet.
-       setIsProcessingGoogleSignIn(false);
+    if (!areServicesAvailable || !auth || !firestore) {
+      // Services not ready yet, wait.
       return;
     }
   
@@ -90,7 +87,7 @@ export default function LoginPage() {
         setIsProcessingGoogleSignIn(false);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth, firestore]);
+  }, [areServicesAvailable, auth, firestore]);
 
 
    useEffect(() => {

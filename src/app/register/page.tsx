@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -10,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useAuth, initiateEmailSignUp, useUser, setUserData, useFirestore, initiateGoogleSignIn, handleGoogleRedirectResult, initiateFacebookSignIn, initiateTwitterSignIn } from '@/firebase';
+import { useAuth, initiateEmailSignUp, useUser, setUserData, useFirestore, initiateGoogleSignIn, handleGoogleRedirectResult, initiateFacebookSignIn, initiateTwitterSignIn, useFirebase } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -32,18 +31,20 @@ const emailRegisterSchema = z.object({
   }),
 });
 
-const baseSchema = z.object({
+const socialRegisterSchema = z.object({
     firstName: z.string().min(1, 'Known as is required'),
     lastName: z.string().min(1, 'Surname is required'),
     email: z.string().email('Invalid email address'),
     cellphone: z.string().optional(),
-    password: z.string().min(6, 'Password must be at least 6 characters long'),
+    password: z.string().min(6, 'Password must be at least 6 characters long').optional(),
     recaptcha: z.string().optional(),
-    consent: z.boolean().optional(),
+    consent: z.literal(true, {
+      errorMap: () => ({ message: "You must accept the terms and conditions." }),
+    }),
 });
 
+type RegisterFormValues = z.infer<typeof socialRegisterSchema>;
 
-type RegisterFormValues = z.infer<typeof baseSchema>;
 
 const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
@@ -70,8 +71,7 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 export default function RegisterPage() {
-  const auth = useAuth();
-  const firestore = useFirestore();
+  const { auth, firestore, areServicesAvailable } = useFirebase();
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
@@ -87,7 +87,7 @@ export default function RegisterPage() {
     control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
-    resolver: zodResolver(baseSchema),
+    resolver: zodResolver(socialRegisterSchema),
     defaultValues: {
       consent: false,
     }
@@ -102,9 +102,8 @@ export default function RegisterPage() {
 
   useEffect(() => {
     // This effect handles the result from a Google Sign-In redirect.
-    if (!auth || !firestore) {
-      // Services not ready yet.
-      setIsProcessingGoogleSignIn(false);
+    if (!areServicesAvailable || !auth || !firestore) {
+      // Services not ready yet, wait.
       return;
     }
   
@@ -128,7 +127,7 @@ export default function RegisterPage() {
         setIsProcessingGoogleSignIn(false);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth, firestore]);
+  }, [areServicesAvailable, auth, firestore]);
 
 
   useEffect(() => {
@@ -163,7 +162,7 @@ export default function RegisterPage() {
     try {
       const displayName = `${data.firstName} ${data.lastName}`;
       // onAuthStateChanged will handle the redirect after this completes
-      const userCredential = await initiateEmailSignUp(auth, data.email, data.password, displayName);
+      const userCredential = await initiateEmailSignUp(auth, data.email, data.password!, displayName);
       
       if (userCredential?.user) {
         const userRef = doc(firestore, 'users', userCredential.user.uid);
@@ -337,5 +336,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-
-    

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -85,3 +84,4 @@ export * from './auth-operations';
 export * from './errors';
 export * from './error-emitter';
 export { useUser } from './provider';
+export { useFirebase } from './provider';
