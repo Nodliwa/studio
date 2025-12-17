@@ -187,7 +187,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
             placeholder="Add a note..."
             rows={1}
             className={cn(
-              "h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px] bg-transparent placeholder:text-foreground/50 font-bold",
+              "h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px] bg-transparent placeholder:text-foreground/50",
               "read-only:cursor-default read-only:bg-transparent"
             )}
             readOnly={item.status === 'done'}
@@ -570,5 +570,3 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
     </>
   );
 }
-
-    
