@@ -5,3 +5,4 @@ This is a NextJS starter in Firebase Studio.
 To get started, take a look at src/app/page.tsx.
 
 <!-- Triggering a new build to resolve expired URL issue -->
+<!-- Retrying build again to get a new signed URL. -->
