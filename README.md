@@ -9,3 +9,4 @@ To get started, take a look at src/app/page.tsx.
 <!-- Another attempt to trigger a build with a fresh signed URL. -->
 <!-- Another retry for the expired signed URL issue. -->
 <!-- Final attempt to trigger a new build due to persistent signed URL expiration. -->
+<!-- Triggering build to be ready for custom domain connection. -->
