@@ -3,77 +3,86 @@ import type { BudgetCategory } from "./types";
 
 const funeralBudgetData: BudgetCategory[] = [
     {
-      id: "cat-1",
-      name: "Meat",
-      total: 0,
-      order: 1,
-      items: [
-        { id: "item-1-1", name: "Lamb", metric: "per kg", quantity: 100, unitPrice: 185, total: 0, comment: "" },
-        { id: "item-1-2", name: "Beef", metric: "per kg", quantity: 50, unitPrice: 175, total: 0, comment: "" },
-        { id: "item-1-3", name: "Chicken", metric: "per kg", quantity: 35, unitPrice: 85, total: 0, comment: "" },
-        { id: "item-1-4", name: "Pork", metric: "per kg", quantity: 50, unitPrice: 120, total: 0, comment: "" },
-      ],
-    },
-    {
-      id: "cat-2",
-      name: "Starch",
-      total: 0,
-      order: 2,
-      items: [
-        { id: "item-2-1", name: "Bread", metric: "per loaf", quantity: 50, unitPrice: 20, total: 0, comment: "" },
-        { id: "item-2-2", name: "Samp", metric: "10kg", quantity: 5, unitPrice: 150, total: 0, comment: "" },
-        { id: "item-2-3", name: "Beans", metric: "10kg", quantity: 3, unitPrice: 350, total: 0, comment: "" },
-        { id: "item-2-4", name: "Rice", metric: "10 kg", quantity: 5, unitPrice: 175, total: 0, comment: "" },
-        { id: "item-2-5", name: "Mealie Meal", metric: "10 kg", quantity: 4, unitPrice: 140, total: 0, comment: "" },
-      ],
-    },
-    {
-      id: "cat-3",
-      name: "Vegetables",
-      total: 0,
-      order: 3,
-      items: [
-        { id: "item-3-1", name: "Cabbage", metric: "8 heads", quantity: 4, unitPrice: 200, total: 0, comment: "" },
-        { id: "item-3-2", name: "Potatoes", metric: "10kg", quantity: 5, unitPrice: 45, total: 0, comment: "" },
-        { id: "item-3-3", name: "Carrot", metric: "10kg", quantity: 4, unitPrice: 85, total: 0, comment: "" },
-        { id: "item-3-4", name: "Onion", metric: "10kg", quantity: 4, unitPrice: 175, total: 0, comment: "" },
-        { id: "item-3-5", name: "Tomatoes", metric: "10kg", quantity: 6, unitPrice: 195, total: 0, comment: "" },
-        { id: "item-3-6", name: "Potatoes", metric: "10kg", quantity: 4, unitPrice: 200, total: 0, comment: "" },
-      ],
-    },
-    {
-      id: "cat-4",
-      name: "Fruit",
-      total: 0,
-      order: 4,
-      items: [
-        { id: "item-4-1", name: "Apples", metric: "per box", quantity: 3, unitPrice: 225, total: 0, comment: "" },
-        { id: "item-4-2", name: "Banana", metric: "per box", quantity: 3, unitPrice: 150, total: 0, comment: "" },
-        { id: "item-4-3", name: "Pears", metric: "per box", quantity: 3, unitPrice: 145, total: 0, comment: "" },
-        { id: "item-4-4", name: "Watermelon", metric: "each", quantity: 10, unitPrice: 75, total: 0, comment: "" },
-        { id: "item-4-5", name: "Oranges", metric: "per box", quantity: 5, unitPrice: 35, total: 0, comment: "" },
-      ],
-    },
-    {
-      id: "cat-5",
-      name: "Refreshments",
-      total: 0,
-      order: 5,
-      items: [
-        { id: "item-5-1", name: "Coffee", metric: "750g", quantity: 3, unitPrice: 120, total: 0, comment: "" },
-        { id: "item-5-2", name: "Teabag", metric: "100's", quantity: 3, unitPrice: 50, total: 0, comment: "" },
-        { id: "item-5-3", name: "Milk", metric: "6x1L", quantity: 10, unitPrice: 125, total: 0, comment: "" },
-        { id: "item-5-4", name: "Sugar", metric: "10kg", quantity: 4, unitPrice: 260, total: 0, comment: "" },
-        { id: "item-5-5", name: "Bottled Water", metric: "24 of 300ml", quantity: 5, unitPrice: 125, total: 0, comment: "" },
-        { id: "item-5-6", name: "Juice", metric: "25 of 300ml", quantity: 4, unitPrice: 200, total: 0, comment: "" },
-        { id: "item-5-7", name: "Carbonated Drink", metric: "6 of 2L", quantity: 10, unitPrice: 140, total: 0, comment: "" },
-      ],
+        id: 'catering',
+        name: 'Catering',
+        total: 0,
+        order: 1,
+        subCategories: [
+            {
+              id: "cat-1",
+              name: "Meat",
+              total: 0,
+              order: 1,
+              items: [
+                { id: "item-1-1", name: "Lamb", metric: "per kg", quantity: 100, unitPrice: 185, total: 0, comment: "" },
+                { id: "item-1-2", name: "Beef", metric: "per kg", quantity: 50, unitPrice: 175, total: 0, comment: "" },
+                { id: "item-1-3", name: "Chicken", metric: "per kg", quantity: 35, unitPrice: 85, total: 0, comment: "" },
+                { id: "item-1-4", name: "Pork", metric: "per kg", quantity: 50, unitPrice: 120, total: 0, comment: "" },
+              ],
+            },
+            {
+              id: "cat-2",
+              name: "Starch",
+              total: 0,
+              order: 2,
+              items: [
+                { id: "item-2-1", name: "Bread", metric: "per loaf", quantity: 50, unitPrice: 20, total: 0, comment: "" },
+                { id: "item-2-2", name: "Samp", metric: "10kg", quantity: 5, unitPrice: 150, total: 0, comment: "" },
+                { id: "item-2-3", name: "Beans", metric: "10kg", quantity: 3, unitPrice: 350, total: 0, comment: "" },
+                { id: "item-2-4", name: "Rice", metric: "10 kg", quantity: 5, unitPrice: 175, total: 0, comment: "" },
+                { id: "item-2-5", name: "Mealie Meal", metric: "10 kg", quantity: 4, unitPrice: 140, total: 0, comment: "" },
+              ],
+            },
+            {
+              id: "cat-3",
+              name: "Vegetables",
+              total: 0,
+              order: 3,
+              items: [
+                { id: "item-3-1", name: "Cabbage", metric: "8 heads", quantity: 4, unitPrice: 200, total: 0, comment: "" },
+                { id: "item-3-2", name: "Potatoes", metric: "10kg", quantity: 5, unitPrice: 45, total: 0, comment: "" },
+                { id: "item-3-3", name: "Carrot", metric: "10kg", quantity: 4, unitPrice: 85, total: 0, comment: "" },
+                { id: "item-3-4", name: "Onion", metric: "10kg", quantity: 4, unitPrice: 175, total: 0, comment: "" },
+                { id: "item-3-5", name: "Tomatoes", metric: "10kg", quantity: 6, unitPrice: 195, total: 0, comment: "" },
+                { id: "item-3-6", name: "Potatoes", metric: "10kg", quantity: 4, unitPrice: 200, total: 0, comment: "" },
+              ],
+            },
+            {
+              id: "cat-4",
+              name: "Fruit",
+              total: 0,
+              order: 4,
+              items: [
+                { id: "item-4-1", name: "Apples", metric: "per box", quantity: 3, unitPrice: 225, total: 0, comment: "" },
+                { id: "item-4-2", name: "Banana", metric: "per box", quantity: 3, unitPrice: 150, total: 0, comment: "" },
+                { id: "item-4-3", name: "Pears", metric: "per box", quantity: 3, unitPrice: 145, total: 0, comment: "" },
+                { id: "item-4-4", name: "Watermelon", metric: "each", quantity: 10, unitPrice: 75, total: 0, comment: "" },
+                { id: "item-4-5", name: "Oranges", metric: "per box", quantity: 5, unitPrice: 35, total: 0, comment: "" },
+              ],
+            },
+            {
+              id: "cat-5",
+              name: "Refreshments",
+              total: 0,
+              order: 5,
+              items: [
+                { id: "item-5-1", name: "Coffee", metric: "750g", quantity: 3, unitPrice: 120, total: 0, comment: "" },
+                { id: "item-5-2", name: "Teabag", metric: "100's", quantity: 3, unitPrice: 50, total: 0, comment: "" },
+                { id: "item-5-3", name: "Milk", metric: "6x1L", quantity: 10, unitPrice: 125, total: 0, comment: "" },
+                { id: "item-5-4", name: "Sugar", metric: "10kg", quantity: 4, unitPrice: 260, total: 0, comment: "" },
+                { id: "item-5-5", name: "Bottled Water", metric: "24 of 300ml", quantity: 5, unitPrice: 125, total: 0, comment: "" },
+                { id: "item-5-6", name: "Juice", metric: "25 of 300ml", quantity: 4, unitPrice: 200, total: 0, comment: "" },
+                { id: "item-5-7", name: "Carbonated Drink", metric: "6 of 2L", quantity: 10, unitPrice: 140, total: 0, comment: "" },
+              ],
+            }
+        ],
+        items: []
     },
     {
         id: "cat-6",
         name: "Deceased",
         total: 0,
-        order: 6,
+        order: 2,
         items: [
             { id: "item-6-1", name: "Municipal Grave fees", metric: "per item", quantity: 1, unitPrice: 1500, total: 0, comment: "" },
             { id: "item-6-2", name: "Coffin", metric: "per item", quantity: 1, unitPrice: 10000, total: 0, comment: "" },
@@ -92,7 +101,7 @@ const funeralBudgetData: BudgetCategory[] = [
         id: "cat-7",
         name: "Service",
         total: 0,
-        order: 7,
+        order: 3,
         items: [
             { id: "item-7-6", name: "Gas Stove / Burner", metric: "per item", quantity: 2, unitPrice: 500, total: 0, comment: "" },
             { id: "item-7-7", name: "Cookware hire", metric: "per item", quantity: 8, unitPrice: 100, total: 0, comment: "" },
@@ -110,7 +119,7 @@ const funeralBudgetData: BudgetCategory[] = [
         id: "cat-8",
         name: "Logistics",
         total: 0,
-        order: 8,
+        order: 4,
         items: [
             { id: "item-8-1", name: "BraaiMaster", metric: "per day", quantity: 5, unitPrice: 100, total: 0, comment: "" },
             { id: "item-8-2", name: "Cookers", metric: "per day", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
@@ -345,3 +354,5 @@ export const budgetTemplates = {
     wedding: weddingBudgetData,
     other: otherBudgetData
 };
+
+    
