@@ -42,7 +42,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
   const isMobile = useIsMobile();
-  const [isProcessingGoogleSignIn, setIsProcessingGoogleSignIn] = useState(true);
+  const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] = useState(true);
   const { toast } = useToast();
 
   const {
@@ -62,44 +62,40 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    // This effect handles the result from a social sign-in redirect.
-    // It now correctly waits for services to be available before proceeding.
     if (!areServicesAvailable) {
-      // Services not ready yet, wait. It will re-run when they are.
-      return;
+      return; // Wait for services to be ready.
     }
   
-    handleGoogleRedirectResult(auth)
-      .then((userCredential) => {
-        if (userCredential) {
-          // User has just returned from a social sign-in redirect.
-          // Process their info. The onAuthStateChanged listener will handle the app redirect.
-          processSocialUser(userCredential);
-        } else {
-          // No user from redirect, so we're not in that flow. Stop the loading indicator.
-          setIsProcessingGoogleSignIn(false);
-        }
-      })
-      .catch((error) => {
-        if (error instanceof FirebaseError) {
-          setFirebaseError(error.message);
-        } else {
-          setFirebaseError('An unexpected error occurred during social sign-in.');
-        }
-        setIsProcessingGoogleSignIn(false);
-      });
+    // We only want to process the redirect result once, on initial load.
+    if (isProcessingSocialSignIn) {
+      handleGoogleRedirectResult(auth)
+        .then((userCredential) => {
+          if (userCredential) {
+            // A user was returned from a redirect. Process them.
+            // The main `useEffect` for `user` will handle the redirect to `/my-plans`.
+            processSocialUser(userCredential);
+          }
+          // Whether a user was returned or not, we're done processing the redirect.
+          setIsProcessingSocialSignIn(false);
+        })
+        .catch((error) => {
+          if (error instanceof FirebaseError) {
+            setFirebaseError(error.message);
+          } else {
+            setFirebaseError('An unexpected error occurred during social sign-in.');
+          }
+          setIsProcessingSocialSignIn(false);
+        });
+    }
+  // We only want this to run once when services are available.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [areServicesAvailable]);
+  }, [areServicesAvailable]); 
 
-
-   useEffect(() => {
-    // This is the primary redirect logic, relying on the live auth state.
+  useEffect(() => {
+    // Redirect a logged-in user to their plans.
+    // This runs whenever the user's auth state is confirmed.
     if (!isUserLoading && user && !user.isAnonymous) {
-      // If we have a signed-in, non-anonymous user, they should be on the plans page.
       router.push('/my-plans');
-    } else if (!isUserLoading && !user) {
-        // If auth is loaded and there's no user, we can stop processing.
-        setIsProcessingGoogleSignIn(false);
     }
   }, [user, isUserLoading, router]);
 
@@ -121,11 +117,14 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     if (!auth) return;
     setFirebaseError(null);
+    setIsProcessingSocialSignIn(true);
     try {
         const userCredential = await initiateGoogleSignIn(auth, isMobile);
         if (userCredential) {
+            // For popup sign-in, process the user immediately.
             await processSocialUser(userCredential);
         }
+        // For redirect, the effect hook will handle it on page load.
     } catch (error) {
         if (error instanceof FirebaseError) {
             if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
@@ -134,6 +133,7 @@ export default function LoginPage() {
         } else {
             setFirebaseError('An unexpected error occurred during Google sign-in.');
         }
+        setIsProcessingSocialSignIn(false);
     }
   };
 
@@ -161,14 +161,25 @@ export default function LoginPage() {
     }
   };
 
-  // Prevent UI flash while auth state is resolving or redirect is pending.
-  if (isUserLoading || isProcessingGoogleSignIn || (user && !user.isAnonymous)) {
+  // Only show the main loading indicator while the initial user state is being determined.
+  // The page is still usable even if a social sign-in is processing in the background.
+  if (isUserLoading) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
           <p>Loading...</p>
       </div>
     );
   }
+
+  // If a logged-in user somehow lands here, redirect them.
+  if (user && !user.isAnonymous) {
+     return (
+      <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
+          <p>Redirecting...</p>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-secondary">
@@ -183,7 +194,7 @@ export default function LoginPage() {
             <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-center">
-                    <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={handleGoogleSignIn}>
+                    <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={handleGoogleSignIn} disabled={isProcessingSocialSignIn}>
                         <GoogleIcon />
                     </Button>
                   </div>
@@ -219,7 +230,7 @@ export default function LoginPage() {
                     {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
                     
                      <div className="pb-6 pt-2 px-6">
-                        <Button type="submit" className="w-full" disabled={isSubmitting}>
+                        <Button type="submit" className="w-full" disabled={isSubmitting || isProcessingSocialSignIn}>
                             {isSubmitting ? 'Logging in...' : 'Login'}
                         </Button>
                          <div className="mt-4 text-center text-sm">
@@ -249,5 +260,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    

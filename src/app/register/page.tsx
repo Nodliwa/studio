@@ -83,47 +83,42 @@ export default function RegisterPage() {
   };
 
   useEffect(() => {
-    // This effect handles the result from a social sign-in redirect.
-    // It now correctly waits for services to be available before proceeding.
     if (!areServicesAvailable) {
-      // Services not ready yet, wait. It will re-run when they are.
-      return;
+      return; // Wait for services to be ready.
     }
   
-    handleGoogleRedirectResult(auth)
-      .then((userCredential) => {
-        if (userCredential) {
-          // User has just returned from a social sign-in redirect.
-          // Process their info. The onAuthStateChanged listener will handle the app redirect.
-          processSocialUser(userCredential);
-        } else {
-          // No user from redirect, so we're not in that flow. Stop the loading indicator.
+    // We only want to process the redirect result once, on initial load.
+    if (isProcessingSocialSignIn) {
+      handleGoogleRedirectResult(auth)
+        .then((userCredential) => {
+          if (userCredential) {
+            // A user was returned from a redirect. Process them.
+            // The main `useEffect` for `user` will handle the redirect to `/my-plans`.
+            processSocialUser(userCredential);
+          }
+          // Whether a user was returned or not, we're done processing the redirect.
           setIsProcessingSocialSignIn(false);
-        }
-      })
-      .catch((error) => {
-        if (error instanceof FirebaseError) {
-          setFirebaseError(error.message);
-        } else {
-          setFirebaseError('An unexpected error occurred during social sign-in.');
-        }
-        setIsProcessingSocialSignIn(false);
-      });
+        })
+        .catch((error) => {
+          if (error instanceof FirebaseError) {
+            setFirebaseError(error.message);
+          } else {
+            setFirebaseError('An unexpected error occurred during social sign-in.');
+          }
+          setIsProcessingSocialSignIn(false);
+        });
+    }
+  // We only want this to run once when services are available.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [areServicesAvailable]);
 
-
   useEffect(() => {
-    // This is the primary redirect logic, relying on the live auth state.
+    // Redirect a logged-in user to their plans.
+    // This runs whenever the user's auth state is confirmed.
     if (!isUserLoading && user && !user.isAnonymous) {
-      // If we have a signed-in, non-anonymous user, they should be on the plans page.
       router.push('/my-plans');
-    } else if (!isUserLoading && !user) {
-        // If auth is loaded and there's no user, we can stop processing.
-        setIsProcessingSocialSignIn(false);
     }
   }, [user, isUserLoading, router]);
-
 
   const onSubmit = async (data: RegisterFormValues) => {
     if (!auth || !firestore) return;
@@ -151,6 +146,7 @@ export default function RegisterPage() {
   const handleSocialSignIn = async (provider: 'google' | 'facebook' | 'twitter') => {
     if (!auth) return;
     setFirebaseError(null);
+    setIsProcessingSocialSignIn(true);
 
     const signInFunction = {
         google: initiateGoogleSignIn,
@@ -161,24 +157,38 @@ export default function RegisterPage() {
     try {
         const userCredential = await signInFunction(auth, isMobile);
         if (userCredential) {
+            // For popup sign-in, process the user immediately.
             await processSocialUser(userCredential);
         }
+        // For redirect, the effect hook will handle it on page load.
     } catch (error) {
         if (error instanceof FirebaseError) {
+            // Don't show an error if the user closes the popup.
             if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
                 setFirebaseError(error.message);
             }
         } else {
             setFirebaseError(`An unexpected error occurred during ${provider} sign-in.`);
         }
+        setIsProcessingSocialSignIn(false);
     }
   };
   
-  // Prevent UI flash while auth state is resolving or redirect is pending.
-  if (isUserLoading || isProcessingSocialSignIn || (user && !user.isAnonymous)) {
+  // Only show the main loading indicator while the initial user state is being determined.
+  // The page is still usable even if a social sign-in is processing in the background.
+  if (isUserLoading) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
           <p>Loading...</p>
+      </div>
+    );
+  }
+
+  // If a logged-in user somehow lands here, redirect them.
+  if (user && !user.isAnonymous) {
+     return (
+      <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
+          <p>Redirecting...</p>
       </div>
     );
   }
@@ -201,13 +211,13 @@ export default function RegisterPage() {
             <CardContent>
                 <div className="space-y-4">
                     <div className="flex justify-center gap-4">
-                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('google')}>
+                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('google')} disabled={isProcessingSocialSignIn}>
                             <GoogleIcon />
                         </Button>
-                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('facebook')}>
+                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('facebook')} disabled={isProcessingSocialSignIn}>
                             <FacebookIcon />
                         </Button>
-                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('twitter')}>
+                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('twitter')} disabled={isProcessingSocialSignIn}>
                             <XIcon />
                         </Button>
                     </div>
@@ -261,7 +271,7 @@ export default function RegisterPage() {
 
                         {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
 
-                        <Button type="submit" className="w-full" disabled={isSubmitting}>
+                        <Button type="submit" className="w-full" disabled={isSubmitting || isProcessingSocialSignIn}>
                             {isSubmitting ? 'Creating Account...' : 'Sign Up'}
                         </Button>
                     </form>
@@ -288,5 +298,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-
-    
