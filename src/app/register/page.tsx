@@ -15,7 +15,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PageHeader from '@/components/page-header';
 import { doc } from 'firebase/firestore';
-import ReCAPTCHA from 'react-google-recaptcha';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { UserCredential } from 'firebase/auth';
 
@@ -25,7 +24,6 @@ const emailRegisterSchema = z.object({
   email: z.string().email('Invalid email address'),
   cellphone: z.string().optional(),
   password: z.string().min(6, 'Password must be at least 6 characters long'),
-  recaptcha: z.string().min(1, 'Please complete the reCAPTCHA'),
   consent: z.literal(true, {
     errorMap: () => ({ message: "You must accept the terms and conditions." }),
   }),
@@ -37,13 +35,12 @@ const socialRegisterSchema = z.object({
     email: z.string().email('Invalid email address'),
     cellphone: z.string().optional(),
     password: z.string().min(6, 'Password must be at least 6 characters long').optional(),
-    recaptcha: z.string().optional(),
     consent: z.literal(true, {
       errorMap: () => ({ message: "You must accept the terms and conditions." }),
     }),
 });
 
-type RegisterFormValues = z.infer<typeof socialRegisterSchema>;
+type RegisterFormValues = z.infer<typeof emailRegisterSchema>;
 
 
 const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
@@ -75,7 +72,6 @@ export default function RegisterPage() {
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const isMobile = useIsMobile();
   const [isProcessingGoogleSignIn, setIsProcessingGoogleSignIn] = useState(true);
 
@@ -87,7 +83,7 @@ export default function RegisterPage() {
     control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
-    resolver: zodResolver(socialRegisterSchema),
+    resolver: zodResolver(emailRegisterSchema),
     defaultValues: {
       consent: false,
     }
@@ -148,12 +144,8 @@ export default function RegisterPage() {
 
     const validationResult = emailRegisterSchema.safeParse(data);
     if (!validationResult.success) {
-        if (recaptchaRef.current) recaptchaRef.current.reset();
-        setValue('recaptcha', undefined);
         const { fieldErrors } = validationResult.error;
-        if (fieldErrors.recaptcha) {
-             setFirebaseError("Please complete the reCAPTCHA.");
-        } else if (fieldErrors.consent) {
+        if (fieldErrors.consent) {
              setFirebaseError("You must accept the terms and conditions.");
         }
         return; 
@@ -175,11 +167,6 @@ export default function RegisterPage() {
       } else {
         setFirebaseError('An unexpected error occurred during registration.');
       }
-    } finally {
-        if (recaptchaRef.current) {
-            recaptchaRef.current.reset();
-        }
-        setValue('recaptcha', undefined);
     }
   };
 
@@ -292,19 +279,6 @@ export default function RegisterPage() {
                                 </label>
                                 {errors.consent && <p className="text-destructive text-sm">{errors.consent.message}</p>}
                             </div>
-                        </div>
-
-                        <div className="space-y-2">
-                        {siteKey ? (
-                            <ReCAPTCHA
-                                ref={recaptchaRef}
-                                sitekey={siteKey}
-                                onChange={(token) => setValue('recaptcha', token || '', { shouldValidate: true })}
-                            />
-                        ) : (
-                            <p className="text-destructive text-sm">reCAPTCHA site key is not configured.</p>
-                        )}
-                        {errors.recaptcha && <p className="text-destructive text-sm">{errors.recaptcha.message}</p>}
                         </div>
 
                         {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
