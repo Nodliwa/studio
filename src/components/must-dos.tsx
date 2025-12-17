@@ -123,7 +123,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
               onChange={(e) => setTitle(e.target.value)}
               onBlur={() => handleBlur('title')}
               className={cn(
-                  "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent flex-grow placeholder:font-bold placeholder:text-foreground/60",
+                  "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent flex-grow font-bold placeholder:font-bold placeholder:text-foreground/60",
                   item.status === 'done' && "line-through text-muted-foreground"
               )}
               readOnly={item.status === 'done'}
@@ -213,13 +213,13 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                           <DropdownMenuItem onClick={() => handleReminderTypeChange('email')}>
-                              <Mail className="mr-2 h-4 w-4" />
+                              <Mail className="mr-2 h-4 w-4" /> Email
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleReminderTypeChange('sms')}>
-                              <MessageSquare className="mr-2 h-4 w-4" />
+                              <MessageSquare className="mr-2 h-4 w-4" /> SMS
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleReminderTypeChange('whatsapp')}>
-                              <WhatsappIcon className="mr-2 h-4 w-4" />
+                              <WhatsappIcon className="mr-2 h-4 w-4" /> WhatsApp
                           </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
