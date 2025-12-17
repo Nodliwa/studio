@@ -111,7 +111,7 @@ const funeralBudgetData: BudgetCategory[] = [
         total: 0,
         order: 8,
         items: [
-            { id: "item-8-1", name: "Slaughters", metric: "per day", quantity: 5, unitPrice: 100, total: 0, comment: "" },
+            { id: "item-8-1", name: "BraaiMaster", metric: "per day", quantity: 5, unitPrice: 100, total: 0, comment: "" },
             { id: "item-8-2", name: "Cookers", metric: "per day", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
             { id: "item-8-3", name: "Bakers", metric: "per day", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
             { id: "item-8-4", name: "Bakkie Hire", metric: "per day", quantity: 1, unitPrice: 650, total: 0, comment: "" },
@@ -277,7 +277,7 @@ const weddingBudgetData: BudgetCategory[] = [
         total: 0,
         order: 5,
         items: [
-            { id: "logistics-1", name: "Slaughters", metric: "per day", quantity: 5, unitPrice: 100, total: 0, comment: "" },
+            { id: "logistics-1", name: "BraaiMaster", metric: "per day", quantity: 5, unitPrice: 100, total: 0, comment: "" },
             { id: "logistics-2", name: "Cookers", metric: "per day", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
             { id: "logistics-3", name: "Bakers", metric: "per day", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
             { id: "logistics-4", name: "Bakkie Hire", metric: "per day", quantity: 1, unitPrice: 650, total: 0, comment: "" },
