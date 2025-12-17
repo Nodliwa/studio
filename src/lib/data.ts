@@ -102,7 +102,7 @@ const funeralBudgetData: BudgetCategory[] = [
             { id: "item-7-12", name: "Funeral Program", metric: "per item", quantity: 50, unitPrice: 15, total: 0, comment: "" },
             { id: "item-7-18", name: "Videographer", metric: "per day", quantity: 1, unitPrice: 2500, total: 0, comment: "" },
             { id: "item-7-19", name: "Pastor", metric: "per day", quantity: 1, unitPrice: 3000, total: 0, comment: "" },
-            { id: "item-7-20", name: "Church Quire", metric: "per day", quantity: 1, unitPrice: 3000, total: 0, comment: "" },
+            { id: "item-7-20", name: "Church Choir", metric: "per day", quantity: 1, unitPrice: 3000, total: 0, comment: "" },
         ],
     },
     {
