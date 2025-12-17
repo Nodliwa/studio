@@ -86,8 +86,7 @@ export default function LandingPage() {
                                 <Image src="/images/girl.jpg" alt="uMemulo Coming Soon" fill className="object-cover rounded-lg" />
                                 <div className="absolute inset-0 bg-black/50 rounded-lg" />
                                 <div className="relative z-10 text-2xl font-bold text-center">
-                                    <p>Iyeza,</p>
-                                    <p>ay'kaka'fiki.</p>
+                                    <p>Stay Tuned</p>
                                 </div>
                             </div>
                         </div>
@@ -110,8 +109,7 @@ export default function LandingPage() {
                                 <Image src="/images/boy.jpg" alt="uMgidi Coming Soon" fill className="object-cover rounded-lg" />
                                 <div className="absolute inset-0 bg-black/50 rounded-lg" />
                                 <div className="relative z-10 text-2xl font-bold text-center">
-                                    <p>Iyeza,</p>
-                                    <p>ay'kaka'fiki.</p>
+                                    <p>Stay Tuned</p>
                                 </div>
                             </div>
                         </div>
