@@ -10,3 +10,4 @@ To get started, take a look at src/app/page.tsx.
 <!-- Another retry for the expired signed URL issue. -->
 <!-- Final attempt to trigger a new build due to persistent signed URL expiration. -->
 <!-- Triggering build to be ready for custom domain connection. -->
+<!-- Ensuring the latest build is ready for the domain switch. -->
