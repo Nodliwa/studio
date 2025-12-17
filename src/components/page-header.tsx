@@ -184,8 +184,8 @@ export default function PageHeader() {
                 </div>
             )}
             <div className="flex items-center md:hidden">
-                {!isUserLoading && !user && (
-                    <Button asChild size="sm" className="text-base mr-4">
+                {!isUserLoading && (!user || user.isAnonymous) && (
+                    <Button asChild size="sm" className="text-base mr-2">
                         <Link href="/register">Sign Up</Link>
                     </Button>
                 )}
@@ -218,6 +218,11 @@ export default function PageHeader() {
                             <SheetClose asChild>
                                 <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60">
                                     Login
+                                </Link>
+                            </SheetClose>
+                             <SheetClose asChild>
+                                <Link href="/register" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                                    Sign Up
                                 </Link>
                             </SheetClose>
                         </>
