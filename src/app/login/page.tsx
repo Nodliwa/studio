@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useUser, setUserData, handleGoogleRedirectResult, useFirebase } from '@/firebase';
+import { setUserData, handleGoogleRedirectResult, useFirebase, useUser } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -63,47 +63,41 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!areServicesAvailable) {
-      return; // Wait for services to be ready.
+      setIsProcessingSocialSignIn(false);
+      return; 
     }
   
-    // We only want to process the redirect result once, on initial load.
-    if (isProcessingSocialSignIn) {
-      handleGoogleRedirectResult(auth)
-        .then((userCredential) => {
-          if (userCredential) {
-            // A user was returned from a redirect. Process them.
-            // The main `useEffect` for `user` will handle the redirect to `/my-plans`.
-            processSocialUser(userCredential);
-          }
-          // Whether a user was returned or not, we're done processing the redirect.
-          setIsProcessingSocialSignIn(false);
-        })
-        .catch((error) => {
-          if (error instanceof FirebaseError) {
-            setFirebaseError(error.message);
-          } else {
-            setFirebaseError('An unexpected error occurred during social sign-in.');
-          }
-          setIsProcessingSocialSignIn(false);
-        });
-    }
-  // We only want this to run once when services are available.
+    handleGoogleRedirectResult(auth)
+      .then((userCredential) => {
+        if (userCredential) {
+          processSocialUser(userCredential);
+        }
+      })
+      .catch((error) => {
+        if (error instanceof FirebaseError) {
+          setFirebaseError(error.message);
+        } else {
+          setFirebaseError('An unexpected error occurred during social sign-in.');
+        }
+      })
+      .finally(() => {
+        setIsProcessingSocialSignIn(false);
+      });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [areServicesAvailable]); 
 
   useEffect(() => {
-    // Redirect a logged-in user to their plans.
-    // This runs whenever the user's auth state is confirmed.
-    if (!isUserLoading && user && !user.isAnonymous) {
+    if (isUserLoading || isProcessingSocialSignIn) return;
+
+    if (user && !user.isAnonymous) {
       router.push('/my-plans');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, isProcessingSocialSignIn, router]);
 
   const onEmailSubmit = async (data: LoginFormValues) => {
     if (!auth) return;
     setFirebaseError(null);
     try {
-      // onAuthStateChanged will handle the redirect
       await signInWithEmailAndPassword(auth, data.email, data.password);
     } catch (error) {
       if (error instanceof FirebaseError) {
@@ -121,10 +115,8 @@ export default function LoginPage() {
     try {
         const userCredential = await initiateGoogleSignIn(auth, isMobile);
         if (userCredential) {
-            // For popup sign-in, process the user immediately.
             await processSocialUser(userCredential);
         }
-        // For redirect, the effect hook will handle it on page load.
     } catch (error) {
         if (error instanceof FirebaseError) {
             if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
@@ -161,9 +153,7 @@ export default function LoginPage() {
     }
   };
 
-  // Only show the main loading indicator while the initial user state is being determined.
-  // The page is still usable even if a social sign-in is processing in the background.
-  if (isUserLoading) {
+  if (isUserLoading || isProcessingSocialSignIn) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
           <p>Loading...</p>
@@ -171,7 +161,6 @@ export default function LoginPage() {
     );
   }
 
-  // If a logged-in user somehow lands here, redirect them.
   if (user && !user.isAnonymous) {
      return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
@@ -194,7 +183,7 @@ export default function LoginPage() {
             <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-center">
-                    <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={handleGoogleSignIn} disabled={isProcessingSocialSignIn}>
+                    <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={handleGoogleSignIn} disabled={isSubmitting}>
                         <GoogleIcon />
                     </Button>
                   </div>
@@ -230,16 +219,16 @@ export default function LoginPage() {
                     {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
                     
                      <div className="pb-6 pt-2 px-6">
-                        <Button type="submit" className="w-full" disabled={isSubmitting || isProcessingSocialSignIn}>
+                        <Button type="submit" className="w-full" disabled={isSubmitting}>
                             {isSubmitting ? 'Logging in...' : 'Login'}
                         </Button>
-                         <div className="mt-4 text-center text-sm">
+                         <p className="mt-4 text-center text-sm">
                             Don't have an account?{' '}
                             <Link href="/register" className="underline">
                                 Sign up
                             </Link>
-                        </div>
-                        <div className="mt-6 text-center text-xs text-muted-foreground">
+                        </p>
+                        <p className="mt-6 text-center text-xs text-muted-foreground">
                         By continuing, you agree to our{' '}
                         <Link href="/terms" className="underline hover:text-primary">
                             Terms of Service
@@ -249,7 +238,7 @@ export default function LoginPage() {
                             Privacy Policy
                         </Link>
                         .
-                        </div>
+                        </p>
                     </div>
                     </form>
                 </div>

@@ -57,8 +57,8 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function RegisterPage() {
   const { auth, firestore, areServicesAvailable } = useFirebase();
-  const router = useRouter();
   const { user, isUserLoading } = useUser();
+  const router = useRouter();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] = useState(true);
@@ -84,41 +84,36 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!areServicesAvailable) {
-      return; // Wait for services to be ready.
+      setIsProcessingSocialSignIn(false);
+      return; 
     }
   
-    // We only want to process the redirect result once, on initial load.
-    if (isProcessingSocialSignIn) {
-      handleGoogleRedirectResult(auth)
-        .then((userCredential) => {
-          if (userCredential) {
-            // A user was returned from a redirect. Process them.
-            // The main `useEffect` for `user` will handle the redirect to `/my-plans`.
-            processSocialUser(userCredential);
-          }
-          // Whether a user was returned or not, we're done processing the redirect.
-          setIsProcessingSocialSignIn(false);
-        })
-        .catch((error) => {
-          if (error instanceof FirebaseError) {
-            setFirebaseError(error.message);
-          } else {
-            setFirebaseError('An unexpected error occurred during social sign-in.');
-          }
-          setIsProcessingSocialSignIn(false);
-        });
-    }
-  // We only want this to run once when services are available.
+    handleGoogleRedirectResult(auth)
+      .then((userCredential) => {
+        if (userCredential) {
+          processSocialUser(userCredential);
+        }
+      })
+      .catch((error) => {
+        if (error instanceof FirebaseError) {
+          setFirebaseError(error.message);
+        } else {
+          setFirebaseError('An unexpected error occurred during social sign-in.');
+        }
+      })
+      .finally(() => {
+        setIsProcessingSocialSignIn(false);
+      });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [areServicesAvailable]);
 
   useEffect(() => {
-    // Redirect a logged-in user to their plans.
-    // This runs whenever the user's auth state is confirmed.
-    if (!isUserLoading && user && !user.isAnonymous) {
+    if (isUserLoading || isProcessingSocialSignIn) return;
+
+    if (user && !user.isAnonymous) {
       router.push('/my-plans');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, isProcessingSocialSignIn, router]);
 
   const onSubmit = async (data: RegisterFormValues) => {
     if (!auth || !firestore) return;
@@ -126,7 +121,6 @@ export default function RegisterPage() {
     
     try {
       const displayName = `${data.firstName} ${data.lastName}`;
-      // onAuthStateChanged will handle the redirect after this completes
       const userCredential = await initiateEmailSignUp(auth, data.email, data.password!, displayName);
       
       if (userCredential?.user) {
@@ -157,13 +151,10 @@ export default function RegisterPage() {
     try {
         const userCredential = await signInFunction(auth, isMobile);
         if (userCredential) {
-            // For popup sign-in, process the user immediately.
             await processSocialUser(userCredential);
         }
-        // For redirect, the effect hook will handle it on page load.
     } catch (error) {
         if (error instanceof FirebaseError) {
-            // Don't show an error if the user closes the popup.
             if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
                 setFirebaseError(error.message);
             }
@@ -174,9 +165,7 @@ export default function RegisterPage() {
     }
   };
   
-  // Only show the main loading indicator while the initial user state is being determined.
-  // The page is still usable even if a social sign-in is processing in the background.
-  if (isUserLoading) {
+  if (isUserLoading || isProcessingSocialSignIn) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
           <p>Loading...</p>
@@ -184,7 +173,6 @@ export default function RegisterPage() {
     );
   }
 
-  // If a logged-in user somehow lands here, redirect them.
   if (user && !user.isAnonymous) {
      return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
@@ -211,13 +199,13 @@ export default function RegisterPage() {
             <CardContent>
                 <div className="space-y-4">
                     <div className="flex justify-center gap-4">
-                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('google')} disabled={isProcessingSocialSignIn}>
+                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('google')} disabled={isSubmitting}>
                             <GoogleIcon />
                         </Button>
-                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('facebook')} disabled={isProcessingSocialSignIn}>
+                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('facebook')} disabled={isSubmitting}>
                             <FacebookIcon />
                         </Button>
-                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('twitter')} disabled={isProcessingSocialSignIn}>
+                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('twitter')} disabled={isSubmitting}>
                             <XIcon />
                         </Button>
                     </div>
@@ -271,26 +259,24 @@ export default function RegisterPage() {
 
                         {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
 
-                        <Button type="submit" className="w-full" disabled={isSubmitting || isProcessingSocialSignIn}>
+                        <Button type="submit" className="w-full" disabled={isSubmitting}>
                             {isSubmitting ? 'Creating Account...' : 'Sign Up'}
                         </Button>
                     </form>
                 </div>
-                <div className="mt-4 text-center text-sm">
+                <p className="mt-4 text-center text-sm">
                     Already have an account?{' '}
                     <Link href="/login" className="underline">
                         Login
                     </Link>
-                </div>
+                </p>
             </CardContent>
             </Card>
             <div className="mt-8 max-w-md w-full text-center p-4 rounded-lg bg-muted/50 border">
                 <h3 className="text-base font-semibold font-headline">Our Commitment to Your Privacy</h3>
                 <p className="text-xs text-muted-foreground mt-2">
-                    We collect only what's needed to create your account and save your plans. Your data is yours—we will never sell it. Everything is securely stored using Google's trusted services, and you are always in control of your information.
-                </p>
-                <p className="text-xs mt-2">
-                    For full details, please read our <Link href="/privacy" className="underline">Privacy Policy</Link>.
+                    We collect only what's needed to create your account and save your plans. Your data is yours—we will never sell it. Everything is securely stored using Google's trusted services, and you are always in control of your information. For full details, please read our{' '}
+                    <Link href="/privacy" className="underline">Privacy Policy</Link>.
                 </p>
             </div>
         </main>
