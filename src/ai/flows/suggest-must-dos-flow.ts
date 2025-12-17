@@ -57,12 +57,12 @@ const suggestMustDosPrompt = ai.definePrompt(
         For each suggestion, also provide default values for the reminder settings: reminderType should be 'email', and reminderDaysBefore should be 3.
 
         Do not suggest any of the following tasks, as they already exist in the user's plan:
-        {{#if existingTitles}}
+        {{#if existingTitles.length}}
           {{#each existingTitles}}
             - {{this}}
           {{/each}}
         {{else}}
-          (No existing tasks)
+          (No existing tasks. You can suggest anything relevant.)
         {{/if}}
       `,
     }
