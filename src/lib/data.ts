@@ -21,7 +21,7 @@ const funeralBudgetData: BudgetCategory[] = [
       order: 2,
       items: [
         { id: "item-2-1", name: "Bread", metric: "per loaf", quantity: 40, unitPrice: 20, total: 0, comment: "" },
-        { id: "item-2-2", name: "Samp (Umngqusho)", metric: "10kg", quantity: 5, unitPrice: 150, total: 0, comment: "" },
+        { id: "item-2-2", name: "Samp", metric: "10kg", quantity: 5, unitPrice: 150, total: 0, comment: "" },
         { id: "item-2-3", name: "Beans", metric: "10kg", quantity: 3, unitPrice: 350, total: 0, comment: "" },
         { id: "item-2-4", name: "Rice", metric: "10 kg", quantity: 5, unitPrice: 175, total: 0, comment: "" },
         { id: "item-2-5", name: "Mealie Meal", metric: "10 kg", quantity: 4, unitPrice: 140, total: 0, comment: "" },
@@ -198,7 +198,7 @@ const weddingBudgetData: BudgetCategory[] = [
     {
         id: "starch", name: "Starch", total: 0, order: 6, items: [
             { id: "starch-1", name: "Bread", metric: "per loaf", quantity: 40, unitPrice: 20, total: 0, comment: "" },
-            { id: "starch-2", name: "Samp (Umngqusho)", metric: "10kg", quantity: 5, unitPrice: 150, total: 0, comment: "" },
+            { id: "starch-2", name: "Samp", metric: "10kg", quantity: 5, unitPrice: 150, total: 0, comment: "" },
             { id: "starch-3", name: "Rice", metric: "10 kg", quantity: 5, unitPrice: 175, total: 0, comment: "" },
             { id: "starch-4", name: "Mealie Meal", metric: "10 kg", quantity: 4, unitPrice: 140, total: 0, comment: "" },
         ]
@@ -287,4 +287,5 @@ export const budgetTemplates = {
  */
 export const initialBudgetData = funeralBudgetData;
 
+    
     
