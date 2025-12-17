@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect, ComponentType } from 'react';
 import { useUser, useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocument } from '@/firebase';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import type { MustDo } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,16 +11,20 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, Trash2, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp, Mail, MessageSquare } from 'lucide-react';
+import { PlusCircle, Trash2, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp, Mail, MessageSquare, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentReference } from 'firebase/firestore';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
+import { suggestMustDos, type SuggestMustDosOutput } from '@/ai/flows/suggest-must-dos-flow';
+import { useToast } from '@/hooks/use-toast';
+
 
 interface MustDosProps {
   budgetId: string;
@@ -129,7 +133,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
               readOnly={item.status === 'done'}
               placeholder="New must-do..."
               />
-              <div className="flex items-center gap-3 text-xs text-muted-foreground ml-4">
+              <div className="flex items-center gap-4 text-xs text-muted-foreground ml-auto">
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-auto w-auto p-1 flex justify-start items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
@@ -183,7 +187,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
             placeholder="Add a note..."
             rows={1}
             className={cn(
-              "h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px] bg-transparent placeholder:text-foreground/50",
+              "h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px] bg-transparent placeholder:text-foreground/50 font-bold",
               "read-only:cursor-default read-only:bg-transparent"
             )}
             readOnly={item.status === 'done'}
@@ -213,13 +217,13 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                           <DropdownMenuItem onClick={() => handleReminderTypeChange('email')}>
-                              <Mail className="mr-2 h-4 w-4" /> Email
+                              <Mail className="mr-2 h-4 w-4" />
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleReminderTypeChange('sms')}>
-                              <MessageSquare className="mr-2 h-4 w-4" /> SMS
+                              <MessageSquare className="mr-2 h-4 w-4" />
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleReminderTypeChange('whatsapp')}>
-                              <WhatsappIcon className="mr-2 h-4 w-4" /> WhatsApp
+                              <WhatsappIcon className="mr-2 h-4 w-4" />
                           </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -250,6 +254,10 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
   const firestore = useFirestore();
   const [localMustDos, setLocalMustDos] = useState<MustDo[]>([]);
   const [isLoading, setIsLoading] = useState(!isTemplateMode && !mustDos);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [suggestions, setSuggestions] = useState<SuggestMustDosOutput['suggestions'] | null>(null);
+  const [selectedSuggestions, setSelectedSuggestions] = useState<Record<string, boolean>>({});
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isTemplateMode) return;
@@ -380,7 +388,106 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
     deleteDocument(docRef);
   };
 
+  const handleGetSuggestions = async () => {
+    if (!eventType) {
+        toast({
+            variant: "destructive",
+            title: "Cannot get suggestions",
+            description: "An event type must be set in the event details first.",
+        });
+        return;
+    }
+
+    setIsSuggesting(true);
+    setSuggestions(null); // Clear previous suggestions
+    
+    try {
+        const existingTitles = items.map(item => item.title);
+        const result = await suggestMustDos({ eventType, existingTitles });
+        
+        if (result.suggestions && result.suggestions.length > 0) {
+            setSuggestions(result.suggestions);
+            // Pre-select all suggestions by default
+            const initialSelection = result.suggestions.reduce((acc, suggestion) => {
+                acc[suggestion.title] = true;
+                return acc;
+            }, {} as Record<string, boolean>);
+            setSelectedSuggestions(initialSelection);
+        } else {
+            toast({ title: "No new suggestions", description: "The AI couldn't find any new suggestions for this event type." });
+        }
+    } catch (error) {
+        console.error("Error getting AI suggestions:", error);
+        toast({
+            variant: "destructive",
+            title: "AI Suggestion Failed",
+            description: "Could not retrieve suggestions. Please try again.",
+        });
+    } finally {
+        setIsSuggesting(false);
+    }
+  };
+
+  const handleAddSuggestions = async () => {
+    if (!suggestions || isTemplateMode || !user || !budgetRef || !firestore) {
+      setSuggestions(null);
+      return;
+    }
+  
+    const selected = suggestions.filter(s => selectedSuggestions[s.title]);
+  
+    if (selected.length === 0) {
+      setSuggestions(null);
+      return;
+    }
+  
+    const batch = writeBatch(firestore);
+    const mustDosCollection = collection(budgetRef, 'mustDos');
+  
+    selected.forEach(suggestion => {
+      const newDocRef = doc(mustDosCollection); // Auto-generate ID
+      const newItem: Omit<MustDo, 'id' > = {
+        budgetId,
+        userId: user.uid,
+        title: suggestion.title,
+        note: suggestion.note,
+        status: 'todo',
+        priority: suggestion.priority,
+        createdAt: serverTimestamp(),
+        reminderType: suggestion.reminderType,
+        reminderDaysBefore: suggestion.reminderDaysBefore,
+        deadline: '', // No deadline by default
+      };
+      batch.set(newDocRef, newItem);
+    });
+  
+    try {
+      await batch.commit();
+      toast({
+        title: "Suggestions Added",
+        description: `${selected.length} new Must-Do item(s) have been added to your list.`,
+      });
+    } catch (error) {
+      console.error("Error adding suggestions in batch:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not add the selected suggestions.",
+      });
+    }
+  
+    setSuggestions(null); // Close the dialog
+  };
+
+  const handleSuggestionSelectionChange = (title: string, isChecked: boolean) => {
+    setSelectedSuggestions(prev => ({
+      ...prev,
+      [title]: isChecked,
+    }));
+  };
+
   return (
+    <>
     <Card className="h-full bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
       <CardHeader className="p-4">
         <CardTitle className="font-headline text-2xl">Must-Do's</CardTitle>
@@ -410,9 +517,58 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add a Must-Do
             </Button>
+            {!isTemplateMode && (
+                <Button variant="outline" onClick={handleGetSuggestions} disabled={isSuggesting} className="bg-white/10 hover:bg-white/20 border-white/30">
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    {isSuggesting ? 'Thinking...' : 'Suggest with AI'}
+                </Button>
+            )}
           </div>
         </div>
       </CardContent>
     </Card>
+
+    <Dialog open={!!suggestions} onOpenChange={(open) => !open && setSuggestions(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>AI Suggestions</DialogTitle>
+            <DialogDescription>
+              Here are a few suggestions based on your event type. Select the ones you'd like to add.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-2">
+            {suggestions?.map((suggestion, index) => (
+              <div key={index} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/50">
+                <Checkbox
+                  id={`suggestion-${index}`}
+                  checked={selectedSuggestions[suggestion.title]}
+                  onCheckedChange={(checked) => handleSuggestionSelectionChange(suggestion.title, !!checked)}
+                  className="mt-1"
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <label
+                    htmlFor={`suggestion-${index}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {suggestion.title}
+                  </label>
+                  <p className="text-sm text-muted-foreground">
+                    {suggestion.note}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSuggestions(null)}>Cancel</Button>
+            <Button onClick={handleAddSuggestions}>
+                Add Selected ({Object.values(selectedSuggestions).filter(Boolean).length})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
+
+    
