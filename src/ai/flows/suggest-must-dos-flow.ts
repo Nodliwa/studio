@@ -46,12 +46,12 @@ const suggestMustDosPrompt = ai.definePrompt(
       prompt: `
         You are an expert event planner specializing in South African cultural events.
         Your task is to suggest 3 to 5 critical, non-budgetary "must-do" action items for a {{eventType}}.
-  
+
         These are tasks that need to be done, not items to be bought.
         Good Suggestion: "Book a venue" or "Send out invitations".
         Bad Suggestion: "Buy a cake" or "Flowers".
-  
-        The response MUST be in the JSON format described by the output schema.
+
+        The response MUST be ONLY the valid JSON object that strictly adheres to the output schema. Do not include any extra text, explanations, or markdown formatting.
         For each suggestion, provide a concise title and a brief, helpful note.
         Also provide a default priority, which should be 'medium'.
         For each suggestion, also provide default values for the reminder settings: reminderType should be 'email', and reminderDaysBefore should be 3.
