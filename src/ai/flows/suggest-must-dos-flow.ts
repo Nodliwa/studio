@@ -33,7 +33,7 @@ const SuggestionSchema = z.object({
 
 // Define the schema for the output of the flow.
 export const SuggestMustDosOutputSchema = z.object({
-  suggestions: z.array(SuggestionSchema).describe('An array of 3 to 5 suggested must-do items.'),
+  suggestions: z.array(SuggestionSchema).describe('An array of 3 to 5 suggested must-do items. If no suggestions can be found, return an empty array.'),
 });
 export type SuggestMustDosOutput = z.infer<typeof SuggestMustDosOutputSchema>;
 
@@ -51,19 +51,19 @@ const suggestMustDosPrompt = ai.definePrompt(
         Good Suggestion: "Book a venue" or "Send out invitations".
         Bad Suggestion: "Buy a cake" or "Flowers".
 
-        The response MUST be ONLY the valid JSON object that strictly adheres to the output schema. Do not include any extra text, explanations, or markdown formatting.
+        The response MUST be ONLY the valid JSON object that strictly adheres to the output schema.
+        Do not include any extra text, explanations, or markdown formatting before or after the JSON object.
+        If you cannot think of any relevant suggestions, return an object with an empty "suggestions" array: { "suggestions": [] }.
+
         For each suggestion, provide a concise title and a brief, helpful note.
-        Also provide a default priority, which should be 'medium'.
-        For each suggestion, also provide default values for the reminder settings: reminderType should be 'email', and reminderDaysBefore should be 3.
+        Set the default priority to 'medium'.
+        Set the default reminderType to 'email'.
+        Set the default reminderDaysBefore to 3.
 
         Do not suggest any of the following tasks, as they already exist in the user's plan:
-        {{#if existingTitles.length}}
-          {{#each existingTitles}}
-            - {{this}}
-          {{/each}}
-        {{else}}
-          (No existing tasks. You can suggest anything relevant.)
-        {{/if}}
+        {{#each existingTitles}}
+          - {{this}}
+        {{/each}}
       `,
     }
   );
@@ -79,9 +79,12 @@ const suggestMustDosFlow = ai.defineFlow(
     const llmResponse = await suggestMustDosPrompt(input);
     const output = llmResponse.output;
 
+    // Validate that the model returned a structured output.
+    // Genkit's `definePrompt` with an output schema handles the parsing. 
+    // If `output` is null/undefined, it means the model's response did not match the schema.
     if (!output) {
-      // Throw an error if the model returns no output, which will be caught by the client.
-      throw new Error('The AI model failed to return a valid structured response.');
+      console.error("AI model failed to return a valid structured response. Raw response:", llmResponse.raw());
+      throw new Error('The AI model failed to return a valid structured response. Please check the logs.');
     }
     
     return output;
