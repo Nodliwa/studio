@@ -13,3 +13,4 @@ To get started, take a look at src/app/page.tsx.
 <!-- Ensuring the latest build is ready for the domain switch. -->
 <!-- Final build trigger to ensure latest code is deployed for domain connection. -->
 <!-- Another build attempt to clear the error state in the dashboard. -->
+<!-- Triggering another build to get a new signed URL, unrelated to DNS status. -->
