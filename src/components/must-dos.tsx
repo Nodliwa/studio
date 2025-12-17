@@ -215,15 +215,15 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
                               <ReminderIcon className="h-4 w-4" />
                           </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent>
+                      <DropdownMenuContent className="min-w-0 w-auto">
                           <DropdownMenuItem onClick={() => handleReminderTypeChange('email')}>
-                              <Mail className="mr-2 h-4 w-4" />
+                              <Mail className="mr-2 h-4 w-4" /> Email
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleReminderTypeChange('sms')}>
-                              <MessageSquare className="mr-2 h-4 w-4" />
+                              <MessageSquare className="mr-2 h-4 w-4" /> SMS
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleReminderTypeChange('whatsapp')}>
-                              <WhatsappIcon className="mr-2 h-4 w-4" />
+                              <WhatsappIcon className="mr-2 h-4 w-4" /> WhatsApp
                           </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
