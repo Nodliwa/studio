@@ -27,8 +27,8 @@ const emailRegisterSchema = z.object({
   cellphone: z.string().optional(),
   password: z.string().min(6, 'Password must be at least 6 characters long'),
   recaptcha: z.string().min(1, 'Please complete the reCAPTCHA'),
-  consent: z.boolean().refine(value => value === true, {
-    message: "You must accept the terms and conditions.",
+  consent: z.literal(true, {
+    errorMap: () => ({ message: "You must accept the terms and conditions." }),
   }),
 });
 
@@ -283,7 +283,7 @@ export default function RegisterPage() {
                         </div>
                         
                          <div className="items-top flex space-x-2">
-                            <Checkbox id="consent" {...register('consent')} onCheckedChange={(checked) => setValue('consent', checked as boolean, { shouldValidate: true })} />
+                            <Checkbox id="consent" {...register('consent')} onCheckedChange={(checked) => setValue('consent', checked === true, { shouldValidate: true })} />
                             <div className="grid gap-1.5 leading-none">
                                 <label
                                 htmlFor="consent"
@@ -337,3 +337,5 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+    
