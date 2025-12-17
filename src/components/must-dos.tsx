@@ -127,7 +127,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
               onChange={(e) => setTitle(e.target.value)}
               onBlur={() => handleBlur('title')}
               className={cn(
-                  "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent flex-grow font-bold placeholder:font-bold placeholder:text-foreground/60",
+                  "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent flex-grow font-bold placeholder:font-bold placeholder:text-foreground/60 w-full",
                   item.status === 'done' && "line-through text-muted-foreground"
               )}
               readOnly={item.status === 'done'}

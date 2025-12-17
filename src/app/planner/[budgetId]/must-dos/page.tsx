@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import type { MustDo } from "@/lib/types";
 import PageHeader from "@/components/page-header";
 import { MustDos } from "@/components/must-dos";
@@ -12,6 +12,7 @@ import { Budget } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 export default function MustDosPage({ params: { budgetId } }: { params: { budgetId: string } }) {
@@ -35,7 +36,7 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
 
   const { data: mustDos, isLoading: mustDosLoading } = useCollection<MustDo>(mustDosQuery);
 
-  if (isUserLoading || budgetLoading || mustDosLoading) {
+  if (isUserLoading) {
     return (
         <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
             <p>Loading...</p>
@@ -53,18 +54,22 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
            <div className="mt-8">
             <Button variant="outline" onClick={() => router.back()}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
+                Back to Plan
             </Button>
           </div>
 
           <div className="mt-8">
-            <MustDos 
-                budgetId={budgetId} 
-                budgetRef={budgetDocRef} 
-                isTemplateMode={false} 
-                mustDos={mustDos} 
-                eventType={budget?.eventType}
-            />
+             {(budgetLoading || mustDosLoading) ? (
+                 <Skeleton className="w-full h-[400px] rounded-lg" />
+             ) : (
+                <MustDos 
+                    budgetId={budgetId} 
+                    budgetRef={budgetDocRef} 
+                    isTemplateMode={false} 
+                    mustDos={mustDos} 
+                    eventType={budget?.eventType}
+                />
+             )}
           </div>
         </main>
       </div>
