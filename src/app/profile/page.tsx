@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect } from 'react';
@@ -7,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import PageHeader from '@/components/page-header';
 import Greeter from '@/components/greeter';
-import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, useAuth } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
@@ -17,6 +16,21 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { sendPasswordResetEmail, deleteUser } from 'firebase/auth';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { FirebaseError } from 'firebase/app';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
 
 const profileSchema = z.object({
     knownAs: z.string().min(1, 'This field is required'),
@@ -28,6 +42,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
     const { user: authUser, isUserLoading: isAuthUserLoading } = useUser();
+    const auth = useAuth();
     const firestore = useFirestore();
     const router = useRouter();
     const { toast } = useToast();
@@ -68,6 +83,20 @@ export default function ProfilePage() {
         }
     }, [userProfile, reset]);
 
+    const getUserInitials = () => {
+        if (userProfile?.knownAs) {
+          return userProfile.knownAs[0].toUpperCase();
+        }
+        if (userProfile?.displayName) {
+          const names = userProfile.displayName.split(' ');
+          return names.map(name => name[0]).join('').toUpperCase();
+        }
+        if (authUser?.email) {
+          return authUser.email[0].toUpperCase();
+        }
+        return 'U';
+      }
+
     const onSubmit = async (data: ProfileFormValues) => {
         if (!userDocRef) return;
         
@@ -80,7 +109,7 @@ export default function ProfilePage() {
                 title: 'Profile Updated',
                 description: 'Your changes have been saved successfully.',
             });
-             reset(data); // Resets the form's dirty state
+             reset(data, { keepIsDirty: false });
         } catch (error) {
             console.error("Error updating profile:", error);
             toast({
@@ -90,6 +119,47 @@ export default function ProfilePage() {
             });
         }
     };
+    
+    const handlePasswordReset = async () => {
+        if (!authUser?.email) return;
+        try {
+          await sendPasswordResetEmail(auth, authUser.email);
+          toast({
+            title: "Password Reset Email Sent",
+            description: `A link to reset your password has been sent to ${authUser.email}.`,
+          });
+        } catch (error) {
+          console.error("Error sending password reset email:", error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not send password reset email. Please try again later.",
+          });
+        }
+      };
+    
+      const handleDeleteAccount = async () => {
+        if (!authUser) return;
+        try {
+          await deleteUser(authUser);
+          toast({
+            title: "Account Deleted",
+            description: "Your account has been permanently deleted.",
+          });
+          router.push('/');
+        } catch (error) {
+          console.error("Error deleting account:", error);
+          let description = "Could not delete your account. Please try again.";
+          if (error instanceof FirebaseError && error.code === 'auth/requires-recent-login') {
+            description = "This is a sensitive operation. Please log out and log back in before deleting your account.";
+          }
+          toast({
+            variant: "destructive",
+            title: "Deletion Failed",
+            description,
+          });
+        }
+      };
 
     if (isAuthUserLoading || isProfileLoading) {
         return (
@@ -105,11 +175,11 @@ export default function ProfilePage() {
                 <PageHeader />
                 <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
                     <Greeter />
-                    <div className="mt-8 max-w-2xl w-full mx-auto">
+                    <div className="mt-8 max-w-2xl w-full mx-auto space-y-8">
                         <Card>
                             <CardHeader>
                                 <CardTitle>My Profile</CardTitle>
-                                <CardDescription>Manage your personal information and account settings.</CardDescription>
+                                <CardDescription>Manage your personal information.</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 {(isAuthUserLoading || isProfileLoading) ? (
@@ -119,42 +189,101 @@ export default function ProfilePage() {
                                         <Skeleton className="h-10 w-full" />
                                     </div>
                                 ) : (
-                                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="knownAs">Known As</Label>
-                                            <Controller
-                                                name="knownAs"
-                                                control={control}
-                                                render={({ field }) => <Input id="knownAs" {...field} />}
-                                            />
-                                            {errors.knownAs && <p className="text-sm text-destructive">{errors.knownAs.message}</p>}
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="displayName">Full Name</Label>
-                                            <Controller
-                                                name="displayName"
-                                                control={control}
-                                                render={({ field }) => <Input id="displayName" {...field} />}
-                                            />
-                                            {errors.displayName && <p className="text-sm text-destructive">{errors.displayName.message}</p>}
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="email">Email</Label>
-                                            <Controller
-                                                name="email"
-                                                control={control}
-                                                render={({ field }) => <Input id="email" type="email" {...field} disabled />}
-                                            />
-                                        </div>
-                                        <div className="flex justify-end">
-                                            <Button type="submit" disabled={isSubmitting || !isDirty}>
-                                                {isSubmitting ? 'Saving...' : 'Save Changes'}
-                                            </Button>
-                                        </div>
-                                    </form>
+                                    <div className="flex items-center gap-6">
+                                        <Avatar className="h-20 w-20">
+                                            <AvatarFallback className="text-3xl">{getUserInitials()}</AvatarFallback>
+                                        </Avatar>
+                                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 flex-1">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="knownAs">Known As</Label>
+                                                <Controller
+                                                    name="knownAs"
+                                                    control={control}
+                                                    render={({ field }) => <Input id="knownAs" {...field} />}
+                                                />
+                                                {errors.knownAs && <p className="text-sm text-destructive">{errors.knownAs.message}</p>}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="displayName">Full Name</Label>
+                                                <Controller
+                                                    name="displayName"
+                                                    control={control}
+                                                    render={({ field }) => <Input id="displayName" {...field} />}
+                                                />
+                                                {errors.displayName && <p className="text-sm text-destructive">{errors.displayName.message}</p>}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="email">Email</Label>
+                                                <Controller
+                                                    name="email"
+                                                    control={control}
+                                                    render={({ field }) => <Input id="email" type="email" {...field} disabled />}
+                                                />
+                                            </div>
+                                            <div className="flex justify-end">
+                                                <Button type="submit" disabled={isSubmitting || !isDirty}>
+                                                    {isSubmitting ? 'Saving...' : 'Save Changes'}
+                                                </Button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 )}
                             </CardContent>
                         </Card>
+                        
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Account</CardTitle>
+                                <CardDescription>Manage your account settings.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex items-center justify-between p-4 border rounded-lg">
+                                    <div>
+                                        <Label className="font-semibold">Reset Password</Label>
+                                        <p className="text-sm text-muted-foreground">Receive an email with a link to reset your password.</p>
+                                    </div>
+                                    <Button variant="outline" onClick={handlePasswordReset}>Send Email</Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-destructive">
+                             <CardHeader>
+                                <CardTitle className="text-destructive">Danger Zone</CardTitle>
+                                <CardDescription>These actions are permanent and cannot be undone.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center justify-between p-4 bg-destructive/10 rounded-lg">
+                                     <div>
+                                        <Label className="font-semibold text-destructive">Delete Account</Label>
+                                        <p className="text-sm text-destructive/80">Permanently delete your account and all associated data.</p>
+                                    </div>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="destructive">Delete Account</Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This action cannot be undone. This will permanently delete your account, your profile, and all of your plans.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    className="bg-destructive hover:bg-destructive/90"
+                                                    onClick={handleDeleteAccount}
+                                                >
+                                                    Yes, delete my account
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </div>
+                            </CardContent>
+                        </Card>
+
                     </div>
                 </main>
             </div>

@@ -1,11 +1,10 @@
-
 'use client';
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { useUser, useFirestore } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { LogOut, PlusCircle, User, ListChecks, Wallet, CrossIcon, Menu, Star, Gift } from 'lucide-react';
@@ -31,7 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useState } from "react";
-import type { Budget, BudgetCategory } from "@/lib/types";
+import type { Budget, BudgetCategory, User as AppUser } from "@/lib/types";
 import { v4 as uuidv4 } from 'uuid';
 import { budgetTemplates } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
@@ -60,6 +59,13 @@ export default function PageHeader() {
   const firestore = useFirestore();
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+
+    const userDocRef = useMemoFirebase(() => 
+        (firestore && user) ? doc(firestore, 'users', user.uid) : null,
+    [firestore, user]);
+
+    const { data: userProfile } = useDoc<AppUser>(userDocRef);
+
 
   const handleLogout = () => {
     signOut(auth).then(() => {
@@ -92,6 +98,11 @@ export default function PageHeader() {
   };
   
   const getUserInitials = () => {
+    if (userProfile?.knownAs && userProfile?.displayName) {
+        const firstInitial = userProfile.knownAs[0] || '';
+        const lastInitial = userProfile.displayName.split(' ').pop()?.[0] || '';
+        return `${firstInitial}${lastInitial}`.toUpperCase();
+    }
     if (user?.displayName) {
       const names = user.displayName.split(' ');
       return names.map(name => name[0]).join('').toUpperCase();
@@ -198,7 +209,7 @@ export default function PageHeader() {
                       <DropdownMenuContent className="w-56" align="end" forceMount>
                         <DropdownMenuItem disabled>
                            <div className="flex flex-col space-y-1">
-                            <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                            <p className="text-sm font-medium leading-none">{userProfile?.displayName || user.displayName}</p>
                             <p className="text-xs leading-none text-muted-foreground">
                               {user.email}
                             </p>
