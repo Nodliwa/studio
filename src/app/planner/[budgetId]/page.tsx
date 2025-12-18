@@ -203,27 +203,29 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
             budgetId: newBudgetId,
           };
           batch.set(categoryRef, categoryData);
-          
-           if (!mustDos || mustDos.length === 0) {
-                const mustDoTemplate = [
-                    { title: 'Confirm venue access time', note: 'Key collection is with security', deadline: '' },
-                    { title: 'Pick up decorations', note: '', deadline: '' }
-                ];
-                mustDoTemplate.forEach(item => {
-                    const mustDoRef = doc(collection(budgetDocRef, 'mustDos'));
-                    batch.set(mustDoRef, {
-                        ...item,
-                        budgetId: newBudgetId,
-                        userId: user.uid,
-                        status: 'todo',
-                        priority: 'medium',
-                        createdAt: serverTimestamp(),
-                        reminderType: 'none',
-                        reminderDaysBefore: 1,
-                    });
-                });
-            }
         });
+
+        // Add initial must-dos ONCE, not in the loop
+        if (!mustDos || mustDos.length === 0) {
+            const mustDoTemplate = [
+                { title: 'Confirm venue access time', note: 'Key collection is with security', deadline: '' },
+                { title: 'Pick up decorations', note: '', deadline: '' }
+            ];
+            mustDoTemplate.forEach(item => {
+                const mustDoRef = doc(collection(budgetDocRef, 'mustDos'));
+                batch.set(mustDoRef, {
+                    ...item,
+                    budgetId: newBudgetId,
+                    userId: user.uid,
+                    status: 'todo',
+                    priority: 'medium',
+                    createdAt: serverTimestamp(),
+                    reminderType: 'none',
+                    reminderDaysBefore: 1,
+                });
+            });
+        }
+        
         await batch.commit();
         
         // The useCollection hook will now fetch the newly created categories,
@@ -439,5 +441,4 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
-
     
