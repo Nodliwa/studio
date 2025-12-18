@@ -392,12 +392,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
             </div>
           </div>
           
-           {!isTemplateMode && (
-            <div className="mt-8">
-              <RsvpManager budgetId={budgetId} rsvps={rsvps} />
-            </div>
-          )}
-
            <p className="text-center text-sm text-muted-foreground mt-8">
             Click on each category below to open shopping items and start creating your plan.
           </p>
@@ -433,6 +427,12 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
                 </SortableContext>
               </DndContext>
             </div>
+            
+            {!isTemplateMode && (
+                <div className="mt-8">
+                  <RsvpManager budgetId={budgetId} rsvps={rsvps} />
+                </div>
+            )}
 
         </main>
       </div>
