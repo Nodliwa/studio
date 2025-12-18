@@ -9,6 +9,7 @@ import PageHeader from "@/components/page-header";
 import { BudgetAccordion } from "@/components/budget-accordion";
 import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
+import { RsvpManager } from "@/components/RsvpManager";
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn, setDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc, writeBatch, setDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import {
@@ -29,6 +30,8 @@ import {
 import Greeter from '@/components/greeter';
 import { Card, CardContent } from '@/components/ui/card';
 import { v4 as uuidv4 } from 'uuid';
+import type { RSVP } from '@/lib/types';
+
 
 const funeralQuotes = [
     '"Blessed are those who mourn, for they will be comforted." - Matthew 5:4',
@@ -101,6 +104,16 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   ), [mustDosCollection]);
 
   const { data: mustDos } = useCollection<MustDo>(mustDosQuery);
+  
+  const rsvpsCollection = useMemoFirebase(() => (
+    !isTemplateMode && user && budgetDocRef ? collection(budgetDocRef, 'rsvps') : null
+  ), [isTemplateMode, user, budgetDocRef]);
+
+  const rsvpsQuery = useMemoFirebase(() => (
+    rsvpsCollection ? query(rsvpsCollection, orderBy('respondedAt', 'desc')) : null
+  ), [rsvpsCollection]);
+
+  const { data: rsvps, isLoading: rsvpsLoading } = useCollection<RSVP>(rsvpsQuery);
 
   const eventType = isTemplateMode ? searchParams.get('eventType') : budget?.eventType;
 
@@ -341,7 +354,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     }
   };
 
-  if (isUserLoading || (!isTemplateMode && (categoriesLoading || budgetLoading)) || budgetData.length === 0) {
+  if (isUserLoading || (!isTemplateMode && (categoriesLoading || budgetLoading || rsvpsLoading)) || budgetData.length === 0) {
     return (
         <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
             <p>Loading...</p>
@@ -362,8 +375,8 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
             <Greeter quote={eventQuote} />
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-            <div className="lg:col-span-1 flex flex-col">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+            <div className="lg:col-span-2 flex flex-col">
               <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} eventType={eventType} />
             </div>
 
@@ -378,6 +391,12 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
               />
             </div>
           </div>
+          
+           {!isTemplateMode && (
+            <div className="mt-8">
+              <RsvpManager budgetId={budgetId} rsvps={rsvps} />
+            </div>
+          )}
 
            <p className="text-center text-sm text-muted-foreground mt-8">
             Click on each category below to open shopping items and start creating your plan.
@@ -420,3 +439,5 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
+
+    
