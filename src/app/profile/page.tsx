@@ -10,7 +10,6 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocki
 import { doc } from 'firebase/firestore';
 import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -30,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { FirebaseError } from 'firebase/app';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 
 
 const profileSchema = z.object({
@@ -176,12 +176,12 @@ export default function ProfilePage() {
                 <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
                     <Greeter />
                     <div className="mt-8 max-w-2xl w-full mx-auto space-y-8">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>My Profile</CardTitle>
-                                <CardDescription>Manage your personal information.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
+
+                        {/* --- MY PROFILE --- */}
+                        <div>
+                            <h2 className="text-2xl font-semibold font-headline">My Profile</h2>
+                            <p className="text-muted-foreground mt-1">Manage your personal information.</p>
+                            <div className="mt-6 p-6 border rounded-lg">
                                 {(isAuthUserLoading || isProfileLoading) ? (
                                     <div className="space-y-4">
                                         <Skeleton className="h-10 w-full" />
@@ -228,65 +228,58 @@ export default function ProfilePage() {
                                         </form>
                                     </div>
                                 )}
-                            </CardContent>
-                        </Card>
-                        
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Account</CardTitle>
-                                <CardDescription>Manage your account settings.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex items-center justify-between p-4 border rounded-lg">
-                                    <div>
-                                        <Label className="font-semibold">Reset Password</Label>
-                                        <p className="text-sm text-muted-foreground">Receive an email with a link to reset your password.</p>
-                                    </div>
-                                    <Button variant="outline" onClick={handlePasswordReset}>Send Email</Button>
-                                </div>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </div>
 
-                        <Card className="border-destructive">
-                             <CardHeader>
-                                <CardTitle className="text-destructive">Danger Zone</CardTitle>
-                                <CardDescription>These actions are permanent and cannot be undone.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex items-center justify-between p-4 bg-destructive/10 rounded-lg">
-                                     <div>
-                                        <Label className="font-semibold text-destructive">Delete Account</Label>
-                                        <p className="text-sm text-destructive/80">Permanently delete your account and all associated data.</p>
-                                    </div>
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="destructive">Delete Account</Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    This action cannot be undone. This will permanently delete your account, your profile, and all of your plans.
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction
-                                                    className="bg-destructive hover:bg-destructive/90"
-                                                    onClick={handleDeleteAccount}
-                                                >
-                                                    Yes, delete my account
-                                                </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
+                        {/* --- ACCOUNT --- */}
+                        <div>
+                            <h2 className="text-2xl font-semibold font-headline">Account</h2>
+                            <p className="text-muted-foreground mt-1">Manage your account settings.</p>
+                            <div className="mt-6 p-6 border rounded-lg flex items-center justify-between">
+                                <div>
+                                    <Label className="font-semibold">Reset Password</Label>
+                                    <p className="text-sm text-muted-foreground">Receive an email with a link to reset your password.</p>
                                 </div>
-                            </CardContent>
-                        </Card>
+                                <Button variant="outline" onClick={handlePasswordReset}>Send Email</Button>
+                            </div>
+                        </div>
+
+                        {/* --- DANGER ZONE --- */}
+                        <div>
+                            <h2 className="text-2xl font-semibold font-headline text-destructive">Danger Zone</h2>
+                            <p className="text-muted-foreground mt-1">These actions are permanent and cannot be undone.</p>
+                            <div className="mt-6 p-6 border border-destructive rounded-lg bg-destructive/5 flex items-center justify-between">
+                                 <div>
+                                    <Label className="font-semibold text-destructive">Delete Account</Label>
+                                    <p className="text-sm text-destructive/80">Permanently delete your account and all associated data.</p>
+                                </div>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive">Delete Account</Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This action cannot be undone. This will permanently delete your account, your profile, and all of your plans.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction
+                                                className="bg-destructive hover:bg-destructive/90"
+                                                onClick={handleDeleteAccount}
+                                            >
+                                                Yes, delete my account
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
+                        </div>
 
                     </div>
                 </main>
             </div>
         </div>
     );
-}
