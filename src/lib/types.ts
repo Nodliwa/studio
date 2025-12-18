@@ -38,6 +38,7 @@ export interface User {
     email: string;
     displayName: string;
     knownAs?: string;
+    photoURL?: string;
 }
 
 export interface MustDo {

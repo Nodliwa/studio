@@ -1,3 +1,4 @@
+
 'use client';
 import Image from "next/image";
 import Link from "next/link";
@@ -35,7 +36,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { budgetTemplates } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "./ui/card";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 
 function calculateInitialTotal(categories: BudgetCategory[]): number {
@@ -202,7 +203,8 @@ export default function PageHeader() {
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                            <Avatar>
-                              <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                                <AvatarImage src={userProfile?.photoURL || user.photoURL || undefined} alt="Profile picture" />
+                                <AvatarFallback>{getUserInitials()}</AvatarFallback>
                            </Avatar>
                         </Button>
                       </DropdownMenuTrigger>

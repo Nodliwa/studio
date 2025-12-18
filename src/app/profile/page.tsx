@@ -1,13 +1,13 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import PageHeader from '@/components/page-header';
 import Greeter from '@/components/greeter';
-import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, useAuth } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, useAuth, getSdks } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { sendPasswordResetEmail, deleteUser } from 'firebase/auth';
+import { sendPasswordResetEmail, deleteUser, updateProfile } from 'firebase/auth';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,11 +27,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 import { FirebaseError } from 'firebase/app';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
-
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { Progress } from '@/components/ui/progress';
 
 const profileSchema = z.object({
     knownAs: z.string().min(1, 'This field is required'),
@@ -47,12 +47,14 @@ export default function ProfilePage() {
     const firestore = useFirestore();
     const router = useRouter();
     const { toast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
     const userDocRef = useMemoFirebase(() => 
         (firestore && authUser) ? doc(firestore, 'users', authUser.uid) : null,
     [firestore, authUser]);
 
-    const { data: userProfile, isLoading: isProfileLoading } = useDoc<AppUser>(userDocRef);
+    const { data: userProfile, isLoading: isProfileLoading, error: profileError } = useDoc<AppUser>(userDocRef);
 
     const { 
         control, 
@@ -99,13 +101,20 @@ export default function ProfilePage() {
       }
 
     const onSubmit = async (data: ProfileFormValues) => {
-        if (!userDocRef) return;
+        if (!userDocRef || !authUser) return;
         
         try {
+            // Update auth profile first if display name changed
+            if(data.displayName !== authUser.displayName) {
+                await updateProfile(authUser, { displayName: data.displayName });
+            }
+
+            // Then update Firestore
             updateDocumentNonBlocking(userDocRef, {
                 knownAs: data.knownAs,
                 displayName: data.displayName
             });
+
             toast({
                 title: 'Profile Updated',
                 description: 'Your changes have been saved successfully.',
@@ -161,8 +170,42 @@ export default function ProfilePage() {
           });
         }
       };
+      
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file || !authUser || !userDocRef) return;
 
-    if (isAuthUserLoading || isProfileLoading) {
+        const { storage } = getSdks(auth.app);
+        const storageRef = ref(storage, `profile-pictures/${authUser.uid}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                setUploadProgress(progress);
+            },
+            (error) => {
+                console.error("Upload failed:", error);
+                setUploadProgress(null);
+                toast({
+                    variant: "destructive",
+                    title: "Upload Failed",
+                    description: "Your profile picture could not be uploaded.",
+                });
+            },
+            async () => {
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                await updateProfile(authUser, { photoURL: downloadURL });
+                updateDocumentNonBlocking(userDocRef, { photoURL: downloadURL });
+                setUploadProgress(null);
+                toast({
+                    title: "Profile Picture Updated",
+                });
+            }
+        );
+    };
+
+    if (isAuthUserLoading || (isProfileLoading && !profileError)) {
         return (
             <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
                 <p>Loading profile...</p>
@@ -178,7 +221,6 @@ export default function ProfilePage() {
                     <Greeter />
                     <div className="mt-8 max-w-2xl w-full mx-auto space-y-8">
 
-                        {/* --- MY PROFILE --- */}
                         <div>
                             <h2 className="text-2xl font-semibold font-headline">My Profile</h2>
                             <p className="text-muted-foreground mt-1">Manage your personal information.</p>
@@ -191,10 +233,35 @@ export default function ProfilePage() {
                                     </div>
                                 ) : (
                                     <div className="flex items-center gap-6">
-                                        <Avatar className="h-20 w-20">
-                                            <AvatarFallback className="text-3xl">{getUserInitials()}</AvatarFallback>
-                                        </Avatar>
+                                        <div className="relative">
+                                            <Avatar className="h-24 w-24">
+                                                <AvatarImage src={userProfile?.photoURL || authUser?.photoURL || undefined} alt="Profile picture" />
+                                                <AvatarFallback className="text-3xl">{getUserInitials()}</AvatarFallback>
+                                            </Avatar>
+                                            <Button
+                                                size="sm"
+                                                className="absolute bottom-0 right-0 h-7 w-7 rounded-full"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                disabled={uploadProgress !== null}
+                                            >
+                                                +
+                                            </Button>
+                                            <input
+                                                type="file"
+                                                ref={fileInputRef}
+                                                onChange={handleFileChange}
+                                                className="hidden"
+                                                accept="image/png, image/jpeg"
+                                            />
+                                        </div>
+
                                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 flex-1">
+                                            {uploadProgress !== null && (
+                                                <div className="space-y-1">
+                                                    <Label>Uploading...</Label>
+                                                    <Progress value={uploadProgress} />
+                                                </div>
+                                            )}
                                             <div className="space-y-2">
                                                 <Label htmlFor="knownAs">Known As</Label>
                                                 <Controller
@@ -232,7 +299,6 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        {/* --- ACCOUNT --- */}
                         <div>
                             <h2 className="text-2xl font-semibold font-headline">Account</h2>
                             <p className="text-muted-foreground mt-1">Manage your account settings.</p>
@@ -245,7 +311,6 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        {/* --- DANGER ZONE --- */}
                         <div>
                             <h2 className="text-2xl font-semibold font-headline text-destructive">Danger Zone</h2>
                             <p className="text-muted-foreground mt-1">These actions are permanent and cannot be undone.</p>
@@ -278,7 +343,6 @@ export default function ProfilePage() {
                                 </AlertDialog>
                             </div>
                         </div>
-
                     </div>
                 </main>
             </div>
