@@ -156,119 +156,119 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
 
   return (
     <Card className="shadow-lg h-full card-glass">
-      <CardHeader className="flex flex-row items-start justify-between p-4 pb-0">
-        <div className="flex-1">
-          <CardTitle className="font-headline text-2xl">
-            {eventTitle}
-          </CardTitle>
-           <p className="text-sm font-semibold mt-1 text-primary">{daysLeftText}</p>
-        </div>
-        {isTemplateMode ? (
-             <Button onClick={() => router.push('/register')} size="sm">Sign Up to Save</Button>
-        ) : !isEditing && (
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>Edit</Button>
-        )}
-      </CardHeader>
-      <CardContent className="p-4 pt-4">
-        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <Label htmlFor="name">My-Plan Name</Label>
-            <Controller
-              name="name"
-              control={control}
-              render={({ field }) => <Input id="name" {...field} placeholder="Life you are celebrating..." disabled={!isEditing} />}
-            />
-          </div>
-          
-          <div className="space-y-1">
-             <Label htmlFor="eventLocation">Event Location</Label>
-              <Controller
-                name="eventLocation"
-                control={control}
-                render={({ field }) => (
-                  <Popover open={ready && status === 'OK' && autocompleteData.length > 0}>
-                    <PopoverAnchor>
-                      <Input
-                        id="eventLocation"
-                        {...field}
-                        disabled={!isEditing || !isLoaded}
-                        placeholder={isLoaded ? "Start typing your address..." : "Loading location..."}
-                        autoComplete="off"
-                      />
-                    </PopoverAnchor>
-                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                      {status === 'OK' && (
-                         <div className="flex flex-col gap-2 p-2">
-                           {autocompleteData.map((suggestion) => {
-                             const {
-                               place_id,
-                               structured_formatting: { main_text, secondary_text },
-                               description
-                             } = suggestion;
-                             return (
-                               <Button
-                                 key={place_id}
-                                 variant="ghost"
-                                 className="justify-start h-auto text-left"
-                                 onClick={() => handleLocationSelect(description)}
-                               >
-                                 <div>
-                                   <strong>{main_text}</strong>
-                                   <br />
-                                   <small className="text-muted-foreground">{secondary_text}</small>
-                                 </div>
-                               </Button>
-                             );
-                           })}
-                         </div>
-                      )}
-                    </PopoverContent>
-                 </Popover>
+        <form onSubmit={handleSubmit(onSubmit)}>
+            <CardHeader className="flex flex-row items-start justify-between p-4 pb-0">
+                <div className="space-y-1">
+                    <CardTitle className="font-headline text-2xl">
+                        {eventTitle}
+                    </CardTitle>
+                    <p className="text-sm font-semibold text-primary">{daysLeftText}</p>
+                </div>
+                {isTemplateMode ? (
+                    <Button onClick={() => router.push('/register')} size="sm">Sign Up to Save</Button>
+                ) : isEditing ? (
+                    <div className="flex items-center gap-2">
+                         <Button type="button" variant="ghost" size="sm" onClick={() => {
+                            if (budget) {
+                                const initialValues = {
+                                name: budget.name || DEFAULT_BUDGET_NAME,
+                                eventLocation: budget.eventLocation || "",
+                                eventDate: budget.eventDate ? new Date(budget.eventDate).toISOString().split('T')[0] : "",
+                                expectedGuests: budget.expectedGuests || 0,
+                            };
+                            reset(initialValues);
+                            }
+                            setIsEditing(false);
+                            clearSuggestions();
+                        }}>Cancel</Button>
+                        <Button type="submit" size="sm" disabled={isSubmitting}>
+                            Save
+                        </Button>
+                    </div>
+                ) : (
+                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>Edit</Button>
                 )}
-              />
-          </div>
+            </CardHeader>
+            <CardContent className="p-4 pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                        <Label htmlFor="name">My-Plan Name</Label>
+                        <Controller
+                        name="name"
+                        control={control}
+                        render={({ field }) => <Input id="name" {...field} placeholder="Life you are celebrating..." disabled={!isEditing} />}
+                        />
+                    </div>
+                    
+                    <div className="space-y-1">
+                        <Label htmlFor="eventLocation">Event Location</Label>
+                        <Controller
+                            name="eventLocation"
+                            control={control}
+                            render={({ field }) => (
+                            <Popover open={ready && status === 'OK' && autocompleteData.length > 0}>
+                                <PopoverAnchor>
+                                <Input
+                                    id="eventLocation"
+                                    {...field}
+                                    disabled={!isEditing || !isLoaded}
+                                    placeholder={isLoaded ? "Start typing your address..." : "Loading location..."}
+                                    autoComplete="off"
+                                />
+                                </PopoverAnchor>
+                                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                                {status === 'OK' && (
+                                    <div className="flex flex-col gap-2 p-2">
+                                    {autocompleteData.map((suggestion) => {
+                                        const {
+                                        place_id,
+                                        structured_formatting: { main_text, secondary_text },
+                                        description
+                                        } = suggestion;
+                                        return (
+                                        <Button
+                                            key={place_id}
+                                            variant="ghost"
+                                            className="justify-start h-auto text-left"
+                                            onClick={() => handleLocationSelect(description)}
+                                        >
+                                            <div>
+                                            <strong>{main_text}</strong>
+                                            <br />
+                                            <small className="text-muted-foreground">{secondary_text}</small>
+                                            </div>
+                                        </Button>
+                                        );
+                                    })}
+                                    </div>
+                                )}
+                                </PopoverContent>
+                            </Popover>
+                            )}
+                        />
+                    </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="eventDate">Event Date</Label>
-            <Controller
-              name="eventDate"
-              control={control}
-              render={({ field }) => <Input id="eventDate" type="date" {...field} disabled={!isEditing} />}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="expectedGuests">Number of Guests</Label>
-            <Controller
-              name="expectedGuests"
-              control={control}
-              render={({ field }) => (
-                <Input id="expectedGuests" type="number" {...field} disabled={!isEditing} value={field.value || 0} />
-              )}
-            />
-          </div>
-          
-          {isEditing && !isTemplateMode && (
-            <div className="md:col-span-2 flex justify-end gap-2 mt-4">
-              <Button type="button" variant="ghost" onClick={() => {
-                if (budget) {
-                    const initialValues = {
-                      name: budget.name || DEFAULT_BUDGET_NAME,
-                      eventLocation: budget.eventLocation || "",
-                      eventDate: budget.eventDate ? new Date(budget.eventDate).toISOString().split('T')[0] : "",
-                      expectedGuests: budget.expectedGuests || 0,
-                  };
-                  reset(initialValues);
-                }
-                setIsEditing(false);
-                clearSuggestions();
-              }}>Cancel</Button>
-              <Button type="submit" disabled={isSubmitting}>
-                Save Changes
-              </Button>
-            </div>
-          )}
+                    <div className="space-y-1">
+                        <Label htmlFor="eventDate">Event Date</Label>
+                        <Controller
+                        name="eventDate"
+                        control={control}
+                        render={({ field }) => <Input id="eventDate" type="date" {...field} disabled={!isEditing} />}
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="expectedGuests">Number of Guests</Label>
+                        <Controller
+                        name="expectedGuests"
+                        control={control}
+                        render={({ field }) => (
+                            <Input id="expectedGuests" type="number" {...field} disabled={!isEditing} value={field.value || 0} />
+                        )}
+                        />
+                    </div>
+                </div>
+            </CardContent>
         </form>
-      </CardContent>
     </Card>
   );
 }
