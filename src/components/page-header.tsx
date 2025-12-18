@@ -8,7 +8,7 @@ import { Button } from "./ui/button";
 import { useUser, useFirestore } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { LogOut, PlusCircle, Heart, ListChecks, Wallet, CrossIcon, Menu, Star, Gift } from 'lucide-react';
+import { LogOut, PlusCircle, User, ListChecks, Wallet, CrossIcon, Menu, Star, Gift } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -23,12 +23,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useState } from "react";
 import type { Budget, BudgetCategory } from "@/lib/types";
 import { v4 as uuidv4 } from 'uuid';
 import { budgetTemplates } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "./ui/card";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 
 
 function calculateInitialTotal(categories: BudgetCategory[]): number {
@@ -82,6 +90,18 @@ export default function PageHeader() {
       router.push(`/planner/template?eventType=${eventType}`);
     }
   };
+  
+  const getUserInitials = () => {
+    if (user?.displayName) {
+      const names = user.displayName.split(' ');
+      return names.map(name => name[0]).join('').toUpperCase();
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
+  }
+
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm shadow-sm">
@@ -112,13 +132,12 @@ export default function PageHeader() {
                 <div className="w-24 h-10 bg-muted rounded-md animate-pulse" />
             ) : user && !user.isAnonymous ? (
                 <div className="flex items-center gap-2">
-                    {pathname === '/my-plans' && (
                     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                         <DialogTrigger asChild>
-                        <Button className="px-3">
-                            <PlusCircle className="mr-1 h-4 w-4" />
-                            Add Plan
-                        </Button>
+                            <Button className="hidden md:flex px-3">
+                                <PlusCircle className="mr-1 h-4 w-4" />
+                                Add Plan
+                            </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[600px]">
                             <DialogHeader>
@@ -167,11 +186,36 @@ export default function PageHeader() {
                             </div>
                         </DialogContent>
                     </Dialog>
-                    )}
-                    <Button variant="ghost" onClick={handleLogout} className="hidden md:flex text-lg font-bold text-foreground/60 hover:text-foreground/80">
-                        <LogOut className="mr-1 h-5 w-5" />
-                        Logout
-                    </Button>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                           <Avatar>
+                              <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                           </Avatar>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56" align="end" forceMount>
+                        <DropdownMenuItem disabled>
+                           <div className="flex flex-col space-y-1">
+                            <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                            <p className="text-xs leading-none text-muted-foreground">
+                              {user.email}
+                            </p>
+                          </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => router.push('/profile')}>
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Profile</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={handleLogout}>
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Log out</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
                 </div>
             ) : (
                 <div className="hidden md:flex items-center gap-2">
@@ -209,10 +253,17 @@ export default function PageHeader() {
                             </Link>
                         </SheetClose>
                         {user && !user.isAnonymous ? (
+                            <>
+                            <SheetClose asChild>
+                                <Link href="/profile" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                                    Profile
+                                </Link>
+                            </SheetClose>
                             <Button variant="ghost" onClick={handleLogout} className="justify-start p-0 text-lg font-medium text-foreground/60 hover:text-foreground/80">
                                 <LogOut className="mr-1 h-5 w-5" />
                                 Logout
                             </Button>
+                            </>
                         ) : (
                         <>
                             <SheetClose asChild>
