@@ -354,7 +354,7 @@ function MyPlansPage() {
                                     <AlertDialogHeader>
                                     <AlertDialogTitle>Early Access Notice</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                        You’re using early access. Paid plans will be introduced soon.
+                                        You’re using early access. Some advanced features will be part of paid plans in future.
                                     </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
@@ -442,5 +442,3 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
-
-    
