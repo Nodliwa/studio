@@ -10,6 +10,7 @@ import { BudgetAccordion } from "@/components/budget-accordion";
 import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
 import { RsvpManager } from "@/components/RsvpManager";
+import { MustDosSummary } from "@/components/must-dos-summary";
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn, setDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc, writeBatch, setDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import {
@@ -435,8 +436,9 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
             </p>
             
             {!isTemplateMode && (
-                <div className="mt-8">
+                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                   <RsvpManager budgetId={budgetId} rsvps={rsvps} />
+                  <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
                 </div>
             )}
 
