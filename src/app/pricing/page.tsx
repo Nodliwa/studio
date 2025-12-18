@@ -2,7 +2,7 @@
 import PageHeader from '@/components/page-header';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Check, Star } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
@@ -97,6 +97,13 @@ export default function PricingPage() {
                 </CardFooter>
               </Card>
             ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <div className="inline-flex items-center bg-primary/10 text-primary-foreground p-3 rounded-lg">
+                <Star className="h-5 w-5 mr-3 text-primary"/>
+                <p className="font-semibold text-foreground">On subscription, the 1st 100 we keep their 1st event for life.</p>
+            </div>
           </div>
         </main>
       </div>
