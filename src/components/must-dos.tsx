@@ -53,7 +53,7 @@ const PriorityIcon = ({ priority }: { priority: MustDo['priority'] }) => {
 
 const WhatsappIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-        <path d="M16.75 13.96c.25.13.4.38.48.63.08.25.11.5.08.75-.03.25-.11.48-.25.7-.13.21-.3.38-.5.5-.2.13-.43.21-.68.25-.25.04-.5.03-.75-.03-.25-.06-.5-.18-.75-.33a10.66 10.66 0 01-3.6-2.04c-1.25-1.25-2.04-2.63-2.38-4.08-.03-.25-.03-.5.03-.75.05-.25.13-.48.25-.68.13-.2.3-.38.5-.5.2-.13-.43-.21-.68-.25.25-.04.5-.03.75.03.25.06.5.18.75.33.25.15.48.33.68.55.2.22.35.48.45.75.1.28.13.55.1.83-.03.28-.13.55-.28.8-.15.25-.35.48-.58.65-.23.18-.4.3-.5.38-.1.08-.15.14-.2.2-.05.06-.08.1-.08.13s0 .05.03.08c.03.03.05.05.08.08.25.25.5.5.75.75s.5.5.75.75c.03.03.05.05.08.08.03.03.05.05.08.08s.05.03.08.03.08-.03.13-.08c.05-.05.1-.13.2-.2.08-.08.2-.2.38-.5.18-.3.4-.55.65-.8.25-.25.5-.45.75-.58.28-.15.55-.25.83-.28.28-.03.55.03.8.1.28.08.53.2.75.35.22.15.4.35.55.55.15.2.28.43.33.68zM12 2a10 10 0 100 20 10 10 0 000-20zm0 18.13c-4.48 0-8.13-3.65-8.13-8.13S7.52 3.88 12 3.88c4.48 0 8.13 3.65 8.13 8.13s-3.65 8.12-8.13 8.12z" />
+        <path d="M16.75 13.96c.25.13.4.38.48.63.08.25.11.5.08.75-.03.25-.11.48-.25.7-.13.21-.3.38-.5.5-.2.13-.43.21-.68.25-.25.04-.5.03-.75-.03-.25-.06-.5-.18-.75-.33a10.66 10.66 0 01-3.6-2.04c-1.25-1.25-2.04-2.63-2.38-4.08-.03-.25-.03-.5.03-.75.05-.25.13-.48.25-.68.13-.2.3-.38-.5-.5.2-.13-.43-.21-.68-.25.25-.04.5-.03.75.03.25.06.5.18.75.33.25.15.48.33.68.55.2.22.35.48.45.75.1.28.13.55.1.83-.03.28-.13.55-.28.8-.15.25-.35.48-.58.65-.23.18-.4.3-.5.38-.1.08-.15.14-.2.2-.05.06-.08.1-.08.13s0 .05.03.08c.03.03.05.05.08.08.25.25.5.5.75.75s.5.5.75.75c.03.03.05.05.08.08.03.03.05.05.08.08s.05.03.08.03.08-.03.13-.08c.05-.05.1-.13.2-.2.08-.08.2-.2.38-.5.18-.3.4-.55.65-.8.25-.25.5-.45.75-.58.28-.15.55-.25.83-.28.28-.03.55.03.8.1.28.08.53.2.75.35.22.15.4.35.55.55.15.2.28.43.33.68zM12 2a10 10 0 100 20 10 10 0 000-20zm0 18.13c-4.48 0-8.13-3.65-8.13-8.13S7.52 3.88 12 3.88c4.48 0 8.13 3.65 8.13 8.13s-3.65 8.12-8.13 8.12z" />
     </svg>
 );
 
@@ -307,23 +307,23 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
     const allItems = isTemplateMode ? localMustDos : serverItems;
     
     return [...allItems].sort((a, b) => {
-        // Primary sort: by priority
+        // Primary sort: status (todo before done)
+        if (a.status === 'todo' && b.status === 'done') return -1;
+        if (a.status === 'done' && b.status === 'todo') return 1;
+
+        // Secondary sort: priority
         const priorityA = a.priority || 'medium';
         const priorityB = b.priority || 'medium';
         if (PriorityLevels[priorityA].order < PriorityLevels[priorityB].order) return -1;
         if (PriorityLevels[priorityA].order > PriorityLevels[priorityB].order) return 1;
-
-        // Secondary sort: by status (todo before done)
-        if (a.status === 'todo' && b.status === 'done') return -1;
-        if (a.status === 'done' && b.status === 'todo') return 1;
   
-        // Tertiary sort: by deadline (earlier dates first)
+        // Tertiary sort: deadline (earlier dates first)
         const dateA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
         const dateB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
         if (dateA < dateB) return -1;
         if (dateA > dateB) return 1;
   
-        // Final sort: by creation time (newest first)
+        // Final sort: creation time (newest first)
         const aTime = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
         const bTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
         return bTime - aTime;
