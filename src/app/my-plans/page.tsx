@@ -180,6 +180,8 @@ function MyPlansPage() {
     const router = useRouter();
     const [dialogOpen, setDialogOpen] = useState(false);
     const { toast } = useToast();
+    const [earlyAccessDialogOpen, setEarlyAccessDialogOpen] = useState(false);
+    const [selectedEventType, setSelectedEventType] = useState<string | null>(null);
     
     const budgetsCollection = useMemoFirebase(() => (
         user && !user.isAnonymous ? collection(firestore, 'users', user.uid, 'budgets') : null
@@ -196,30 +198,39 @@ function MyPlansPage() {
       }, [user, isUserLoading, router]);
 
     const handleNewPlan = async (eventType: string) => {
-        setDialogOpen(false); 
-        if (user && !user.isAnonymous) {
-            const newBudgetId = uuidv4();
-            const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
-            const initialTotal = calculateInitialTotal(template);
-
-            const newBudget: Budget = {
-                id: newBudgetId,
-                name: "",
-                grandTotal: initialTotal,
-                userId: user.uid,
-                eventType: eventType,
-                eventDate: '',
-                eventLocation: '',
-                expectedGuests: 0
-            };
-            
-            const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
-            await setDoc(budgetDocRef, newBudget, {});
-
-            router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
-        } else {
-             router.push(`/planner/template?eventType=${eventType}`);
+        if (!user || user.isAnonymous) {
+            router.push(`/planner/template?eventType=${eventType}`);
+            return;
         }
+        
+        setSelectedEventType(eventType);
+        setEarlyAccessDialogOpen(true);
+    };
+
+    const proceedWithNewPlan = async () => {
+        setEarlyAccessDialogOpen(false);
+        if (!user || user.isAnonymous || !selectedEventType) return;
+
+        const newBudgetId = uuidv4();
+        const template = budgetTemplates[selectedEventType as keyof typeof budgetTemplates] || budgetTemplates.other;
+        const initialTotal = calculateInitialTotal(template);
+
+        const newBudget: Budget = {
+            id: newBudgetId,
+            name: "",
+            grandTotal: initialTotal,
+            userId: user.uid,
+            eventType: selectedEventType,
+            eventDate: '',
+            eventLocation: '',
+            expectedGuests: 0
+        };
+        
+        const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
+        await setDoc(budgetDocRef, newBudget, {});
+        
+        setDialogOpen(false); 
+        router.push(`/planner/${newBudgetId}?eventType=${selectedEventType}`);
     };
     
     const handleDeletePlan = async (budgetId: string) => {
@@ -338,6 +349,19 @@ function MyPlansPage() {
                                     </div>
                                 </DialogContent>
                             </Dialog>
+                             <AlertDialog open={earlyAccessDialogOpen} onOpenChange={setEarlyAccessDialogOpen}>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                    <AlertDialogTitle>Early Access Notice</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        You’re using early access. Paid plans will be introduced soon.
+                                    </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                    <AlertDialogAction onClick={proceedWithNewPlan}>OK</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </div>
 
 
@@ -418,3 +442,5 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
+
+    
