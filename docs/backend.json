@@ -149,6 +149,10 @@
         "knownAs": {
             "type": "string",
             "description": "The name the user prefers to be called."
+        },
+        "photoURL": {
+            "type": "string",
+            "description": "URL of the user's profile picture."
         }
       },
       "required": [
@@ -175,13 +179,30 @@
         "reminderDaysBefore": { "type": "number", "description": "How many days before the deadline to send the reminder." }
       },
       "required": ["id", "budgetId", "userId", "title", "status", "priority", "createdAt", "reminderType", "reminderDaysBefore"]
-    }
+    },
+    "RSVP": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "RSVP",
+        "type": "object",
+        "description": "Represents a single RSVP response from a guest for a specific event.",
+        "properties": {
+          "id": { "type": "string", "description": "Unique identifier for the RSVP record." },
+          "budgetId": { "type": "string", "description": "The ID of the budget this RSVP belongs to." },
+          "guestName": { "type": "string", "description": "The name of the guest responding." },
+          "status": { "type": "string", "enum": ["attending", "not_attending"], "description": "The guest's attendance status." },
+          "additionalGuests": { "type": "number", "description": "The number of additional guests the person is bringing (+1s)." },
+          "respondedAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the RSVP was submitted." }
+        },
+        "required": ["id", "budgetId", "guestName", "status", "additionalGuests", "respondedAt"]
+      }
   },
   "auth": {
     "providers": [
       "password",
       "anonymous",
-      "google.com"
+      "google.com",
+      "facebook.com",
+      "twitter.com"
     ]
   },
   "firestore": {
@@ -246,9 +267,24 @@
             { "name": "mustDoId", "description": "The unique identifier of the must-do item." }
           ]
         }
+      },
+      {
+        "path": "/users/{userId}/budgets/{budgetId}/rsvps/{rsvpId}",
+        "definition": {
+          "entityName": "RSVP",
+          "schema": { "$ref": "#/backend/entities/RSVP" },
+          "description": "Collection for storing RSVP responses for a specific budget/event.",
+          "params": [
+            { "name": "userId", "description": "The unique identifier of the user who owns the budget." },
+            { "name": "budgetId", "description": "The unique identifier of the budget." },
+            { "name": "rsvpId", "description": "The unique identifier of the RSVP response." }
+          ]
+        }
       }
     ],
     "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. It leverages path-based ownership for user-specific data and avoids hierarchical authorization dependencies by denormalizing authorization context where necessary. The structure also supports secure list operations via structural segregation.\\n\\nBudgets, Categories and Items are nested under the `/users/{userId}` collection, ensuring that only the user has access to their own data (Path-Based Ownership).\\n\\nThis structure will need to be implemented with corresponding Firebase Security Rules."
   }
 }
+    
+
     

@@ -11,7 +11,7 @@
  *
  * Key Security Decisions:
  * - Default Deny: All operations are denied by default.
- * - Authentication Required: No anonymous access is permitted for any data.
+ * - Authentication Required: No anonymous access is permitted for any data, except for RSVP creation.
  * - No User Enumeration: The top-level `/users` collection cannot be listed,
  *   preventing malicious actors from discovering the entire user base.
  * - Path-Based Ownership: A user's identity (auth.uid) is compared against
@@ -67,63 +67,20 @@ service cloud.firestore {
     }
 
     /**
-     * Validates that the User document being created has its internal 'id'
-     * field correctly set to its own document ID.
+     * Validates the schema for a new RSVP document.
+     * Ensures required fields are present and have the correct types.
+     * Also validates the budgetId matches the path.
      */
-    function isValidUserDocument(userId) {
-      return request.resource.data.id == userId;
-    }
-
-    /**
-     * Enforces that the User document's 'id' field cannot be changed after creation.
-     */
-    function isImmutableUserDocument() {
-      return request.resource.data.id == resource.data.id;
-    }
-
-    /**
-     * Validates that the Budget document being created correctly references
-     * the parent user ID from the path.
-     */
-    function isValidBudgetDocument(userId) {
-      return request.resource.data.userId == userId;
-    }
-
-    /**
-     * Enforces that the Budget's 'userId' field is immutable.
-     */
-    function isImmutableBudgetDocument() {
-      return request.resource.data.userId == resource.data.userId;
-    }
-
-    /**
-     * Validates that the Category document being created correctly references
-     * the parent budget ID from the path.
-     */
-    function isValidCategoryDocument(budgetId) {
-      return request.resource.data.budgetId == budgetId;
-    }
-
-    /**
-     * Enforces that the Category's 'budgetId' field is immutable.
-     */
-    function isImmutableCategoryDocument() {
-      return request.resource.data.budgetId == resource.data.budgetId;
-    }
-
-    /**
-     * Validates that the Item document being created correctly references
-     * the parent category ID from the path.
-     */
-    function isValidItemDocument(categoryId) {
-      return request.resource.data.categoryId == categoryId;
-    }
-
-    /**
-     * Enforces that the Item's 'categoryId' field is immutable.
-     */
-    function isImmutableItemDocument() {
-      return request.resource.data.categoryId == resource.data.categoryId;
+    function isValidRsvpDocument(budgetId) {
+        let data = request.resource.data;
+        return data.guestName is string &&
+               data.guestName.size() > 0 &&
+               data.status is string &&
+               (data.status == 'attending' || data.status == 'not_attending') &&
+               data.additionalGuests is number &&
+               data.additionalGuests >= 0 &&
+               data.budgetId == budgetId &&
+               request.time == data.respondedAt;
     }
 
 
@@ -134,24 +91,17 @@ service cloud.firestore {
     /**
      * @description Rules for the User collection.
      * @path /users/{userId}
-     * @allow A user (auth.uid='user123') can (get) their own profile at /users/user123.
-     * @allow A user (auth.uid='user123') can (create) their own profile at /users/user123.
-     * @deny A user (auth.uid='user456') cannot (get) another user's profile at /users/user123.
-     * @deny Any user cannot (list) the /users collection to prevent user enumeration.
-     * @principle Restricts access to a user's own profile document and prevents discovery of other users.
      */
     match /users/{userId} {
-      allow get, update: if isOwner(userId);
+      allow get, update, delete: if isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId) && isValidUserDocument(userId);
-      allow delete: if isExistingOwner(userId);
+      allow create: if isOwner(userId);
 
       /**
        * @description Rules for the user's Budgets subcollection.
        */
       match /budgets/{budgetId} {
-        allow get, create, update, delete: if isOwner(userId);
-        allow list: if isOwner(userId);
+        allow get, create, update, delete, list: if isOwner(userId);
 
         /**
          * @description Rules for the categories within a budget.
@@ -172,8 +122,19 @@ service cloud.firestore {
         match /mustDos/{mustDoId} {
           allow get, list, create, update, delete: if isOwner(userId);
         }
+
+        /**
+         * @description Rules for RSVP responses for a budget.
+         * @allow Anyone can (create) an RSVP to allow for public submissions.
+         * @allow Only the budget owner can (read, list, update, delete) RSVPs.
+         */
+        match /rsvps/{rsvpId} {
+            allow create: if isValidRsvpDocument(budgetId);
+            allow get, list, update, delete: if isOwner(userId);
+        }
       }
     }
   }
 }
+
     
