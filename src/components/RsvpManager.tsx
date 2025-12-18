@@ -60,7 +60,7 @@ export function RsvpManager({ budgetId, rsvps }: RsvpManagerProps) {
   return (
     <Card className="h-full bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">RSVP & Guest List</CardTitle>
+        <CardTitle className="font-headline text-2xl">Invites & Guest List</CardTitle>
         <CardDescription className="text-foreground/80">Share the link below and watch your guest list grow.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -131,5 +131,3 @@ export function RsvpManager({ budgetId, rsvps }: RsvpManagerProps) {
     </Card>
   );
 }
-
-    
