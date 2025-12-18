@@ -8,20 +8,6 @@ import { cn } from '@/lib/utils';
 
 const tiers = [
   {
-    name: 'Browser',
-    price: 'Free',
-    priceSuffix: '',
-    description: 'View only – No edits, no saves.',
-    features: [
-      'View plan templates',
-      'Explore budget categories and items',
-      'No account needed',
-    ],
-    cta: 'Explore Now',
-    href: '/planner',
-    isMostPopular: false,
-  },
-  {
     name: 'Free',
     price: 'Free',
     priceSuffix: '(Sign-Up)',
@@ -83,7 +69,7 @@ export default function PricingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12 items-stretch justify-center">
             {tiers.map((tier) => (
               <Card key={tier.name} className={cn("flex flex-col", tier.isMostPopular ? "border-primary shadow-lg" : "")}>
                 <CardHeader className="text-center">
