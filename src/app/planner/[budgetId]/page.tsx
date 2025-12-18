@@ -430,7 +430,7 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
               </DndContext>
             </div>
             
-            <p className="text-center text-xs text-muted-foreground mt-8 px-4">
+            <p className="text-center text-xs text-muted-foreground mt-8 px-4 font-bold">
               All prices shown are estimates only. Actual costs may vary depending on location, supplier, availability, and personal preferences.
             </p>
             
