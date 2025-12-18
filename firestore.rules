@@ -11,7 +11,7 @@
  *
  * Key Security Decisions:
  * - Default Deny: All operations are denied by default.
- * - Authentication Required: No anonymous access is permitted for any data, except for RSVP creation.
+ * - Authentication Required: No anonymous access is permitted for any data, except for RSVP creation and reading a single budget for the RSVP page.
  * - No User Enumeration: The top-level `/users` collection cannot be listed,
  *   preventing malicious actors from discovering the entire user base.
  * - Path-Based Ownership: A user's identity (auth.uid) is compared against
@@ -101,7 +101,9 @@ service cloud.firestore {
        * @description Rules for the user's Budgets subcollection.
        */
       match /budgets/{budgetId} {
-        allow get, create, update, delete, list: if isOwner(userId);
+        // ALLOW public read for RSVP page, but only owner can list/write.
+        allow get: if true;
+        allow list, create, update, delete: if isOwner(userId);
 
         /**
          * @description Rules for the categories within a budget.
@@ -136,5 +138,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { addRsvp } from '@/app/rsvp/actions';
@@ -12,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useFirebase } from '@/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { CalendarDays, MapPin, Users, PartyPopper } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 
@@ -26,6 +27,21 @@ const rsvpSchema = z.object({
 
 type RsvpFormValues = z.infer<typeof rsvpSchema>;
 
+async function findBudget(firestore: any, budgetId: string): Promise<Budget | null> {
+    const usersCollectionRef = collection(firestore, 'users');
+    const usersSnapshot = await getDocs(usersCollectionRef);
+
+    for (const userDoc of usersSnapshot.docs) {
+        const budgetDocRef = doc(firestore, 'users', userDoc.id, 'budgets', budgetId);
+        const budgetDocSnap = await getDoc(budgetDocRef);
+        if (budgetDocSnap.exists()) {
+            return budgetDocSnap.data() as Budget;
+        }
+    }
+    return null;
+}
+
+
 export default function RsvpPage({ params }: { params: { budgetId: string } }) {
   const { budgetId } = params;
   const { firestore } = useFirebase();
@@ -38,6 +54,7 @@ export default function RsvpPage({ params }: { params: { budgetId: string } }) {
     register,
     handleSubmit,
     watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<RsvpFormValues>({
     resolver: zodResolver(rsvpSchema),
@@ -51,26 +68,12 @@ export default function RsvpPage({ params }: { params: { budgetId: string } }) {
       setIsLoading(true);
       
       try {
-        // This is a simplification. In a real-world scenario, you'd query a public
-        // collection or use a Cloud Function to avoid exposing user IDs.
-        // For this prototype, we'll assume we can find the budget.
-        // A better approach would be to have a global `budgets` collection.
-        // But for now, we can't query subcollections without the parent ID.
-        // Let's assume for the prototype we can't fetch the budget details on this public page
-        // and we will just use the budgetId to submit the form.
-        // This is a limitation of the current Firestore structure for public pages.
-        
-        // Let's create a placeholder budget object to allow the UI to render.
-        setBudget({
-            id: budgetId,
-            name: "The Celebration",
-            grandTotal: 0,
-            userId: "unknown",
-            eventType: "Event",
-            eventDate: new Date().toISOString(),
-            eventLocation: "A beautiful location",
-            expectedGuests: 100,
-        });
+        const foundBudget = await findBudget(firestore, budgetId);
+        if (foundBudget) {
+            setBudget(foundBudget);
+        } else {
+            setError('Could not find the event. The link may be incorrect or the event may have been removed.');
+        }
 
       } catch (e) {
         setError('Could not find the event. Please check the link.');
