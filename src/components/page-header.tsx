@@ -143,7 +143,7 @@ export default function PageHeader() {
             {isUserLoading ? (
                 <div className="w-24 h-10 bg-muted rounded-md animate-pulse" />
             ) : user && !user.isAnonymous ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 pr-4">
                     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                         <DialogTrigger asChild>
                             <Button className="hidden md:flex px-3">
