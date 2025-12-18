@@ -430,6 +430,10 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
               </DndContext>
             </div>
             
+            <p className="text-center text-xs text-muted-foreground mt-8 px-4">
+              All prices shown are estimates only. Actual costs may vary depending on location, supplier, availability, and personal preferences.
+            </p>
+            
             {!isTemplateMode && (
                 <div className="mt-8">
                   <RsvpManager budgetId={budgetId} rsvps={rsvps} />
@@ -441,4 +445,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
+    
+
     
