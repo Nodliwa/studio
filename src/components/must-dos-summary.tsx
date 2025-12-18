@@ -1,13 +1,31 @@
-
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, ComponentType } from 'react';
 import { useRouter } from 'next/navigation';
 import type { MustDo } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ListChecks, Calendar, CheckCircle } from 'lucide-react';
+import { ListChecks, Calendar, CheckCircle, ArrowDown, ArrowRight, ArrowUp, Flag } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Progress } from './ui/progress';
+import { cn } from '@/lib/utils';
+
+
+const PriorityLevels: Record<MustDo['priority'], { icon: ComponentType<{className?: string}> }> = {
+    low: { icon: ArrowDown },
+    medium: { icon: ArrowRight },
+    high: { icon: ArrowUp },
+};
+
+const PriorityIcon = ({ priority }: { priority: MustDo['priority'] }) => {
+    const safePriority = priority || 'medium';
+    const Icon = PriorityLevels[safePriority]?.icon || Flag;
+    const colorClass = {
+        low: 'text-green-500',
+        medium: 'text-yellow-500',
+        high: 'text-red-500',
+    }[safePriority];
+    return <Icon className={cn('h-4 w-4 shrink-0', colorClass)} />;
+};
 
 interface MustDosSummaryProps {
   budgetId: string;
@@ -55,7 +73,10 @@ export function MustDosSummary({ budgetId, mustDos }: MustDosSummaryProps) {
             {openTasks.length > 0 ? (
                 openTasks.map(task => (
                     <div key={task.id} className="flex items-center justify-between p-2 rounded-md bg-black/10 text-sm">
-                        <span className="font-medium truncate pr-2">{task.title}</span>
+                        <div className="flex items-center gap-2 min-w-0">
+                           <PriorityIcon priority={task.priority} />
+                           <span className="font-medium truncate">{task.title}</span>
+                        </div>
                         {task.deadline ? (
                             <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
                                 <Calendar className="h-3 w-3" />
