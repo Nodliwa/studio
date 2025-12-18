@@ -137,9 +137,12 @@ export default function PageHeader() {
             <Link href="/my-plans" className={cn("font-bold transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
                 MyPlans
             </Link>
+            <Link href="/pricing" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/pricing" ? "text-foreground" : "text-foreground/60")}>
+                Pricing
+            </Link>
         </nav>
 
-        <div className="flex items-center justify-end flex-1">
+        <div className="flex items-center justify-end flex-1 mr-4">
             {isUserLoading ? (
                 <div className="w-24 h-10 bg-muted rounded-md animate-pulse" />
             ) : user && !user.isAnonymous ? (
@@ -263,6 +266,11 @@ export default function PageHeader() {
                         <SheetClose asChild>
                             <Link href="/my-plans" className={cn("transition-colors hover:text-foreground/80", pathname?.startsWith("/my-plans") || pathname?.startsWith("/planner") ? "text-foreground" : "text-foreground/60")}>
                                 MyPlans
+                            </Link>
+                        </SheetClose>
+                        <SheetClose asChild>
+                           <Link href="/pricing" className={cn("transition-colors hover:text-foreground/80", pathname === "/pricing" ? "text-foreground" : "text-foreground/60")}>
+                                Pricing
                             </Link>
                         </SheetClose>
                         {user && !user.isAnonymous ? (
