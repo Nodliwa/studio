@@ -72,13 +72,18 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12 items-stretch justify-center">
             {tiers.map((tier) => (
               <Card key={tier.name} className={cn("flex flex-col relative overflow-hidden", tier.isMostPopular ? "border-primary shadow-lg" : "")}>
+                {tier.name === 'Free' && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full bg-amber-500 text-white p-2 text-center text-xs font-semibold z-10">
+                    Plan will be saved for a limited period
+                  </div>
+                )}
                 {(tier.name === 'Basic' || tier.name === 'Standard') && (
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full bg-primary text-primary-foreground p-2 text-center text-xs font-semibold z-10">
                     <Star className="h-4 w-4 inline-block mr-1" />
                     1st 100 subscribers keep their 1st event for life!
                   </div>
                 )}
-                <CardHeader className={cn("text-center", (tier.name === 'Basic' || tier.name === 'Standard') && 'pt-12')}>
+                <CardHeader className={cn("text-center", (tier.name !== 'Free') && 'pt-12')}>
                   <CardTitle className="text-2xl font-headline">{tier.name}</CardTitle>
                   <CardDescription>{tier.description}</CardDescription>
                   <div className="pt-4">
