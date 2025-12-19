@@ -83,7 +83,7 @@ export default function PricingPage() {
                     1st 100 subscribers keep their 1st event for life!
                   </div>
                 )}
-                <CardHeader className={cn("text-center", (tier.name !== 'Free') && 'pt-12')}>
+                <CardHeader className={cn("text-center pt-12")}>
                   <CardTitle className="text-2xl font-headline">{tier.name}</CardTitle>
                   <CardDescription>{tier.description}</CardDescription>
                   <div className="pt-4">
