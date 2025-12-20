@@ -5,6 +5,10 @@ import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUser, initiateAnonymousSignIn, useAuth } from '@/firebase';
 
+// This line forces the page to be rendered dynamically, which is required
+// because we are using the `useSearchParams` hook.
+export const dynamic = 'force-dynamic';
+
 export default function PlannerRedirectPage() {
   const router = useRouter();
   const { user, isUserLoading } = useUser();
