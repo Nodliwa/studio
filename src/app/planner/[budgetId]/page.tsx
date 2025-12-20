@@ -30,7 +30,6 @@ import {
 } from '@dnd-kit/sortable';
 import Greeter from '@/components/greeter';
 import { Card, CardContent } from '@/components/ui/card';
-import { v4 as uuidv4 } from 'uuid';
 import type { RSVP } from '@/lib/types';
 
 
