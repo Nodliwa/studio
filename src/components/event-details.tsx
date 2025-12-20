@@ -12,7 +12,10 @@ import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { DocumentReference } from "firebase/firestore";
-import usePlacesAutocomplete from "use-places-autocomplete";
+import usePlacesAutocomplete, {
+  getGeocode,
+  getLatLng,
+} from "use-places-autocomplete";
 import { useLoadScript } from "@react-google-maps/api";
 import {
   Popover,
@@ -38,27 +41,21 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const DEFAULT_BUDGET_NAME = "";
-const libraries: "places"[] = ["places"];
 
 export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventType }: EventDetailsProps) {
   const { user } = useUser();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(isTemplateMode);
 
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    libraries,
-  });
-
   const {
     ready,
+    value,
     suggestions: { status, data: autocompleteData },
     setValue: setAutocompleteValue,
     clearSuggestions,
   } = usePlacesAutocomplete({
     requestOptions: { /* Define search scope here */ },
     debounce: 300,
-    disabled: !isLoaded,
   });
 
   const {
@@ -211,8 +208,8 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
                                 <Input
                                     id="eventLocation"
                                     {...field}
-                                    disabled={!isEditing || !isLoaded}
-                                    placeholder={isLoaded ? "Start typing your address..." : "Loading location..."}
+                                    disabled={!isEditing || !ready}
+                                    placeholder={ready ? "Start typing your address..." : "Loading location..."}
                                     autoComplete="off"
                                 />
                                 </PopoverAnchor>
