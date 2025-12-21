@@ -76,41 +76,39 @@ export default function RegisterPage() {
   };
 
   useEffect(() => {
-    if (!auth) {
-        const isRedirectPending = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
-        if (!isRedirectPending) {
-            setIsProcessingSocialSignIn(false);
-        }
-        return;
-    }
-  
-    sessionStorage.removeItem('firebase:pendingRedirect');
-    handleGoogleRedirectResult(auth)
-      .then((userCredential) => {
-        if (userCredential) {
-          return processSocialUser(userCredential);
-        }
-      })
-      .catch((error) => {
-        if (error instanceof FirebaseError) {
-          setFirebaseError(error.message);
+    const processAuth = async () => {
+        const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
+        if (isRedirecting && auth) {
+            sessionStorage.removeItem('firebase:pendingRedirect');
+            try {
+                const userCredential = await handleGoogleRedirectResult(auth);
+                if (userCredential) {
+                    await processSocialUser(userCredential);
+                }
+            } catch (error) {
+                if (error instanceof FirebaseError) {
+                    setFirebaseError(error.message);
+                } else {
+                    setFirebaseError('An unexpected error occurred during social sign-in.');
+                }
+            } finally {
+                setIsProcessingSocialSignIn(false);
+            }
+            return; 
         } else {
-          setFirebaseError('An unexpected error occurred during social sign-in.');
+             setIsProcessingSocialSignIn(false);
         }
-      })
-      .finally(() => {
-        setIsProcessingSocialSignIn(false);
-      });
+
+        if (!isUserLoading && !isProcessingSocialSignIn) {
+            if (user && !user.isAnonymous) {
+                router.push('/my-plans');
+            }
+        }
+    };
+
+    processAuth();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth]);
-
-  useEffect(() => {
-    if (isUserLoading || isProcessingSocialSignIn) return;
-
-    if (user && !user.isAnonymous) {
-      router.push('/my-plans');
-    }
-  }, [user, isUserLoading, isProcessingSocialSignIn, router]);
+  }, [user, isUserLoading, isProcessingSocialSignIn, auth, router]);
 
   const onSubmit = async (data: RegisterFormValues) => {
     if (!auth || !firestore) return;
