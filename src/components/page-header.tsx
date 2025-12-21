@@ -240,8 +240,8 @@ export default function PageHeader() {
 
                 </div>
             ) : (
-                <div className="hidden md:flex items-center gap-2">
-                     <Button asChild variant="ghost" className="text-base md:text-lg mr-[5px]">
+                <div className="flex items-center gap-2">
+                     <Button asChild variant="ghost" className="hidden md:inline-flex text-base md:text-lg mr-[5px]">
                         <Link href="/login">Login</Link>
                     </Button>
                     <Button asChild size="sm" className="text-base md:text-lg mr-4">
@@ -301,11 +301,6 @@ export default function PageHeader() {
                                 <SheetClose asChild>
                                     <Link href="/login" className="transition-colors hover:text-foreground/80 text-foreground/60">
                                         Login
-                                    </Link>
-                                </SheetClose>
-                                <SheetClose asChild>
-                                    <Link href="/register" className="transition-colors hover:text-foreground/80 text-foreground/60">
-                                        Sign Up
                                     </Link>
                                 </SheetClose>
                             </>
