@@ -103,8 +103,6 @@ export default function ProfilePage() {
       }
 
     const onSubmit = async (data: ProfileFormValues) => {
-        // This function's only job is to save the data to Firestore.
-        // The useEffect hook above will handle updating the UI.
         if (!userDocRef) return;
         
         try {
