@@ -14,9 +14,4 @@ export const ai = genkit({
   plugins: [
     googleAI(), // Enables Google's generative AI models like Gemini.
   ],
-  // The following options are for pre-1.0 versions of Genkit and are deprecated.
-  // Using them can cause instability. They have been removed to ensure
-  // compatibility with the current Genkit version.
-  // logLevel: 'debug',
-  // enableTracingAndMetrics: true,
 });
