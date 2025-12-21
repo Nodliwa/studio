@@ -24,6 +24,7 @@ import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 import { suggestMustDos, type SuggestMustDosOutput } from '@/ai/flows/suggest-must-dos-flow';
 import { useToast } from '@/hooks/use-toast';
+import { scoreSuggestions, type ScoredSuggestion } from '@/ai/flows/score-suggestions-flow';
 
 
 interface MustDosProps {
@@ -255,7 +256,7 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
   const [localMustDos, setLocalMustDos] = useState<MustDo[]>([]);
   const [isLoading, setIsLoading] = useState(!isTemplateMode && !mustDos);
   const [isSuggesting, setIsSuggesting] = useState(false);
-  const [suggestions, setSuggestions] = useState<SuggestMustDosOutput['suggestions'] | null>(null);
+  const [suggestions, setSuggestions] = useState<ScoredSuggestion[] | null>(null);
   const [selectedSuggestions, setSelectedSuggestions] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
@@ -352,97 +353,109 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
     deleteDocument(docRef);
   };
 
-  // ✅ Fetch AI Suggestions
-const handleGetSuggestions = async () => {
-  if (!eventType) {
-    toast({
-      variant: "destructive",
-      title: "Cannot get suggestions",
-      description: "Please set an event type first.",
-    });
-    return;
-  }
-
-  setIsSuggesting(true);
-  setSuggestions(null);
-
-  try {
-    const existingTitles = items.map(item => item.title);
-    const result = await suggestMustDos({ eventType, existingTitles });
-
-    if (result.suggestions && result.suggestions.length > 0) {
-      setSuggestions(result.suggestions);
-      // Start with no suggestions selected
-      const initialSelection: Record<string, boolean> = {};
-      setSelectedSuggestions(initialSelection);
-    } else {
+  // ✅ Fetch and Score AI Suggestions
+  const handleGetSuggestions = async () => {
+    if (!eventType) {
       toast({
-        title: "No suggestions found",
-        description: "Try a different event type or refresh.",
+        variant: "destructive",
+        title: "Cannot get suggestions",
+        description: "Please set an event type first in the event details.",
+      });
+      return;
+    }
+
+    setIsSuggesting(true);
+    setSuggestions(null);
+
+    try {
+      const existingTitles = items.map(item => item.title);
+      const result = await suggestMustDos({ eventType, existingTitles });
+
+      if (result.suggestions && result.suggestions.length > 0) {
+        const titles = result.suggestions.map(s => s.title);
+        const context = `Event type: ${eventType}`;
+        
+        // Score and sort the suggestions
+        const scored = await scoreSuggestions(titles, context);
+        const sorted = scored.sort((a, b) => b.score - a.score);
+
+        setSuggestions(sorted);
+        // Start with no suggestions selected
+        const initialSelection: Record<string, boolean> = {};
+        setSelectedSuggestions(initialSelection);
+      } else {
+        toast({
+          title: "No new suggestions found",
+          description: "The AI couldn't find any new tasks for this event type.",
+        });
+      }
+    } catch (error) {
+      console.error("AI Suggestion Error:", error);
+      toast({
+        variant: "destructive",
+        title: "AI Suggestion Failed",
+        description: "Could not retrieve suggestions. Please try again.",
+      });
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
+
+  // ✅ Add Selected Suggestions
+  const handleAddSuggestions = async () => {
+    if (!suggestions || isTemplateMode || !user || !budgetRef || !firestore) {
+      setSuggestions(null);
+      return;
+    }
+
+    // This logic now needs to find the full suggestion object from the original, unsorted list.
+    // Or, more simply, the `suggestions` state already holds the sorted ScoredSuggestion objects.
+    const selected = suggestions.filter(s => selectedSuggestions[s.title]);
+    if (selected.length === 0) {
+      toast({ title: "No items selected", description: "Please select at least one suggestion to add." });
+      return;
+    }
+
+    const batch = writeBatch(firestore);
+    const mustDosCollection = collection(budgetRef, 'mustDos');
+
+    selected.forEach(suggestion => {
+      const newDocRef = doc(mustDosCollection);
+      // We don't have the note, priority etc. from the scoring function
+      // Let's assume default values or find them from the original suggestion if we had it.
+      // For now, we'll use defaults.
+      const newItem: Omit<MustDo, 'id'> = {
+        budgetId,
+        userId: user.uid,
+        title: suggestion.title,
+        note: '', // Note is not returned by the scoring function
+        status: 'todo',
+        priority: 'medium', // Default priority
+        createdAt: serverTimestamp(),
+        reminderType: 'none',
+        reminderDaysBefore: 1,
+        deadline: '',
+      };
+      batch.set(newDocRef, newItem);
+    });
+
+    try {
+      await batch.commit();
+      toast({
+        title: "Suggestions Added",
+        description: `${selected.length} new Must-Do item(s) have been added.`,
+      });
+    } catch (error) {
+      console.error("Error adding suggestions:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not add the selected suggestions.",
       });
     }
-  } catch (error) {
-    console.error("AI Suggestion Error:", error);
-    toast({
-      variant: "destructive",
-      title: "AI Suggestion Failed",
-      description: "Could not retrieve suggestions. Please try again.",
-    });
-  } finally {
-    setIsSuggesting(false);
-  }
-};
 
-// ✅ Add Selected Suggestions
-const handleAddSuggestions = async () => {
-  if (!suggestions || isTemplateMode || !user || !budgetRef || !firestore) {
     setSuggestions(null);
-    return;
-  }
-
-  const selected = suggestions.filter(s => selectedSuggestions[s.title]);
-  if (selected.length === 0) {
-    toast({ title: "No items selected", description: "Please select at least one suggestion." });
-    return;
-  }
-
-  const batch = writeBatch(firestore);
-  const mustDosCollection = collection(budgetRef, 'mustDos');
-
-  selected.forEach(suggestion => {
-    const newDocRef = doc(mustDosCollection);
-    const newItem: Omit<MustDo, 'id'> = {
-      budgetId,
-      userId: user.uid,
-      title: suggestion.title,
-      note: suggestion.note,
-      status: 'todo',
-      priority: suggestion.priority,
-      createdAt: serverTimestamp(),
-      reminderType: suggestion.reminderType,
-      reminderDaysBefore: suggestion.reminderDaysBefore,
-      deadline: '',
-    };
-    batch.set(newDocRef, newItem);
-  });
-
-  try {
-    await batch.commit();
-    toast({
-      title: "Suggestions Added",
-      description: `${selected.length} new Must-Do item(s) have been added.`,
-    });
-  } catch (error) {
-    console.error("Error adding suggestions:", error);
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: "Could not add the selected suggestions.",
-    });
-  }
-
-  setSuggestions(null);
-};
+  };
 
   const handleSuggestionSelectionChange = (title: string, isChecked: boolean) => {
     setSelectedSuggestions(prev => ({
@@ -453,83 +466,83 @@ const handleAddSuggestions = async () => {
 
   return (
     <>
-    <Card className="h-full bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
-      <CardHeader className="p-4">
-        <CardTitle className="font-headline text-2xl">Must-Do's</CardTitle>
-        <CardDescription className="text-foreground/80">The things that make your event run smoothly. Add what matters most to you.</CardDescription>
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <div className="space-y-2">
-          <div className="flex items-center gap-4 text-sm font-medium text-foreground/90">
-            <span>{completedCount} of {items.length} completed</span>
-            <Progress value={progress} className="w-full h-2 bg-white/20" />
-          </div>
+      <Card className="h-full bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
+        <CardHeader className="p-4">
+          <CardTitle className="font-headline text-2xl">Must-Do's</CardTitle>
+          <CardDescription className="text-foreground/80">The things that make your event run smoothly. Add what matters most to you.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <div className="space-y-2">
+            <div className="flex items-center gap-4 text-sm font-medium text-foreground/90">
+              <span>{completedCount} of {items.length} completed</span>
+              <Progress value={progress} className="w-full h-2 bg-white/20" />
+            </div>
 
-          <div className="border border-border/20 rounded-lg overflow-hidden bg-white/5">
-            {items.map(item => (
-              <MustDoItem key={item.id} item={item} onUpdate={handleUpdateItem} onDelete={handleDeleteItem} />
+            <div className="border border-border/20 rounded-lg overflow-hidden bg-white/5">
+              {items.map(item => (
+                <MustDoItem key={item.id} item={item} onUpdate={handleUpdateItem} onDelete={handleDeleteItem} />
+              ))}
+              {items.length === 0 && !isLoading && (
+                <p className="text-muted-foreground text-center p-8">No must-dos yet. Add one to get started!</p>
+              )}
+              {isLoading && (
+                   <p className="text-muted-foreground text-center p-8">Loading must-dos...</p>
+              )}
+            </div>
+            
+            <div className="flex flex-wrap gap-2 pt-2">
+              <Button variant="outline" onClick={() => handleAddItem()} className="bg-white/10 hover:bg-white/20 border-white/30">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add a Must-Do
+              </Button>
+              {!isTemplateMode && (
+                  <Button variant="outline" onClick={handleGetSuggestions} disabled={isSuggesting} className="bg-white/10 hover:bg-white/20 border-white/30">
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      {isSuggesting ? 'Thinking...' : 'Suggest with AI'}
+                  </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!suggestions} onOpenChange={(open) => !open && setSuggestions(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ranked AI Suggestions</DialogTitle>
+            <DialogDescription>
+              Here are ranked suggestions for your event. Select the ones you want to add.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-2">
+            {suggestions?.map((suggestion, index) => (
+              <div key={index} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/50">
+                <Checkbox
+                  id={`suggestion-${index}`}
+                  checked={!!selectedSuggestions[suggestion.title]}
+                  onCheckedChange={(checked) => handleSuggestionSelectionChange(suggestion.title, !!checked)}
+                  className="mt-1"
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <label
+                    htmlFor={`suggestion-${index}`}
+                    className="text-sm font-medium leading-none flex items-center"
+                  >
+                    {suggestion.title}
+                    {suggestion.score > 0.8 && <span className="ml-2 text-xs">🔥 Recommended</span>}
+                  </label>
+                </div>
+              </div>
             ))}
-            {items.length === 0 && !isLoading && (
-              <p className="text-muted-foreground text-center p-8">No must-dos yet. Add one to get started!</p>
-            )}
-            {isLoading && (
-                 <p className="text-muted-foreground text-center p-8">Loading must-dos...</p>
-            )}
           </div>
-          
-          <div className="flex flex-wrap gap-2 pt-2">
-            <Button variant="outline" onClick={() => handleAddItem()} className="bg-white/10 hover:bg-white/20 border-white/30">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add a Must-Do
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSuggestions(null)}>Cancel</Button>
+            <Button onClick={handleAddSuggestions}>
+              Add Selected ({Object.values(selectedSuggestions).filter(Boolean).length})
             </Button>
-            {!isTemplateMode && (
-                <Button variant="outline" onClick={handleGetSuggestions} disabled={isSuggesting} className="bg-white/10 hover:bg-white/20 border-white/30">
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    {isSuggesting ? 'Thinking...' : 'Suggest with AI'}
-                </Button>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-
-    <Dialog open={!!suggestions} onOpenChange={(open) => !open && setSuggestions(null)}>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>AI Suggestions</DialogTitle>
-      <DialogDescription>
-        Here are suggestions based on your event type. Select the ones you'd like to add.
-      </DialogDescription>
-    </DialogHeader>
-    <div className="py-4 space-y-2">
-      {suggestions?.map((suggestion, index) => (
-        <div key={index} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/50">
-          <Checkbox
-            id={`suggestion-${index}`}
-            checked={selectedSuggestions[suggestion.title]}
-            onCheckedChange={(checked) => handleSuggestionSelectionChange(suggestion.title, !!checked)}
-            className="mt-1"
-          />
-          <div className="grid gap-1.5 leading-none">
-            <label
-              htmlFor={`suggestion-${index}`}
-              className="text-sm font-medium leading-none"
-            >
-              {suggestion.title}
-            </label>
-            <p className="text-sm text-muted-foreground">{suggestion.note}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-    <DialogFooter>
-      <Button variant="ghost" onClick={() => setSuggestions(null)}>Cancel</Button>
-      <Button onClick={handleAddSuggestions}>
-        Add Selected ({Object.values(selectedSuggestions).filter(Boolean).length})
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

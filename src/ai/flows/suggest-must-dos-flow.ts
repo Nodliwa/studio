@@ -15,46 +15,33 @@ export const SuggestMustDosInputSchema = z.object({
 });
 export type SuggestMustDosInput = z.infer<typeof SuggestMustDosInputSchema>;
 
-// ✅ Suggestion Schema
+// ✅ Suggestion Schema - This is what the LLM will generate
 const SuggestionSchema = z.object({
   title: z.string().describe('Short, actionable title (e.g., "Book photographer").'),
   note: z.string().describe('Brief helpful note (e.g., "Get quotes from 3 vendors.").'),
   priority: z.enum(['low', 'medium', 'high']).describe('Suggested priority.'),
-  reminderType: z.enum(['none', 'email', 'sms', 'whatsapp']).describe('Default reminder type.'),
-  reminderDaysBefore: z.number().describe('Days before deadline to send reminder.'),
 });
 
-// ✅ Output Schema
+// ✅ Output Schema - The final, typed output of the flow
 export const SuggestMustDosOutputSchema = z.object({
   suggestions: z.array(SuggestionSchema).describe('Array of 5 suggested must-do items.'),
 });
 export type SuggestMustDosOutput = z.infer<typeof SuggestMustDosOutputSchema>;
 
-// ✅ Simplified Prompt
+// ✅ Simplified and Strict Prompt
 const suggestMustDosPrompt = ai.definePrompt({
   name: 'suggestMustDosPrompt',
   input: { schema: SuggestMustDosInputSchema },
   output: { schema: SuggestMustDosOutputSchema },
   prompt: `
-You are an expert event planner. Suggest 5 critical, non-budgetary tasks for a {{eventType}}.
+You are an expert event planner. For a {{eventType}}, suggest 5 critical, non-budgetary tasks.
 
 Rules:
-- Do NOT suggest any tasks from this list: {{#each existingTitles}}- {{this}} {{/each}}.
-- If no new tasks are found, return an empty array for "suggestions".
-- Respond ONLY with valid JSON matching this schema:
-{
-  "suggestions": [
-    {
-      "title": "string",
-      "note": "string",
-      "priority": "low|medium|high",
-      "reminderType": "email|sms|whatsapp|none",
-      "reminderDaysBefore": number
-    }
-  ]
-}
-No extra text, no explanations.
+- Do NOT suggest any tasks from this list of existing tasks: {{#each existingTitles}}- {{this}} {{/each}}.
+- If no new, relevant tasks come to mind, return an empty array for "suggestions".
+- Your response MUST be a valid JSON object that strictly adheres to the provided output schema. Do not add any extra text, explanations, or markdown formatting.
 `,
+  // The 'output.schema' automatically tells the model the format to use.
 });
 
 // ✅ Main Flow with Safe Parsing & Fallback
@@ -66,13 +53,19 @@ const suggestMustDosFlow = ai.defineFlow(
   },
   async (input) => {
     const llmResponse = await suggestMustDosPrompt(input);
+    const output = llmResponse.output();
+
+    if (!output) {
+      console.error('AI returned a null or undefined output.');
+      throw new Error('AI returned no output.');
+    }
 
     // Validate output using Zod safeParse
-    const parsed = SuggestMustDosOutputSchema.safeParse(llmResponse.output);
+    const parsed = SuggestMustDosOutputSchema.safeParse(output);
     if (!parsed.success) {
       console.error('Validation error:', parsed.error);
       // Log raw response for debugging
-      console.error('Raw AI response:', llmResponse.raw);
+      console.error('Raw AI response:', llmResponse.raw());
       throw new Error('AI returned invalid JSON or missing fields.');
     }
 
