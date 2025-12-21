@@ -79,12 +79,18 @@ export default function ProfilePage() {
     useEffect(() => {
         if (userProfile) {
             reset({
-                knownAs: userProfile.knownAs || '',
-                displayName: userProfile.displayName || '',
-                email: userProfile.email || '',
+                knownAs: userProfile.knownAs || authUser?.displayName?.split(' ')[0] || '',
+                displayName: userProfile.displayName || authUser?.displayName || '',
+                email: userProfile.email || authUser?.email || '',
+            });
+        } else if (authUser) {
+             reset({
+                knownAs: authUser?.displayName?.split(' ')[0] || '',
+                displayName: authUser?.displayName || '',
+                email: authUser?.email || '',
             });
         }
-    }, [userProfile, reset]);
+    }, [userProfile, authUser, reset]);
 
     const getUserInitials = () => {
         const knownAs = userProfile?.knownAs?.trim();
@@ -105,7 +111,7 @@ export default function ProfilePage() {
     };
 
     const onSubmit = async (data: ProfileFormValues) => {
-        if (!userDocRef || !isDirty) return;
+        if (!userDocRef) return;
         
         try {
             await updateDoc(userDocRef, {
@@ -345,3 +351,5 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    
