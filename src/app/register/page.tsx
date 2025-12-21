@@ -19,6 +19,8 @@ import { doc } from 'firebase/firestore';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { UserCredential } from 'firebase/auth';
 import { initiateGoogleSignIn, initiateFacebookSignIn, initiateTwitterSignIn } from '@/firebase/auth-operations';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 const emailRegisterSchema = z.object({
   firstName: z.string().min(1, 'Known as is required'),
@@ -198,15 +200,19 @@ export default function RegisterPage() {
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
+                    <Alert variant="default" className="bg-blue-50 border-blue-200 text-blue-800">
+                        <Info className="h-4 w-4 !text-blue-800" />
+                        <AlertDescription className="text-xs">
+                        Social logins not working? <a href="https://console.firebase.google.com/project/studio-1406892914-3d877/authentication/providers" target="_blank" rel="noopener noreferrer" className="font-bold underline">Click here to enable them</a> in your Firebase project.
+                        </AlertDescription>
+                    </Alert>
+
                     <div className="flex justify-center gap-4">
                         <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('google')} disabled={isSubmitting}>
                             <GoogleIcon />
                         </Button>
                         <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('facebook')} disabled={isSubmitting}>
                             <FacebookIcon />
-                        </Button>
-                        <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={() => handleSocialSignIn('twitter')} disabled={isSubmitting}>
-                            <XIcon />
                         </Button>
                     </div>
 
@@ -284,3 +290,5 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+    
