@@ -259,42 +259,7 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
   const { toast } = useToast();
 
   useEffect(() => {
-    if (isTemplateMode) {
-      if (localMustDos.length === 0) { // Only set initial template items if the list is empty
-        setLocalMustDos([
-          {
-            id: 'local-1',
-            budgetId,
-            userId: '',
-            title: 'Confirm venue access time',
-            note: 'Key collection is with security',
-            status: 'todo',
-            priority: 'high',
-            deadline: new Date().toISOString().split('T')[0],
-            createdAt: new Date(),
-            reminderType: 'email',
-            reminderDaysBefore: 3,
-          },
-          {
-            id: 'local-2',
-            budgetId,
-            userId: '',
-            title: 'Pick up decorations',
-            note: '',
-            status: 'todo',
-            priority: 'medium',
-            deadline: '',
-            createdAt: new Date(),
-            reminderType: 'none',
-            reminderDaysBefore: 1,
-          },
-        ]);
-      }
-    }
-  }, [isTemplateMode, budgetId, localMustDos.length]);
-
-  useEffect(() => {
-    if (mustDos !== null) {
+    if (mustDos) {
       setIsLoading(false);
     }
   }, [mustDos]);
@@ -386,96 +351,100 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
     deleteDocument(docRef);
   };
 
-  const handleGetSuggestions = async () => {
-    if (!eventType) {
-        toast({
-            variant: "destructive",
-            title: "Cannot get suggestions",
-            description: "An event type must be set in the event details first.",
-        });
-        return;
-    }
-
-    setIsSuggesting(true);
-    setSuggestions(null); // Clear previous suggestions
-    
-    try {
-        const existingTitles = items.map(item => item.title);
-        const result = await suggestMustDos({ eventType, existingTitles });
-        
-        if (result.suggestions && result.suggestions.length > 0) {
-            setSuggestions(result.suggestions);
-            // Pre-select all suggestions by default
-            const initialSelection = result.suggestions.reduce((acc, suggestion) => {
-                acc[suggestion.title] = true;
-                return acc;
-            }, {} as Record<string, boolean>);
-            setSelectedSuggestions(initialSelection);
-        } else {
-            toast({ title: "No new suggestions", description: "The AI couldn't find any new suggestions for this event type." });
-        }
-    } catch (error) {
-        console.error("Error getting AI suggestions:", error);
-        toast({
-            variant: "destructive",
-            title: "AI Suggestion Failed",
-            description: "Could not retrieve suggestions. Please try again.",
-        });
-    } finally {
-        setIsSuggesting(false);
-    }
-  };
-
-  const handleAddSuggestions = async () => {
-    if (!suggestions || isTemplateMode || !user || !budgetRef || !firestore) {
-      setSuggestions(null);
-      return;
-    }
-  
-    const selected = suggestions.filter(s => selectedSuggestions[s.title]);
-  
-    if (selected.length === 0) {
-      setSuggestions(null);
-      return;
-    }
-  
-    const batch = writeBatch(firestore);
-    const mustDosCollection = collection(budgetRef, 'mustDos');
-  
-    selected.forEach(suggestion => {
-      const newDocRef = doc(mustDosCollection); // Auto-generate ID
-      const newItem: Omit<MustDo, 'id' > = {
-        budgetId,
-        userId: user.uid,
-        title: suggestion.title,
-        note: suggestion.note,
-        status: 'todo',
-        priority: suggestion.priority,
-        createdAt: serverTimestamp(),
-        reminderType: suggestion.reminderType,
-        reminderDaysBefore: suggestion.reminderDaysBefore,
-        deadline: '', // No deadline by default
-      };
-      batch.set(newDocRef, newItem);
+  // ✅ Fetch AI Suggestions
+const handleGetSuggestions = async () => {
+  if (!eventType) {
+    toast({
+      variant: "destructive",
+      title: "Cannot get suggestions",
+      description: "Please set an event type first.",
     });
-  
-    try {
-      await batch.commit();
+    return;
+  }
+
+  setIsSuggesting(true);
+  setSuggestions(null);
+
+  try {
+    const existingTitles = items.map(item => item.title);
+    const result = await suggestMustDos({ eventType, existingTitles });
+
+    if (result.suggestions?.length > 0) {
+      setSuggestions(result.suggestions);
+      // Pre-select all suggestions by default
+      const initialSelection = result.suggestions.reduce((acc, suggestion) => {
+        acc[suggestion.title] = true;
+        return acc;
+      }, {} as Record<string, boolean>);
+      setSelectedSuggestions(initialSelection);
+    } else {
       toast({
-        title: "Suggestions Added",
-        description: `${selected.length} new Must-Do item(s) have been added to your list.`,
-      });
-    } catch (error) {
-      console.error("Error adding suggestions in batch:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not add the selected suggestions.",
+        title: "No suggestions found",
+        description: "Try a different event type or refresh.",
       });
     }
-  
-    setSuggestions(null); // Close the dialog
-  };
+  } catch (error) {
+    console.error("AI Suggestion Error:", error);
+    toast({
+      variant: "destructive",
+      title: "AI Suggestion Failed",
+      description: "Could not retrieve suggestions. Please try again.",
+    });
+  } finally {
+    setIsSuggesting(false);
+  }
+};
+
+// ✅ Add Selected Suggestions
+const handleAddSuggestions = async () => {
+  if (!suggestions || isTemplateMode || !user || !budgetRef || !firestore) {
+    setSuggestions(null);
+    return;
+  }
+
+  const selected = suggestions.filter(s => selectedSuggestions[s.title]);
+  if (selected.length === 0) {
+    toast({ title: "No items selected", description: "Please select at least one suggestion." });
+    return;
+  }
+
+  const batch = writeBatch(firestore);
+  const mustDosCollection = collection(budgetRef, 'mustDos');
+
+  selected.forEach(suggestion => {
+    const newDocRef = doc(mustDosCollection);
+    const newItem: Omit<MustDo, 'id'> = {
+      budgetId,
+      userId: user.uid,
+      title: suggestion.title,
+      note: suggestion.note,
+      status: 'todo',
+      priority: suggestion.priority,
+      createdAt: serverTimestamp(),
+      reminderType: suggestion.reminderType,
+      reminderDaysBefore: suggestion.reminderDaysBefore,
+      deadline: '',
+    };
+    batch.set(newDocRef, newItem);
+  });
+
+  try {
+    await batch.commit();
+    toast({
+      title: "Suggestions Added",
+      description: `${selected.length} new Must-Do item(s) have been added.`,
+    });
+  } catch (error) {
+    console.error("Error adding suggestions:", error);
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Could not add the selected suggestions.",
+    });
+  }
+
+  setSuggestions(null);
+};
 
   const handleSuggestionSelectionChange = (title: string, isChecked: boolean) => {
     setSelectedSuggestions(prev => ({
@@ -527,44 +496,42 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
     </Card>
 
     <Dialog open={!!suggestions} onOpenChange={(open) => !open && setSuggestions(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>AI Suggestions</DialogTitle>
-            <DialogDescription>
-              Here are a few suggestions based on your event type. Select the ones you'd like to add.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-2">
-            {suggestions?.map((suggestion, index) => (
-              <div key={index} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/50">
-                <Checkbox
-                  id={`suggestion-${index}`}
-                  checked={selectedSuggestions[suggestion.title]}
-                  onCheckedChange={(checked) => handleSuggestionSelectionChange(suggestion.title, !!checked)}
-                  className="mt-1"
-                />
-                <div className="grid gap-1.5 leading-none">
-                  <label
-                    htmlFor={`suggestion-${index}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {suggestion.title}
-                  </label>
-                  <p className="text-sm text-muted-foreground">
-                    {suggestion.note}
-                  </p>
-                </div>
-              </div>
-            ))}
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>AI Suggestions</DialogTitle>
+      <DialogDescription>
+        Here are suggestions based on your event type. Select the ones you'd like to add.
+      </DialogDescription>
+    </DialogHeader>
+    <div className="py-4 space-y-2">
+      {suggestions?.map((suggestion, index) => (
+        <div key={index} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/50">
+          <Checkbox
+            id={`suggestion-${index}`}
+            checked={selectedSuggestions[suggestion.title]}
+            onCheckedChange={(checked) => handleSuggestionSelectionChange(suggestion.title, !!checked)}
+            className="mt-1"
+          />
+          <div className="grid gap-1.5 leading-none">
+            <label
+              htmlFor={`suggestion-${index}`}
+              className="text-sm font-medium leading-none"
+            >
+              {suggestion.title}
+            </label>
+            <p className="text-sm text-muted-foreground">{suggestion.note}</p>
           </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setSuggestions(null)}>Cancel</Button>
-            <Button onClick={handleAddSuggestions}>
-                Add Selected ({Object.values(selectedSuggestions).filter(Boolean).length})
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      ))}
+    </div>
+    <DialogFooter>
+      <Button variant="ghost" onClick={() => setSuggestions(null)}>Cancel</Button>
+      <Button onClick={handleAddSuggestions}>
+        Add Selected ({Object.values(selectedSuggestions).filter(Boolean).length})
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
     </>
   );
 }
