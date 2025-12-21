@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,15 +20,20 @@ const Greeter = ({ quote }: { quote?: string }) => {
   const [subGreeting, setSubGreeting] = useState('');
 
   useEffect(() => {
-    const isLoading = isAuthUserLoading || isProfileLoading;
-    if (isLoading) {
+    // Show a generic greeting while auth or profile data is loading.
+    if (isAuthUserLoading || isProfileLoading) {
         setMainGreeting('Welcome!');
         setSubGreeting("Let's get your planning done.");
         return;
     }
 
-    // Prioritize Firestore data. Fallback to auth data only if Firestore profile doesn't exist.
-    const name = userProfile?.knownAs || userProfile?.displayName?.split(' ')[0] || authUser?.displayName?.split(' ')[0] || authUser?.email?.split('@')[0] || 'there';
+    // Once loading is complete, determine the name to use.
+    // This block will only run when both auth and profile data are available.
+    const name = userProfile?.knownAs 
+                 || userProfile?.displayName?.split(' ')[0] 
+                 || authUser?.displayName?.split(' ')[0] 
+                 || authUser?.email?.split('@')[0] 
+                 || 'there';
     
     const hour = new Date().getHours();
     let timeOfDayGreeting = '';
