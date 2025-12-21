@@ -19,6 +19,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import type { UserCredential } from 'firebase/auth';
 import { initiateGoogleSignIn, initiateFacebookSignIn } from '@/firebase/auth-operations';
 import { Eye, EyeOff } from 'lucide-react';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const emailRegisterSchema = z.object({
   firstName: z.string().min(1, 'Known as is required'),
@@ -57,6 +58,7 @@ export default function RegisterPage() {
   const isMobile = useIsMobile();
   const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [isRecaptchaVerified, setIsRecaptchaVerified] = useState(false);
 
   const {
     register,
@@ -253,6 +255,15 @@ export default function RegisterPage() {
                             </div>
                             {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
                         </div>
+
+                        <div className="flex justify-center">
+                          <ReCAPTCHA
+                            sitekey={process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || ''}
+                            onChange={() => setIsRecaptchaVerified(true)}
+                            onExpired={() => setIsRecaptchaVerified(false)}
+                            onError={() => setIsRecaptchaVerified(false)}
+                          />
+                        </div>
                         
                          <div className="items-top flex space-x-2">
                             <Checkbox id="consent" {...register('consent')} onCheckedChange={(checked) => setValue('consent', checked === true, { shouldValidate: true })} />
@@ -269,7 +280,7 @@ export default function RegisterPage() {
 
                         {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
 
-                        <Button type="submit" className="w-full" disabled={isSubmitting}>
+                        <Button type="submit" className="w-full" disabled={isSubmitting || !isRecaptchaVerified}>
                             {isSubmitting ? 'Creating Account...' : 'Sign Up'}
                         </Button>
                     </form>

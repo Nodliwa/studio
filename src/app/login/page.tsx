@@ -19,6 +19,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { initiateGoogleSignIn } from '@/firebase/auth-operations';
 import { Eye, EyeOff } from 'lucide-react';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -45,6 +46,7 @@ export default function LoginPage() {
   const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] = useState(true);
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
+  const [isRecaptchaVerified, setIsRecaptchaVerified] = useState(false);
 
   const {
     register,
@@ -246,10 +248,19 @@ export default function LoginPage() {
                         {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
                     </div>
 
+                    <div className="flex justify-center">
+                      <ReCAPTCHA
+                        sitekey={process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || ''}
+                        onChange={() => setIsRecaptchaVerified(true)}
+                        onExpired={() => setIsRecaptchaVerified(false)}
+                        onError={() => setIsRecaptchaVerified(false)}
+                      />
+                    </div>
+
                     {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
                     
                      <div className="pb-6 pt-2 px-6">
-                        <Button type="submit" className="w-full" disabled={isSubmitting}>
+                        <Button type="submit" className="w-full" disabled={isSubmitting || !isRecaptchaVerified}>
                             {isSubmitting ? 'Logging in...' : 'Login'}
                         </Button>
                          <p className="mt-4 text-center text-sm">
