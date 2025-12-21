@@ -66,36 +66,51 @@ export default function LoginPage() {
   };
   
     useEffect(() => {
-      if (!isUserLoading && user && !user.isAnonymous) {
-        router.push('/my-plans');
-        return;
-      }
-  
-      const processAuth = async () => {
-        const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
-        if (isRedirecting && auth) {
-          sessionStorage.removeItem('firebase:pendingRedirect');
-          try {
-            const userCredential = await handleGoogleRedirectResult(auth);
-            if (userCredential) {
-              await processSocialUser(userCredential);
-              // The user state change will trigger the redirect in the first part of this effect.
-            }
-          } catch (error) {
-            if (error instanceof FirebaseError) {
-              setFirebaseError(error.message);
-            } else {
-              setFirebaseError('An unexpected error occurred during social sign-in.');
-            }
-          }
+        if (!isUserLoading && user && !user.isAnonymous) {
+            router.push('/my-plans');
+            return;
         }
-        setIsProcessingSocialSignIn(false);
-      };
-  
-      if (!user) {
+
+        const processAuth = async () => {
+            // Only handle redirect results if not loading and no user is present
+            if (!auth || user) {
+                setIsProcessingSocialSignIn(false);
+                return;
+            }
+            
+            const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
+            
+            try {
+                // getRedirectResult will resolve to null if no redirect is pending
+                const userCredential = await handleGoogleRedirectResult(auth);
+                if (userCredential) {
+                    sessionStorage.removeItem('firebase:pendingRedirect');
+                    await processSocialUser(userCredential);
+                    // The user state will change, and the first block of this effect will handle redirection.
+                }
+            } catch (error) {
+                sessionStorage.removeItem('firebase:pendingRedirect');
+                if (error instanceof FirebaseError) {
+                    setFirebaseError(error.message);
+                } else {
+                    setFirebaseError('An unexpected error occurred during social sign-in.');
+                }
+            } finally {
+                // If we were checking for a redirect, we're done processing, regardless of outcome.
+                if (isRedirecting) {
+                   setIsProcessingSocialSignIn(false);
+                }
+            }
+        };
+
+        // We only set loading to false if we are not expecting a redirect.
+        // If a redirect is expected, the finally block in processAuth will handle it.
+        const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
+        if (!isRedirecting) {
+          setIsProcessingSocialSignIn(false);
+        }
+
         processAuth();
-      }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, isUserLoading, auth, router]);
 
   const onEmailSubmit = async (data: LoginFormValues) => {
@@ -121,9 +136,11 @@ export default function LoginPage() {
             sessionStorage.setItem('firebase:pendingRedirect', 'true');
         }
         const userCredential = await initiateGoogleSignIn(auth, isMobile);
-        if (userCredential) {
+        if (userCredential) { // This will only be true for non-redirect (desktop) flow
             await processSocialUser(userCredential);
         }
+        // For redirect flow, the useEffect will handle the result.
+        // For popup flow, the user state change in useEffect will trigger redirect.
         if(!isMobile) {
             setIsProcessingSocialSignIn(false);
         }

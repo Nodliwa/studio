@@ -84,30 +84,39 @@ export default function RegisterPage() {
     }
 
     const processAuth = async () => {
-      const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
-      if (isRedirecting && auth) {
-        sessionStorage.removeItem('firebase:pendingRedirect');
-        try {
-          const userCredential = await handleGoogleRedirectResult(auth);
-          if (userCredential) {
-            await processSocialUser(userCredential);
-            // The user state change will trigger the redirect in the first part of this effect.
-          }
-        } catch (error) {
-          if (error instanceof FirebaseError) {
-            setFirebaseError(error.message);
-          } else {
-            setFirebaseError('An unexpected error occurred during social sign-in.');
-          }
+        if (!auth || user) {
+            setIsProcessingSocialSignIn(false);
+            return;
         }
-      }
-      setIsProcessingSocialSignIn(false);
-    };
 
-    if (!user) {
-      processAuth();
+        const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
+
+        try {
+            const userCredential = await handleGoogleRedirectResult(auth);
+            if (userCredential) {
+                sessionStorage.removeItem('firebase:pendingRedirect');
+                await processSocialUser(userCredential);
+            }
+        } catch (error) {
+            sessionStorage.removeItem('firebase:pendingRedirect');
+            if (error instanceof FirebaseError) {
+                setFirebaseError(error.message);
+            } else {
+                setFirebaseError('An unexpected error occurred during social sign-in.');
+            }
+        } finally {
+            if (isRedirecting) {
+              setIsProcessingSocialSignIn(false);
+            }
+        }
+    };
+    
+    const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
+    if (!isRedirecting) {
+      setIsProcessingSocialSignIn(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    
+    processAuth();
   }, [user, isUserLoading, auth, router]);
 
   const onSubmit = async (data: RegisterFormValues) => {
