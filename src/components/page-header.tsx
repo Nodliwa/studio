@@ -99,44 +99,22 @@ export default function PageHeader() {
   };
   
   const getUserInitials = () => {
-    // Priority 1: Use 'knownAs' from the Firestore profile.
     const knownAs = userProfile?.knownAs?.trim();
     if (knownAs) {
       return knownAs
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase();
+        .split(" ")
+        .map((word) => word[0].toUpperCase())
+        .join("");
     }
-  
-    // Priority 2: Use 'displayName' from the Firestore profile.
-    const displayName = userProfile?.displayName?.trim();
+    const displayName = userProfile?.displayName?.trim() || user?.displayName?.trim();
     if (displayName) {
-      const names = displayName.split(' ');
-      if (names.length > 1) {
-        return (names[0][0] + names[names.length - 1][0]).toUpperCase();
-      }
-      return displayName.substring(0, 2).toUpperCase();
+      return displayName
+        .split(" ")
+        .map((word) => word[0].toUpperCase())
+        .join("");
     }
-  
-    // Priority 3: Fallback to the core auth display name (from Google/FB).
-    const authDisplayName = user?.displayName?.trim();
-    if (authDisplayName) {
-        const names = authDisplayName.split(' ');
-        if (names.length > 1) {
-            return (names[0][0] + names[names.length - 1][0]).toUpperCase();
-        }
-        return authDisplayName.substring(0, 2).toUpperCase();
-    }
-
-    // Priority 4: Fallback to email.
-    if (user?.email) {
-      return user.email[0].toUpperCase();
-    }
-  
-    // Final fallback.
-    return 'U';
-  }
+    return user?.email?.charAt(0).toUpperCase() || "?";
+  };
 
 
   return (
@@ -332,5 +310,3 @@ export default function PageHeader() {
     </header>
   );
 }
-
-    
