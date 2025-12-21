@@ -66,39 +66,37 @@ export default function LoginPage() {
   };
   
     useEffect(() => {
-        const processAuth = async () => {
-            const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
-            if (isRedirecting && auth) {
-                sessionStorage.removeItem('firebase:pendingRedirect');
-                try {
-                    const userCredential = await handleGoogleRedirectResult(auth);
-                    if (userCredential) {
-                        await processSocialUser(userCredential);
-                    }
-                } catch (error) {
-                    if (error instanceof FirebaseError) {
-                        setFirebaseError(error.message);
-                    } else {
-                        setFirebaseError('An unexpected error occurred during social sign-in.');
-                    }
-                } finally {
-                    setIsProcessingSocialSignIn(false);
-                }
-                return;
+      if (!isUserLoading && user && !user.isAnonymous) {
+        router.push('/my-plans');
+        return;
+      }
+  
+      const processAuth = async () => {
+        const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
+        if (isRedirecting && auth) {
+          sessionStorage.removeItem('firebase:pendingRedirect');
+          try {
+            const userCredential = await handleGoogleRedirectResult(auth);
+            if (userCredential) {
+              await processSocialUser(userCredential);
+              // The user state change will trigger the redirect in the first part of this effect.
+            }
+          } catch (error) {
+            if (error instanceof FirebaseError) {
+              setFirebaseError(error.message);
             } else {
-                 setIsProcessingSocialSignIn(false);
+              setFirebaseError('An unexpected error occurred during social sign-in.');
             }
-
-            if (!isUserLoading && !isProcessingSocialSignIn) {
-                if (user && !user.isAnonymous) {
-                    router.push('/my-plans');
-                }
-            }
-        };
-
+          }
+        }
+        setIsProcessingSocialSignIn(false);
+      };
+  
+      if (!user) {
         processAuth();
+      }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, isUserLoading, isProcessingSocialSignIn, auth, router]);
+    }, [user, isUserLoading, auth, router]);
 
   const onEmailSubmit = async (data: LoginFormValues) => {
     if (!auth) return;
@@ -166,22 +164,13 @@ export default function LoginPage() {
     }
   };
 
-  if (isUserLoading || isProcessingSocialSignIn) {
+  if (isUserLoading || isProcessingSocialSignIn || (user && !user.isAnonymous)) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
           <p>Loading...</p>
       </div>
     );
   }
-
-  if (user && !user.isAnonymous) {
-     return (
-      <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-          <p>Redirecting...</p>
-      </div>
-    );
-  }
-
 
   return (
     <div className="min-h-screen bg-secondary">
