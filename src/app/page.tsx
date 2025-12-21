@@ -9,10 +9,14 @@ import PageHeader from '@/components/page-header';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
 
 export default function LandingPage() {
     const { toast } = useToast();
     const [flippedCard, setFlippedCard] = useState<string | null>(null);
+    const { user } = useUser();
+    const router = useRouter();
 
     const handleFlip = (cardId: string) => {
         if (flippedCard === cardId) {
@@ -21,6 +25,14 @@ export default function LandingPage() {
             setFlippedCard(cardId);
         }
     };
+    
+    const handlePlanEventClick = () => {
+        if (user && !user.isAnonymous) {
+            router.push('/my-plans');
+        } else {
+            router.push('/planner/template');
+        }
+    }
 
   return (
     <div className="min-h-screen w-full bg-secondary">
@@ -34,11 +46,9 @@ export default function LandingPage() {
               SimpliPlan helps you budget for life's most important moments. From Weddings to Funerals, plan your celebration with ease and confidence.
             </p>
             <div className="flex justify-center items-center gap-4">
-              <Link href="/planner" className="inline-block">
-                <Button size="lg" className="font-semibold text-lg py-4 px-4">
+              <Button size="lg" className="font-semibold text-lg py-4 px-4" onClick={handlePlanEventClick}>
                   Plan your Event
-                </Button>
-              </Link>
+              </Button>
             </div>
 
             <div className="w-full mx-auto mt-8">
