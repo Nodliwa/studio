@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, ComponentType } from 'react';
@@ -369,13 +370,10 @@ const handleGetSuggestions = async () => {
     const existingTitles = items.map(item => item.title);
     const result = await suggestMustDos({ eventType, existingTitles });
 
-    if (result.suggestions?.length > 0) {
+    if (result.suggestions && result.suggestions.length > 0) {
       setSuggestions(result.suggestions);
-      // Pre-select all suggestions by default
-      const initialSelection = result.suggestions.reduce((acc, suggestion) => {
-        acc[suggestion.title] = true;
-        return acc;
-      }, {} as Record<string, boolean>);
+      // Start with no suggestions selected
+      const initialSelection: Record<string, boolean> = {};
       setSelectedSuggestions(initialSelection);
     } else {
       toast({
