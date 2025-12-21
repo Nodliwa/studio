@@ -18,6 +18,7 @@ import { doc } from 'firebase/firestore';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { UserCredential } from 'firebase/auth';
 import { initiateGoogleSignIn, initiateFacebookSignIn } from '@/firebase/auth-operations';
+import { Eye, EyeOff } from 'lucide-react';
 
 const emailRegisterSchema = z.object({
   firstName: z.string().min(1, 'Known as is required'),
@@ -55,6 +56,7 @@ export default function RegisterPage() {
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -238,7 +240,18 @@ export default function RegisterPage() {
                             <Input id="cellphone" type="tel" placeholder="Cellphone (Optional)" {...register('cellphone')} />
                         </div>
                         <div className="space-y-2">
-                            <Input id="password" type="password" placeholder="Password" {...register('password')} />
+                             <div className="relative">
+                                <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="Password" {...register('password')} />
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute top-0 right-0 h-full px-3"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </Button>
+                            </div>
                             {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
                         </div>
                         

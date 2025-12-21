@@ -18,6 +18,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { initiateGoogleSignIn } from '@/firebase/auth-operations';
+import { Eye, EyeOff } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -43,6 +44,7 @@ export default function LoginPage() {
   const isMobile = useIsMobile();
   const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] = useState(true);
   const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -57,17 +59,14 @@ export default function LoginPage() {
     if (!firestore || !userCredential.user.email) return;
     const userRef = doc(firestore, 'users', userCredential.user.uid);
     
-    // Check if the user document already exists
     const userSnap = await getDoc(userRef);
     if (!userSnap.exists()) {
-      // Only create the document if it's their first time logging in
       await setUserData(userRef, userCredential.user.email, userCredential.user.displayName || 'New User');
     }
   };
   
     useEffect(() => {
         const processAuth = async () => {
-            // High priority: check if we are returning from a redirect
             const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
             if (isRedirecting && auth) {
                 sessionStorage.removeItem('firebase:pendingRedirect');
@@ -75,8 +74,6 @@ export default function LoginPage() {
                     const userCredential = await handleGoogleRedirectResult(auth);
                     if (userCredential) {
                         await processSocialUser(userCredential);
-                        // The onAuthStateChanged listener in useUser will now have the latest user,
-                        // and the second part of this effect will handle the redirect.
                     }
                 } catch (error) {
                     if (error instanceof FirebaseError) {
@@ -87,12 +84,11 @@ export default function LoginPage() {
                 } finally {
                     setIsProcessingSocialSignIn(false);
                 }
-                return; // Stop further processing in this run
+                return;
             } else {
                  setIsProcessingSocialSignIn(false);
             }
 
-            // This part runs if not handling a redirect, or after redirect handling is complete
             if (!isUserLoading && !isProcessingSocialSignIn) {
                 if (user && !user.isAnonymous) {
                     router.push('/my-plans');
@@ -130,7 +126,6 @@ export default function LoginPage() {
         if (userCredential) {
             await processSocialUser(userCredential);
         }
-        // On desktop, after popup, we can stop processing. On mobile, the page will reload.
         if(!isMobile) {
             setIsProcessingSocialSignIn(false);
         }
@@ -230,7 +225,18 @@ export default function LoginPage() {
                                 Forgot Password?
                             </Button>
                         </div>
-                        <Input id="password" type="password" {...register('password')} />
+                        <div className="relative">
+                            <Input id="password" type={showPassword ? 'text' : 'password'} {...register('password')} />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute top-0 right-0 h-full px-3"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                        </div>
                         {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
                     </div>
 
