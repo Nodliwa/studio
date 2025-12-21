@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -106,6 +107,8 @@ export default function ProfilePage() {
         if (!userDocRef) return;
         
         try {
+            // This function now ONLY handles the data submission.
+            // The useEffect hook above will handle resetting the form with the new data.
             await updateDoc(userDocRef, {
                 knownAs: data.knownAs,
                 displayName: data.displayName
@@ -343,3 +346,5 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    

@@ -99,31 +99,42 @@ export default function PageHeader() {
   };
   
   const getUserInitials = () => {
-    // Priority 1: Use the 'knownAs' field from Firestore profile
-    if (userProfile?.knownAs) {
-      return userProfile.knownAs.charAt(0).toUpperCase();
+    // Priority 1: Use 'knownAs' from the Firestore profile.
+    const knownAs = userProfile?.knownAs?.trim();
+    if (knownAs) {
+      return knownAs
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase();
     }
-    // Priority 2: Use the initials from the Firestore displayName
-    if (userProfile?.displayName) {
-      const names = userProfile.displayName.split(' ');
+  
+    // Priority 2: Use 'displayName' from the Firestore profile.
+    const displayName = userProfile?.displayName?.trim();
+    if (displayName) {
+      const names = displayName.split(' ');
       if (names.length > 1) {
-        return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+        return (names[0][0] + names[names.length - 1][0]).toUpperCase();
       }
-      return names[0].charAt(0).toUpperCase();
+      return displayName[0].toUpperCase();
     }
-    // Priority 3: Fallback to the core auth displayName (from Google/FB)
-    if (user?.displayName) {
-        const names = user.displayName.split(' ');
+  
+    // Priority 3: Fallback to the core auth display name (from Google/FB).
+    const authDisplayName = user?.displayName?.trim();
+    if (authDisplayName) {
+        const names = authDisplayName.split(' ');
         if (names.length > 1) {
-            return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+            return (names[0][0] + names[names.length - 1][0]).toUpperCase();
         }
-        return names[0].charAt(0).toUpperCase();
+        return authDisplayName[0].toUpperCase();
     }
-    // Priority 4: Fallback to the email
+
+    // Priority 4: Fallback to email.
     if (user?.email) {
-      return user.email.charAt(0).toUpperCase();
+      return user.email[0].toUpperCase();
     }
-    // Final fallback
+  
+    // Final fallback.
     return 'U';
   }
 
@@ -321,3 +332,5 @@ export default function PageHeader() {
     </header>
   );
 }
+
+    
