@@ -56,7 +56,7 @@ export async function scoreSuggestions(suggestions: string[], context: string): 
   try {
     // Call the OpenAI API.
     const response = await client.chat.completions.create({
-      model: "gpt-4o-mini", // A fast and capable model suitable for this task.
+      model: "gpt-4o-mini", // A fast and capable model for this task.
       messages: [{ role: "user", content: prompt }],
       temperature: 0, // Set to 0 for deterministic, consistent scoring.
       response_format: { type: "json_object" }, // Enforce JSON output format.
@@ -64,8 +64,8 @@ export async function scoreSuggestions(suggestions: string[], context: string): 
 
     const content = response.choices[0].message.content;
     if (!content) {
-      console.error("AI response content is null.");
-      return [];
+      console.error("AI response content is null, returning default scores.");
+      return suggestions.map(title => ({ title, score: 0.5 }));
     }
     
     // The model might return a root object like { "suggestions": [...] }
