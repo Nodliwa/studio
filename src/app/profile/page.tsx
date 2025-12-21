@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -16,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { sendPasswordResetEmail, deleteUser, updateProfile } from 'firebase/auth';
+import { sendPasswordResetEmail, deleteUser } from 'firebase/auth';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -101,15 +100,10 @@ export default function ProfilePage() {
       }
 
     const onSubmit = async (data: ProfileFormValues) => {
-        if (!userDocRef || !authUser) return;
+        if (!userDocRef) return;
         
         try {
-            // Update auth profile first if display name changed
-            if(data.displayName !== authUser.displayName) {
-                await updateProfile(authUser, { displayName: data.displayName });
-            }
-
-            // Then update Firestore
+            // ONLY update the Firestore document. This is the source of truth.
             await updateDoc(userDocRef, {
                 knownAs: data.knownAs,
                 displayName: data.displayName
@@ -119,7 +113,8 @@ export default function ProfilePage() {
                 title: 'Profile Updated',
                 description: 'Your changes have been saved successfully.',
             });
-             await reset(data, { keepIsDirty: false });
+            // Reset the form state to reflect the saved data
+            reset(data);
         } catch (error) {
             console.error("Error updating profile:", error);
             toast({
@@ -195,7 +190,6 @@ export default function ProfilePage() {
             },
             async () => {
                 const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                await updateProfile(authUser, { photoURL: downloadURL });
                 await updateDoc(userDocRef, { photoURL: downloadURL });
                 setUploadProgress(null);
                 toast({

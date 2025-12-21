@@ -99,18 +99,25 @@ export default function PageHeader() {
   };
   
   const getUserInitials = () => {
-    if (userProfile?.knownAs && userProfile?.displayName) {
-        const firstInitial = userProfile.knownAs[0] || '';
-        const lastInitial = userProfile.displayName.split(' ').pop()?.[0] || '';
-        return `${firstInitial}${lastInitial}`.toUpperCase();
+    // Priority 1: Use the 'knownAs' field from Firestore profile
+    if (userProfile?.knownAs) {
+      return userProfile.knownAs.charAt(0).toUpperCase();
     }
+    // Priority 2: Use the initials from the Firestore displayName
+    if (userProfile?.displayName) {
+      const names = userProfile.displayName.split(' ');
+      return names.map(name => name.charAt(0)).join('').toUpperCase();
+    }
+    // Priority 3: Fallback to the core auth displayName (from Google/FB)
     if (user?.displayName) {
-      const names = user.displayName.split(' ');
-      return names.map(name => name[0]).join('').toUpperCase();
+        const names = user.displayName.split(' ');
+        return names.map(name => name.charAt(0)).join('').toUpperCase();
     }
+    // Priority 4: Fallback to the email
     if (user?.email) {
-      return user.email[0].toUpperCase();
+      return user.email.charAt(0).toUpperCase();
     }
+    // Final fallback
     return 'U';
   }
 
