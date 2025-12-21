@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect, ComponentType } from 'react';
@@ -260,40 +259,39 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!isTemplateMode) return;
-    
-    setLocalMustDos(prev => {
-        if (prev.length > 0) return prev; // Already initialized
-        return [
-            {
-              id: 'local-1',
-              budgetId,
-              userId: '',
-              title: 'Confirm venue access time',
-              note: 'Key collection is with security',
-              status: 'todo',
-              priority: 'high',
-              deadline: new Date().toISOString().split('T')[0],
-              createdAt: new Date(),
-              reminderType: 'email',
-              reminderDaysBefore: 3,
-            },
-            {
-              id: 'local-2',
-              budgetId,
-              userId: '',
-              title: 'Pick up decorations',
-              note: '',
-              status: 'todo',
-              priority: 'medium',
-              deadline: '',
-              createdAt: new Date(),
-              reminderType: 'none',
-              reminderDaysBefore: 1,
-            }
-        ];
-    });
-  }, [isTemplateMode, budgetId]);
+    if (isTemplateMode) {
+      if (localMustDos.length === 0) { // Only set initial template items if the list is empty
+        setLocalMustDos([
+          {
+            id: 'local-1',
+            budgetId,
+            userId: '',
+            title: 'Confirm venue access time',
+            note: 'Key collection is with security',
+            status: 'todo',
+            priority: 'high',
+            deadline: new Date().toISOString().split('T')[0],
+            createdAt: new Date(),
+            reminderType: 'email',
+            reminderDaysBefore: 3,
+          },
+          {
+            id: 'local-2',
+            budgetId,
+            userId: '',
+            title: 'Pick up decorations',
+            note: '',
+            status: 'todo',
+            priority: 'medium',
+            deadline: '',
+            createdAt: new Date(),
+            reminderType: 'none',
+            reminderDaysBefore: 1,
+          },
+        ]);
+      }
+    }
+  }, [isTemplateMode, budgetId, localMustDos.length]);
 
   useEffect(() => {
     if (mustDos !== null) {
