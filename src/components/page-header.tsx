@@ -106,7 +106,7 @@ export default function PageHeader() {
         .map((word) => word[0].toUpperCase())
         .join("");
     }
-    const displayName = userProfile?.displayName?.trim() || user?.displayName?.trim();
+    const displayName = userProfile?.displayName?.trim();
     if (displayName) {
       return displayName
         .split(" ")

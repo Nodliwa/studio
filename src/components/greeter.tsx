@@ -28,7 +28,9 @@ const Greeter = ({ quote }: { quote?: string }) => {
         return;
     }
 
-    const name = userProfile?.knownAs || userProfile?.displayName?.split(' ')[0] || authUser?.email?.split('@')[0] || 'there';
+    // Prioritize Firestore data. Fallback to auth data only if Firestore profile doesn't exist.
+    const name = userProfile?.knownAs || userProfile?.displayName?.split(' ')[0] || authUser?.displayName?.split(' ')[0] || authUser?.email?.split('@')[0] || 'there';
+    
     const hour = new Date().getHours();
     let timeOfDayGreeting = '';
 
