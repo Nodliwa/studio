@@ -68,7 +68,7 @@ const suggestMustDosFlow = ai.defineFlow(
     if (!parsed.success) {
       console.error('Validation error:', parsed.error);
       // Log raw response for debugging
-      console.error('Raw AI response:', llmResponse.raw);
+      console.error('Raw AI response:', llmResponse.raw());
       // ✅ Graceful fallback instead of throwing an error
       return { suggestions: [] };
     }
@@ -82,7 +82,12 @@ const suggestMustDosFlow = ai.defineFlow(
   }
 );
 
-// ✅ Wrapper Function
+// ✅ Wrapper Function with Error Handling
 export async function suggestMustDos(input: SuggestMustDosInput): Promise<SuggestMustDosOutput> {
-  return suggestMustDosFlow(input);
+  try {
+    return await suggestMustDosFlow(input);
+  } catch (err) {
+    console.error('Flow execution failed:', err);
+    return { suggestions: [] }; // ✅ Graceful fallback
+  }
 }
