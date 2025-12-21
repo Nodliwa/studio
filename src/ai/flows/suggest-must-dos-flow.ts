@@ -84,6 +84,7 @@ const suggestMustDosFlow = ai.defineFlow(
 
 // ✅ Wrapper Function with Error Handling
 export async function suggestMustDos(input: SuggestMustDosInput): Promise<SuggestMustDosOutput> {
+  console.log('SuggestMustDos called with:', input);
   try {
     return await suggestMustDosFlow(input);
   } catch (err) {
