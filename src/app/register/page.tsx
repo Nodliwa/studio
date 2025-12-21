@@ -18,8 +18,6 @@ import { doc } from 'firebase/firestore';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { UserCredential } from 'firebase/auth';
 import { initiateGoogleSignIn, initiateFacebookSignIn } from '@/firebase/auth-operations';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
 
 const emailRegisterSchema = z.object({
   firstName: z.string().min(1, 'Known as is required'),
