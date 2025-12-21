@@ -76,6 +76,8 @@ export default function ProfilePage() {
     }, [authUser, isAuthUserLoading, router]);
 
     useEffect(() => {
+        // This effect is the single source of truth for the form's data.
+        // It runs whenever the userProfile data from Firestore changes.
         if (userProfile) {
             reset({
                 knownAs: userProfile.knownAs || '',
@@ -100,6 +102,7 @@ export default function ProfilePage() {
       }
 
     const onSubmit = async (data: ProfileFormValues) => {
+        // This function's only job is to save the data to Firestore.
         if (!userDocRef) return;
         
         try {
