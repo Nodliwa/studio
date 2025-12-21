@@ -26,7 +26,7 @@ const SuggestionSchema = z.object({
 
 // ✅ Output Schema
 export const SuggestMustDosOutputSchema = z.object({
-  suggestions: z.array(SuggestionSchema).describe('Array of 3–5 suggested must-do items.'),
+  suggestions: z.array(SuggestionSchema).describe('Array of 5 suggested must-do items.'),
 });
 export type SuggestMustDosOutput = z.infer<typeof SuggestMustDosOutputSchema>;
 
@@ -36,7 +36,7 @@ const suggestMustDosPrompt = ai.definePrompt({
   input: { schema: SuggestMustDosInputSchema },
   output: { schema: SuggestMustDosOutputSchema },
   prompt: `
-You are an expert event planner. Suggest 3–5 critical, non-budgetary tasks for a {{eventType}}.
+You are an expert event planner. Suggest 5 critical, non-budgetary tasks for a {{eventType}}.
 
 Rules:
 - Do NOT suggest any tasks from this list: {{#each existingTitles}}- {{this}} {{/each}}.
