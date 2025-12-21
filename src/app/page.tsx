@@ -8,12 +8,10 @@ import { ListChecks, CalendarDays, Wallet, RefreshCw } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 
 export default function LandingPage() {
-    const { toast } = useToast();
     const [flippedCard, setFlippedCard] = useState<string | null>(null);
     const { user } = useUser();
     const router = useRouter();
@@ -53,7 +51,7 @@ export default function LandingPage() {
 
             <div className="w-full mx-auto mt-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <Link href="/planner?eventType=wedding" className="group">
+                    <Link href="/planner/template?eventType=wedding" className="group">
                        <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-[4/3]">
                             <Image src="/images/wedding.jpg" alt="Wedding" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
                             <div className="absolute inset-0 bg-black/30" />
@@ -64,7 +62,7 @@ export default function LandingPage() {
                             </div>
                         </Card>
                     </Link>
-                    <Link href="/planner?eventType=funeral" className="group">
+                    <Link href="/planner/template?eventType=funeral" className="group">
                         <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-[4/3]">
                             <Image src="/images/funeral2.png" alt="Funeral" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
                             <div className="absolute inset-0 bg-black/30" />
