@@ -7,8 +7,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import PageHeader from '@/components/page-header';
 import Greeter from '@/components/greeter';
-import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, useAuth, getSdks } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth, getSdks } from '@/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
@@ -110,7 +110,7 @@ export default function ProfilePage() {
             }
 
             // Then update Firestore
-            updateDocumentNonBlocking(userDocRef, {
+            await updateDoc(userDocRef, {
                 knownAs: data.knownAs,
                 displayName: data.displayName
             });
@@ -119,7 +119,7 @@ export default function ProfilePage() {
                 title: 'Profile Updated',
                 description: 'Your changes have been saved successfully.',
             });
-             reset(data, { keepIsDirty: false });
+             await reset(data, { keepIsDirty: false });
         } catch (error) {
             console.error("Error updating profile:", error);
             toast({
@@ -173,7 +173,7 @@ export default function ProfilePage() {
       
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (!file || !authUser || !userDocRef) return;
+        if (!file || !authUser || !userDocRef || !firestore) return;
 
         const { storage } = getSdks(auth.app);
         const storageRef = ref(storage, `profile-pictures/${authUser.uid}`);
@@ -196,7 +196,7 @@ export default function ProfilePage() {
             async () => {
                 const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
                 await updateProfile(authUser, { photoURL: downloadURL });
-                updateDocumentNonBlocking(userDocRef, { photoURL: downloadURL });
+                await updateDoc(userDocRef, { photoURL: downloadURL });
                 setUploadProgress(null);
                 toast({
                     title: "Profile Picture Updated",
