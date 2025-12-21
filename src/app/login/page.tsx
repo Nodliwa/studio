@@ -36,7 +36,7 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   );
 
 export default function LoginPage() {
-  const { auth, firestore, areServicesAvailable } = useFirebase();
+  const { auth, firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
@@ -63,8 +63,6 @@ export default function LoginPage() {
   useEffect(() => {
     // This effect runs on mount to handle the redirect result from social sign-ins.
     if (!auth) {
-        // If auth is not ready, we can't process the result yet.
-        // We set processing to false only if we are certain no redirect is pending.
         const isRedirectPending = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
         if (!isRedirectPending) {
             setIsProcessingSocialSignIn(false);
@@ -77,7 +75,7 @@ export default function LoginPage() {
       .then((userCredential) => {
         if (userCredential) {
           // If we get a result, process the user.
-          processSocialUser(userCredential);
+          return processSocialUser(userCredential);
         }
       })
       .catch((error) => {

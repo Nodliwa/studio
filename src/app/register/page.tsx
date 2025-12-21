@@ -17,7 +17,7 @@ import PageHeader from '@/components/page-header';
 import { doc } from 'firebase/firestore';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { UserCredential } from 'firebase/auth';
-import { initiateGoogleSignIn, initiateFacebookSignIn, initiateTwitterSignIn } from '@/firebase/auth-operations';
+import { initiateGoogleSignIn, initiateFacebookSignIn } from '@/firebase/auth-operations';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 
@@ -51,7 +51,7 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 export default function RegisterPage() {
-  const { auth, firestore, areServicesAvailable } = useFirebase();
+  const { auth, firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
@@ -90,7 +90,7 @@ export default function RegisterPage() {
     handleGoogleRedirectResult(auth)
       .then((userCredential) => {
         if (userCredential) {
-          processSocialUser(userCredential);
+          return processSocialUser(userCredential);
         }
       })
       .catch((error) => {
@@ -136,7 +136,7 @@ export default function RegisterPage() {
     }
   };
 
-  const handleSocialSignIn = async (provider: 'google' | 'facebook' | 'twitter') => {
+  const handleSocialSignIn = async (provider: 'google' | 'facebook') => {
     if (!auth) return;
     setFirebaseError(null);
     setIsProcessingSocialSignIn(true);
@@ -144,7 +144,6 @@ export default function RegisterPage() {
     const signInFunction = {
         google: initiateGoogleSignIn,
         facebook: initiateFacebookSignIn,
-        twitter: initiateTwitterSignIn,
     }[provider];
 
     try {
