@@ -75,11 +75,11 @@ export default function ProfilePage() {
             router.push('/login');
         }
     }, [authUser, isAuthUserLoading, router]);
-
+    
+    // This effect is the single source of truth for the form's data.
+    // It runs whenever the userProfile data from Firestore changes,
+    // ensuring the form always reflects the latest saved state.
     useEffect(() => {
-        // This effect is the single source of truth for the form's data.
-        // It runs whenever the userProfile data from Firestore changes,
-        // ensuring the form always reflects the latest saved state.
         if (userProfile) {
             reset({
                 knownAs: userProfile.knownAs || '',
@@ -90,25 +90,27 @@ export default function ProfilePage() {
     }, [userProfile, reset]);
 
     const getUserInitials = () => {
-        if (userProfile?.knownAs) {
-          return userProfile.knownAs[0].toUpperCase();
+        const knownAs = userProfile?.knownAs?.trim();
+        if (knownAs) {
+        return knownAs
+            .split(' ')
+            .map((word) => word[0].toUpperCase())
+            .join('');
         }
-        if (userProfile?.displayName) {
-          const names = userProfile.displayName.split(' ');
-          return names.map(name => name[0]).join('').toUpperCase();
+        const displayName = userProfile?.displayName?.trim();
+        if (displayName) {
+        return displayName
+            .split(' ')
+            .map((word) => word[0].toUpperCase())
+            .join('');
         }
-        if (authUser?.email) {
-          return authUser.email[0].toUpperCase();
-        }
-        return 'U';
-      }
+        return authUser?.email?.charAt(0).toUpperCase() || '?';
+    };
 
     const onSubmit = async (data: ProfileFormValues) => {
         if (!userDocRef) return;
         
         try {
-            // This function now ONLY handles the data submission.
-            // The useEffect hook above will handle resetting the form with the new data.
             await updateDoc(userDocRef, {
                 knownAs: data.knownAs,
                 displayName: data.displayName

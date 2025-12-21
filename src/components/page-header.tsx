@@ -116,7 +116,7 @@ export default function PageHeader() {
       if (names.length > 1) {
         return (names[0][0] + names[names.length - 1][0]).toUpperCase();
       }
-      return displayName[0].toUpperCase();
+      return displayName.substring(0, 2).toUpperCase();
     }
   
     // Priority 3: Fallback to the core auth display name (from Google/FB).
@@ -126,7 +126,7 @@ export default function PageHeader() {
         if (names.length > 1) {
             return (names[0][0] + names[names.length - 1][0]).toUpperCase();
         }
-        return authDisplayName[0].toUpperCase();
+        return authDisplayName.substring(0, 2).toUpperCase();
     }
 
     // Priority 4: Fallback to email.
