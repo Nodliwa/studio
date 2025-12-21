@@ -106,12 +106,18 @@ export default function PageHeader() {
     // Priority 2: Use the initials from the Firestore displayName
     if (userProfile?.displayName) {
       const names = userProfile.displayName.split(' ');
-      return names.map(name => name.charAt(0)).join('').toUpperCase();
+      if (names.length > 1) {
+        return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+      }
+      return names[0].charAt(0).toUpperCase();
     }
     // Priority 3: Fallback to the core auth displayName (from Google/FB)
     if (user?.displayName) {
         const names = user.displayName.split(' ');
-        return names.map(name => name.charAt(0)).join('').toUpperCase();
+        if (names.length > 1) {
+            return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+        }
+        return names[0].charAt(0).toUpperCase();
     }
     // Priority 4: Fallback to the email
     if (user?.email) {

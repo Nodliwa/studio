@@ -103,7 +103,6 @@ export default function ProfilePage() {
         if (!userDocRef) return;
         
         try {
-            // ONLY update the Firestore document. This is the source of truth.
             await updateDoc(userDocRef, {
                 knownAs: data.knownAs,
                 displayName: data.displayName
@@ -113,8 +112,6 @@ export default function ProfilePage() {
                 title: 'Profile Updated',
                 description: 'Your changes have been saved successfully.',
             });
-            // Reset the form state to reflect the saved data
-            reset(data);
         } catch (error) {
             console.error("Error updating profile:", error);
             toast({
