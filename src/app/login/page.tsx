@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PageHeader from '@/components/page-header';
 import { signInWithEmailAndPassword, sendPasswordResetEmail, type UserCredential } from 'firebase/auth';
-import { doc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { initiateGoogleSignIn } from '@/firebase/auth-operations';
@@ -56,8 +56,13 @@ export default function LoginPage() {
   const processSocialUser = async (userCredential: UserCredential) => {
     if (!firestore || !userCredential.user.email) return;
     const userRef = doc(firestore, 'users', userCredential.user.uid);
-    // This will create the user document if it doesn't exist, or merge if it does.
-    await setUserData(userRef, userCredential.user.email, userCredential.user.displayName || 'New User');
+    
+    // Check if the user document already exists
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) {
+      // Only create the document if it's their first time logging in
+      await setUserData(userRef, userCredential.user.email, userCredential.user.displayName || 'New User');
+    }
   };
   
     useEffect(() => {
