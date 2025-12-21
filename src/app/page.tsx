@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -7,15 +6,31 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ListChecks, CalendarDays, Wallet, RefreshCw } from 'lucide-react';
 import PageHeader from '@/components/page-header';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
 
 export default function LandingPage() {
     const { toast } = useToast();
     const [flippedCard, setFlippedCard] = useState<string | null>(null);
     const { user, isUserLoading } = useUser();
+    const router = useRouter();
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // This effect runs only on the client, after the initial render.
+        // This prevents the user check from interfering with the build process.
+        if (!isUserLoading) {
+            if (user && !user.isAnonymous) {
+                router.push('/my-plans');
+            } else {
+                setLoading(false);
+            }
+        }
+    }, [user, isUserLoading, router]);
+
 
     const handleFlip = (cardId: string) => {
         if (flippedCard === cardId) {
@@ -24,6 +39,14 @@ export default function LandingPage() {
             setFlippedCard(cardId);
         }
     };
+
+    if (loading || isUserLoading || (user && !user.isAnonymous)) {
+        return (
+          <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
+              <p>Loading...</p>
+          </div>
+        );
+    }
 
 
   return (
