@@ -56,11 +56,11 @@ const suggestMustDosFlow = ai.defineFlow(
   },
   async (input) => {
     const llmResponse = await suggestMustDosPrompt(input);
-    const output = llmResponse.output();
+    const output = llmResponse.output; // ✅ Corrected: .output is a property
 
     if (!output) {
-      console.error('AI returned a null or undefined output.');
-      throw new Error('AI returned no output.');
+      console.warn('AI returned a null or undefined output, using fallback.');
+      return { suggestions: [] };
     }
 
     // Validate output using Zod safeParse
@@ -68,8 +68,9 @@ const suggestMustDosFlow = ai.defineFlow(
     if (!parsed.success) {
       console.error('Validation error:', parsed.error);
       // Log raw response for debugging
-      console.error('Raw AI response:', llmResponse.raw());
-      throw new Error('AI returned invalid JSON or missing fields.');
+      console.error('Raw AI response:', llmResponse.raw);
+      // ✅ Graceful fallback instead of throwing an error
+      return { suggestions: [] };
     }
 
     // Fallback if no suggestions

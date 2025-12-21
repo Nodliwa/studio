@@ -69,20 +69,30 @@ export async function scoreSuggestions(suggestions: string[], context: string): 
     }
     
     // The model might return a root object like { "suggestions": [...] }
-    const parsed = JSON.parse(content);
+    let parsed;
+    try {
+        parsed = JSON.parse(content);
+    } catch (e) {
+        console.error("Initial JSON parsing failed, returning default scores.", e);
+        // Fallback if parsing fails
+        return suggestions.map(title => ({ title, score: 0.5 }));
+    }
+
     if (Array.isArray(parsed)) {
         return parsed;
     }
-    if (parsed.suggestions && Array.isArray(parsed.suggestions)) {
-        return parsed.suggestions;
+    // Check if the response is nested under a key like "suggestions"
+    const suggestionsArray = parsed.suggestions || parsed.data || parsed.items;
+    if (suggestionsArray && Array.isArray(suggestionsArray)) {
+        return suggestionsArray;
     }
 
-    console.error("Parsed JSON is not in the expected format:", parsed);
+    console.error("Parsed JSON is not in the expected array format:", parsed);
     return [];
 
   } catch (err) {
-    console.error("Failed to parse or process AI response:", err);
-    // Return the original suggestions with a default score to avoid breaking the UI
+    console.error("Failed to process AI response, returning default scores:", err);
+    // Fallback: Return the original suggestions with a default score to avoid breaking the UI
     return suggestions.map(title => ({ title, score: 0.5 }));
   }
 }
