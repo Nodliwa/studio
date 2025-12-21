@@ -61,14 +61,22 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    if (!areServicesAvailable) {
-      setIsProcessingSocialSignIn(false);
-      return; 
+    // This effect runs on mount to handle the redirect result from social sign-ins.
+    if (!auth) {
+        // If auth is not ready, we can't process the result yet.
+        // We set processing to false only if we are certain no redirect is pending.
+        const isRedirectPending = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
+        if (!isRedirectPending) {
+            setIsProcessingSocialSignIn(false);
+        }
+        return;
     }
   
+    sessionStorage.removeItem('firebase:pendingRedirect');
     handleGoogleRedirectResult(auth)
       .then((userCredential) => {
         if (userCredential) {
+          // If we get a result, process the user.
           processSocialUser(userCredential);
         }
       })
@@ -80,10 +88,11 @@ export default function LoginPage() {
         }
       })
       .finally(() => {
+        // Whether it succeeded, failed, or there was no credential, we are done processing.
         setIsProcessingSocialSignIn(false);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [areServicesAvailable]); 
+  }, [auth]);
 
   useEffect(() => {
     if (isUserLoading || isProcessingSocialSignIn) return;
@@ -112,11 +121,19 @@ export default function LoginPage() {
     setFirebaseError(null);
     setIsProcessingSocialSignIn(true);
     try {
+        if (isMobile) {
+            sessionStorage.setItem('firebase:pendingRedirect', 'true');
+        }
         const userCredential = await initiateGoogleSignIn(auth, isMobile);
         if (userCredential) {
             await processSocialUser(userCredential);
         }
+        // On desktop, after popup, we can stop processing. On mobile, the page will reload.
+        if(!isMobile) {
+            setIsProcessingSocialSignIn(false);
+        }
     } catch (error) {
+        sessionStorage.removeItem('firebase:pendingRedirect');
         if (error instanceof FirebaseError) {
             if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
                 setFirebaseError(error.message);
@@ -248,3 +265,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    

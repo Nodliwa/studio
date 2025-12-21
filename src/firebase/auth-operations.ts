@@ -103,13 +103,18 @@ export async function initiateTwitterSignIn(authInstance: Auth, isMobile: boolea
 
 /**
  * Handles the result of a Sign-In redirect for any provider.
+ * This should be called once when the application loads after a redirect.
  */
 export async function handleGoogleRedirectResult(auth: Auth): Promise<UserCredential | null> {
     try {
+        // This promise resolves with the signed-in user credential after a redirect.
+        // It resolves to `null` if the page was loaded without a pending redirect.
         const result = await getRedirectResult(auth);
         return result;
     } catch (error) {
         console.error('Error handling social sign-in redirect result:', error);
-        throw error;
+        throw error; // Re-throw to be caught by the calling component
     }
 }
+
+    

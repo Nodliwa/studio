@@ -78,11 +78,15 @@ export default function RegisterPage() {
   };
 
   useEffect(() => {
-    if (!areServicesAvailable) {
-      setIsProcessingSocialSignIn(false);
-      return; 
+    if (!auth) {
+        const isRedirectPending = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
+        if (!isRedirectPending) {
+            setIsProcessingSocialSignIn(false);
+        }
+        return;
     }
   
+    sessionStorage.removeItem('firebase:pendingRedirect');
     handleGoogleRedirectResult(auth)
       .then((userCredential) => {
         if (userCredential) {
@@ -100,7 +104,7 @@ export default function RegisterPage() {
         setIsProcessingSocialSignIn(false);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [areServicesAvailable]);
+  }, [auth]);
 
   useEffect(() => {
     if (isUserLoading || isProcessingSocialSignIn) return;
@@ -144,11 +148,18 @@ export default function RegisterPage() {
     }[provider];
 
     try {
+        if (isMobile) {
+            sessionStorage.setItem('firebase:pendingRedirect', 'true');
+        }
         const userCredential = await signInFunction(auth, isMobile);
         if (userCredential) {
             await processSocialUser(userCredential);
         }
+        if(!isMobile) {
+            setIsProcessingSocialSignIn(false);
+        }
     } catch (error) {
+        sessionStorage.removeItem('firebase:pendingRedirect');
         if (error instanceof FirebaseError) {
             if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
                 setFirebaseError(error.message);
@@ -283,3 +294,5 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+    
