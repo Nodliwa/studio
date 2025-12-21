@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview Robust AI flow for suggesting "must-do" tasks for event planning.
- * Includes strict JSON enforcement, simplified prompt, safe parsing, and fallback handling.
+ * Includes strict JSON enforcement, detailed priority guidance, and safe parsing.
  */
 
 import { ai } from '@/ai/genkit';
@@ -28,20 +28,23 @@ export const SuggestMustDosOutputSchema = z.object({
 });
 export type SuggestMustDosOutput = z.infer<typeof SuggestMustDosOutputSchema>;
 
-// ✅ Simplified and Strict Prompt
+// ✅ Improved and Strict Prompt
 const suggestMustDosPrompt = ai.definePrompt({
   name: 'suggestMustDosPrompt',
   input: { schema: SuggestMustDosInputSchema },
   output: { schema: SuggestMustDosOutputSchema },
   prompt: `
-You are an expert event planner. For a {{eventType}}, suggest 5 critical, non-budgetary tasks.
+You are an expert event planner. For a {{eventType}}, suggest exactly 5 critical, non-budgetary tasks.
 
-Rules:
-- Do NOT suggest any tasks from this list of existing tasks: {{#each existingTitles}}- {{this}} {{/each}}.
-- If no new, relevant tasks come to mind, return an empty array for "suggestions".
-- Your response MUST be a valid JSON object that strictly adheres to the provided output schema. Do not add any extra text, explanations, or markdown formatting.
+Follow these rules strictly:
+1.  Do NOT suggest any tasks from this list of existing tasks: {{#each existingTitles}}- {{this}} {{/each}}.
+2.  If no new, relevant tasks come to mind, return an empty array for "suggestions".
+3.  Assign priority based on these guidelines:
+    - "high": For tasks that must be done early or are critical to the event's success.
+    - "medium": For important but less time-sensitive tasks.
+    - "low": For "nice-to-have" tasks or final touches.
+4.  Your response MUST be a valid JSON object that strictly adheres to the provided output schema. Do not add any extra text, explanations, or markdown formatting.
 `,
-  // The 'output.schema' automatically tells the model the format to use.
 });
 
 // ✅ Main Flow with Safe Parsing & Fallback
