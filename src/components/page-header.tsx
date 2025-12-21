@@ -113,6 +113,10 @@ export default function PageHeader() {
         .map((word) => word[0].toUpperCase())
         .join("");
     }
+    // Fallback to auth data only if firestore data is unavailable
+    if (user?.displayName) {
+       return user.displayName.split(" ").map((word) => word[0].toUpperCase()).join("");
+    }
     return user?.email?.charAt(0).toUpperCase() || "?";
   };
 
@@ -310,5 +314,3 @@ export default function PageHeader() {
     </header>
   );
 }
-
-    

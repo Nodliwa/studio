@@ -17,16 +17,17 @@ const Greeter = ({ quote }: { quote?: string }) => {
 
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<AppUser>(userDocRef);
 
-  const [mainGreeting, setMainGreeting] = useState('');
-  const [subGreeting, setSubGreeting] = useState('');
+  const [mainGreeting, setMainGreeting] = useState('Welcome!');
+  const [subGreeting, setSubGreeting] = useState("Let's get your planning done.");
 
   useEffect(() => {
+    // Wait until both auth and profile loading are complete to prevent race conditions
     if (isAuthUserLoading || isProfileLoading) {
-      setMainGreeting('Welcome!');
-      setSubGreeting("Let's get your planning done.");
+      setMainGreeting('Welcome!'); // Show a generic greeting while loading
       return;
     }
 
+    // Establish a clear priority for the name to use
     const name = userProfile?.knownAs
                  || userProfile?.displayName?.split(' ')[0]
                  || authUser?.displayName?.split(' ')[0]
@@ -63,5 +64,3 @@ const Greeter = ({ quote }: { quote?: string }) => {
 };
 
 export default Greeter;
-
-    

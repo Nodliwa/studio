@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import PageHeader from '@/components/page-header';
 import Greeter from '@/components/greeter';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth, getSdks } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
@@ -77,35 +77,36 @@ export default function ProfilePage() {
     }, [authUser, isAuthUserLoading, router]);
     
     useEffect(() => {
+        // This ensures the form is populated from the single source of truth: the Firestore profile.
+        // It only falls back to the auth provider's info if the Firestore doc is not yet created/populated.
         if (userProfile) {
             reset({
-                knownAs: userProfile.knownAs || authUser?.displayName?.split(' ')[0] || '',
-                displayName: userProfile.displayName || authUser?.displayName || '',
+                knownAs: userProfile.knownAs || userProfile.displayName?.split(' ')[0] || '',
+                displayName: userProfile.displayName || '',
                 email: userProfile.email || authUser?.email || '',
             });
-        } else if (authUser) {
+        } else if (authUser && !isProfileLoading) { // Only use authUser as fallback if profile isn't loading
              reset({
                 knownAs: authUser?.displayName?.split(' ')[0] || '',
                 displayName: authUser?.displayName || '',
                 email: authUser?.email || '',
             });
         }
-    }, [userProfile, authUser, reset]);
+    }, [userProfile, authUser, isProfileLoading, reset]);
 
     const getUserInitials = () => {
+        // Strict priority: Firestore data first.
         const knownAs = userProfile?.knownAs?.trim();
         if (knownAs) {
-        return knownAs
-            .split(' ')
-            .map((word) => word[0].toUpperCase())
-            .join('');
+          return knownAs.split(' ').map((word) => word[0].toUpperCase()).join('');
         }
         const displayName = userProfile?.displayName?.trim();
         if (displayName) {
-        return displayName
-            .split(' ')
-            .map((word) => word[0].toUpperCase())
-            .join('');
+          return displayName.split(' ').map((word) => word[0].toUpperCase()).join('');
+        }
+        // Fallback to auth data only if Firestore data is unavailable.
+        if (authUser?.displayName) {
+          return authUser.displayName.split(' ').map((word) => word[0].toUpperCase()).join('');
         }
         return authUser?.email?.charAt(0).toUpperCase() || '?';
     };
@@ -176,9 +177,10 @@ export default function ProfilePage() {
       
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (!file || !authUser || !userDocRef || !firestore) return;
+        if (!file || !authUser || !userDocRef) return;
 
-        const { storage } = getSdks(auth.app);
+        // The getSdks function is not directly available, so we get storage from the auth instance's app
+        const storage = getStorage(auth.app);
         const storageRef = ref(storage, `profile-pictures/${authUser.uid}`);
         const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -351,5 +353,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-    
