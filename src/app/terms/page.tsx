@@ -16,10 +16,10 @@ export default function TermsOfServicePage() {
 
             <h2 className="text-2xl font-bold font-headline mt-8 mb-4">1. DEFINITIONS</h2>
             <ul>
-              <li>"SimpliPlan" / "we" / "us" / "our" refers to the SimpliPlan platform and its operators.</li>
-              <li>"User" / "you" refers to any individual who accesses or uses SimpliPlan.</li>
-              <li>"Account" means a registered user profile created to access features of the Service.</li>
-              <li>"Content" means any information, data, text, or materials entered into the platform by users.</li>
+              <li>"SimpliPlan" / "we" / "us" / "our" - refers to the SimpliPlan platform and its operators.</li>
+              <li>"User" / "you" - refers to any individual who accesses or uses SimpliPlan.</li>
+              <li>"Account" - means a registered user profile created to access features of the Service.</li>
+              <li>"Content" - means any information, data, text, or materials entered into the platform by users.</li>
             </ul>
 
             <h2 className="text-2xl font-bold font-headline mt-8 mb-4">2. ELIGIBILITY</h2>
