@@ -9,7 +9,7 @@ backend:
   id: next-server
   # Pin the backend to a specific repository.
   # The repository must be in the same Google Cloud project.
-  repository: projects/studio-1406892914-3d877/locations/us-central1/repositories/firebase-frameworks-nextn
+  repository: projects/studio-1406892914-3d877-dev/locations/us-central1/repositories/firebase-frameworks-nextn
 runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
@@ -24,4 +24,4 @@ rewrites:
   - source: "**"
     function: "next-server"
 
-# Force complete redeployment trigger v12. Correcting project config.
+# Final deployment attempt trigger v1. Correcting repository path.
