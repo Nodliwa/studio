@@ -3,6 +3,13 @@
 
 # Pin the backend to a specific region.
 location: us-central1
+backend:
+  # The ID of the backend to create or update.
+  # This is a user-defined ID and not the name of the function.
+  id: next-server
+  # Pin the backend to a specific repository.
+  # The repository must be in the same Google Cloud project.
+  repository: projects/studio-1406892914-3d877/locations/us-central1/repositories/firebase-frameworks-nextn
 runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
