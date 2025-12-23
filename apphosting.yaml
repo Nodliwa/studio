@@ -24,6 +24,6 @@ rewrites:
   - source: "**"
     function: "next-server"
 
-# Force redeployment trigger v5.
+# Force complete redeployment trigger v10.
 
     
