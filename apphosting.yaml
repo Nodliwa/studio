@@ -23,5 +23,3 @@ headers:
 rewrites:
   - source: "**"
     function: "next-server"
-
-# Final attempt: Forcing a complete re-provision of backend services.
