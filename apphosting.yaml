@@ -24,6 +24,6 @@ rewrites:
   - source: "**"
     function: "next-server"
 
-# Restoration build trigger
+# Force redeployment trigger v5.
 
     

@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   description: "Event planning made simple.",
 };
 
+// Force redeployment trigger v5
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -36,5 +37,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-    
