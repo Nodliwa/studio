@@ -24,4 +24,4 @@ rewrites:
   - source: "**"
     function: "next-server"
 
-# Forcing another full, clean redeployment to resolve persistent configuration issues.
+# Final attempt: Forcing a complete re-provision of backend services.
