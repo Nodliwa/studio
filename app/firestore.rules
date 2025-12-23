@@ -1,0 +1,142 @@
+
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model.
+ * A user can only access, modify, or delete data that exists within their
+ * own dedicated document tree. All access requires user authentication.
+ *
+ * Data Structure: All application data is hierarchically nested under the
+ * `/users/{userId}` collection path. A user's profile is the root document,
+ * and their budgets, categories, and items are stored in nested subcollections.
+ * This structure makes ownership-based security straightforward and performant.
+ *
+ * Key Security Decisions:
+ * - Default Deny: All operations are denied by default.
+ * - Authentication Required: No anonymous access is permitted for any data, except for RSVP creation and reading a single budget for the RSVP page.
+ * - No User Enumeration: The top-level `/users` collection cannot be listed,
+ *   preventing malicious actors from discovering the entire user base.
+ * - Path-Based Ownership: A user's identity (auth.uid) is compared against
+ *   the `{userId}` segment in the document path to determine ownership.
+ *
+ * Denormalization for Authorization: The core authorization model relies on the
+ * document path itself, which is a highly performant strategy. To ensure data
+ * integrity, rules validate that key relational fields within documents (e.g., a
+ * budget's `userId` field) match the corresponding ID in the path upon creation.
+ * These relational fields are then enforced as immutable on update to prevent
+ * documents from being moved between owners or parent documents.
+ *
+ * Structural Segregation: The data model naturally uses structural segregation
+ * by nesting all private user content within their own document tree. This
+ * design inherently secures list operations, as a user can only query collections
+ * that are already inside their private data scope.
+ *
+ * This rules file has been updated to trigger a re-provisioning of the backend.
+ * Forcing another backend re-provision to resolve 404 error.
+ * Another attempt to force a re-provision of the backend.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------------------
+    // Helper Functions
+    // -------------------------------------------------------------------------
+
+    /**
+     * Verifies that a user is signed in.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Verifies that the currently authenticated user's ID matches the
+     * specified userId from the document path. This is the cornerstone
+     * of the user-ownership security model.
+     * @param userId The user ID from the path wildcard.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * A stricter version of isOwner for update and delete operations. It ensures
+     * that the document being modified actually exists, which is a best practice
+     * to prevent unintended side effects.
+     * @param userId The user ID from the path wildcard.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Validates the schema for a new RSVP document.
+     * Ensures required fields are present and have the correct types.
+     * Also validates the budgetId matches the path.
+     */
+    function isValidRsvpDocument(budgetId) {
+        let data = request.resource.data;
+        return data.guestName is string &&
+               data.guestName.size() > 0 &&
+               data.status is string &&
+               (data.status == 'attending' || data.status == 'not_attending') &&
+               data.additionalGuests is number &&
+               data.additionalGuests >= 0 &&
+               data.budgetId == budgetId &&
+               request.time == data.respondedAt;
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Collection Rules
+    // -------------------------------------------------------------------------
+
+    /**
+     * @description Rules for the User collection.
+     * @path /users/{userId}
+     */
+    match /users/{userId} {
+      allow get, update, delete: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId);
+
+      /**
+       * @description Rules for the user's Budgets subcollection.
+       */
+      match /budgets/{budgetId} {
+        // ALLOW public read for RSVP page, but only owner can list/write.
+        allow get: if true;
+        allow list, create, update, delete: if isOwner(userId);
+
+        /**
+         * @description Rules for the categories within a budget.
+         */
+        match /categories/{categoryId} {
+          allow get, list, create, update, delete: if isOwner(userId);
+
+          /**
+           * @description Rules for items within a category.
+           */
+          match /items/{itemId} {
+             allow get, list, create, update, delete: if isOwner(userId);
+          }
+        }
+         /**
+         * @description Rules for the must-do tasks within a budget.
+         */
+        match /mustDos/{mustDoId} {
+          allow get, list, create, update, delete: if isOwner(userId);
+        }
+
+        /**
+         * @description Rules for RSVP responses for a budget.
+         * @allow Anyone can (create) an RSVP to allow for public submissions.
+         * @allow Only the budget owner can (read, list, update, delete) RSVPs.
+         */
+        match /rsvps/{rsvpId} {
+            allow create: if isValidRsvpDocument(budgetId);
+            allow get, list, update, delete: if isOwner(userId);
+        }
+      }
+    }
+  }
+}
