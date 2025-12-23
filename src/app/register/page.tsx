@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,6 +21,7 @@ import type { UserCredential } from 'firebase/auth';
 import { initiateGoogleSignIn, initiateFacebookSignIn } from '@/firebase/auth-operations';
 import { Eye, EyeOff } from 'lucide-react';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { verifyRecaptcha } from '@/app/actions';
 
 const emailRegisterSchema = z.object({
   firstName: z.string().min(1, 'Known as is required'),
@@ -59,7 +60,8 @@ export default function RegisterPage() {
   const isMobile = useIsMobile();
   const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [isRecaptchaVerified, setIsRecaptchaVerified] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const {
     register,
@@ -76,7 +78,6 @@ export default function RegisterPage() {
   const processSocialUser = async (userCredential: UserCredential) => {
     if (!firestore || !userCredential.user.email) return;
     const userRef = doc(firestore, 'users', userCredential.user.uid);
-    // This will create the user document if it doesn't exist, or merge if it does.
     await setUserData(userRef, userCredential.user.email, userCredential.user.displayName || 'New User');
   };
 
@@ -125,8 +126,21 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     if (!auth || !firestore) return;
     setFirebaseError(null);
+
+    if (!recaptchaToken) {
+        setFirebaseError('Please complete the reCAPTCHA challenge.');
+        return;
+    }
     
     try {
+      const isVerified = await verifyRecaptcha(recaptchaToken);
+      if (!isVerified) {
+          setFirebaseError('reCAPTCHA verification failed. Please try again.');
+          recaptchaRef.current?.reset();
+          setRecaptchaToken(null);
+          return;
+      }
+      
       const displayName = `${data.firstName} ${data.lastName}`;
       const userCredential = await initiateEmailSignUp(auth, data.email, data.password!, displayName);
       
@@ -141,6 +155,8 @@ export default function RegisterPage() {
       } else {
         setFirebaseError('An unexpected error occurred during registration.');
       }
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     }
   };
 
@@ -259,10 +275,11 @@ export default function RegisterPage() {
 
                         <div className="flex justify-center">
                           <ReCAPTCHA
+                            ref={recaptchaRef}
                             sitekey={process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || ''}
-                            onChange={() => setIsRecaptchaVerified(true)}
-                            onExpired={() => setIsRecaptchaVerified(false)}
-                            onError={() => setIsRecaptchaVerified(false)}
+                            onChange={(token) => setRecaptchaToken(token)}
+                            onExpired={() => setRecaptchaToken(null)}
+                            onError={() => setRecaptchaToken(null)}
                           />
                         </div>
                         
@@ -281,7 +298,7 @@ export default function RegisterPage() {
 
                         {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
 
-                        <Button type="submit" className="w-full" disabled={isSubmitting || !isRecaptchaVerified}>
+                        <Button type="submit" className="w-full" disabled={isSubmitting || !recaptchaToken}>
                             {isSubmitting ? 'Creating Account...' : 'Sign Up'}
                         </Button>
                     </form>

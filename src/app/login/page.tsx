@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { initiateGoogleSignIn } from '@/firebase/auth-operations';
 import { Eye, EyeOff } from 'lucide-react';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { verifyRecaptcha } from '@/app/actions';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -47,7 +48,8 @@ export default function LoginPage() {
   const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] = useState(true);
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
-  const [isRecaptchaVerified, setIsRecaptchaVerified] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const {
     register,
@@ -75,7 +77,6 @@ export default function LoginPage() {
         }
 
         const processAuth = async () => {
-            // Only handle redirect results if not loading and no user is present
             if (!auth || user) {
                 setIsProcessingSocialSignIn(false);
                 return;
@@ -84,12 +85,10 @@ export default function LoginPage() {
             const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
             
             try {
-                // getRedirectResult will resolve to null if no redirect is pending
                 const userCredential = await handleRedirectResult(auth);
                 if (userCredential) {
                     sessionStorage.removeItem('firebase:pendingRedirect');
                     await processSocialUser(userCredential);
-                    // The user state will change, and the first block of this effect will handle redirection.
                 }
             } catch (error) {
                 sessionStorage.removeItem('firebase:pendingRedirect');
@@ -99,15 +98,12 @@ export default function LoginPage() {
                     setFirebaseError('An unexpected error occurred during social sign-in.');
                 }
             } finally {
-                // If we were checking for a redirect, we're done processing, regardless of outcome.
                 if (isRedirecting) {
                    setIsProcessingSocialSignIn(false);
                 }
             }
         };
 
-        // We only set loading to false if we are not expecting a redirect.
-        // If a redirect is expected, the finally block in processAuth will handle it.
         const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
         if (!isRedirecting) {
           setIsProcessingSocialSignIn(false);
@@ -119,14 +115,31 @@ export default function LoginPage() {
   const onEmailSubmit = async (data: LoginFormValues) => {
     if (!auth) return;
     setFirebaseError(null);
+
+    if (!recaptchaToken) {
+        setFirebaseError('Please complete the reCAPTCHA challenge.');
+        return;
+    }
+
     try {
+      const isVerified = await verifyRecaptcha(recaptchaToken);
+      if (!isVerified) {
+          setFirebaseError('reCAPTCHA verification failed. Please try again.');
+          recaptchaRef.current?.reset();
+          setRecaptchaToken(null);
+          return;
+      }
+      
       await signInWithEmailAndPassword(auth, data.email, data.password);
+
     } catch (error) {
       if (error instanceof FirebaseError) {
         setFirebaseError(error.message);
       } else {
         setFirebaseError('An unexpected error occurred.');
       }
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     }
   };
 
@@ -139,11 +152,9 @@ export default function LoginPage() {
             sessionStorage.setItem('firebase:pendingRedirect', 'true');
         }
         const userCredential = await initiateGoogleSignIn(auth, isMobile);
-        if (userCredential) { // This will only be true for non-redirect (desktop) flow
+        if (userCredential) {
             await processSocialUser(userCredential);
         }
-        // For redirect flow, the useEffect will handle the result.
-        // For popup flow, the user state change in useEffect will trigger redirect.
         if(!isMobile) {
             setIsProcessingSocialSignIn(false);
         }
@@ -251,17 +262,18 @@ export default function LoginPage() {
 
                     <div className="flex justify-center">
                       <ReCAPTCHA
+                        ref={recaptchaRef}
                         sitekey={process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || ''}
-                        onChange={() => setIsRecaptchaVerified(true)}
-                        onExpired={() => setIsRecaptchaVerified(false)}
-                        onError={() => setIsRecaptchaVerified(false)}
+                        onChange={(token) => setRecaptchaToken(token)}
+                        onExpired={() => setRecaptchaToken(null)}
+                        onError={() => setRecaptchaToken(null)}
                       />
                     </div>
 
                     {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
                     
                      <div className="pb-6 pt-2 px-6">
-                        <Button type="submit" className="w-full" disabled={isSubmitting || !isRecaptchaVerified}>
+                        <Button type="submit" className="w-full" disabled={isSubmitting || !recaptchaToken}>
                             {isSubmitting ? 'Logging in...' : 'Login'}
                         </Button>
                          <p className="mt-4 text-center text-sm">
