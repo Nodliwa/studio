@@ -50,13 +50,18 @@ export async function addRsvp(budgetId: string, data: RsvpData): Promise<{ succe
   const rsvpCollectionRef = collection(firestore, 'users', userId, 'budgets', budgetId, 'rsvps');
 
   try {
-    const docRef = await addDoc(rsvpCollectionRef, {
+    const newDoc = {
       budgetId,
       guestName,
       status,
       additionalGuests: status === 'attending' ? additionalGuests : 0,
       respondedAt: serverTimestamp(),
-    });
+    };
+    const docRef = await addDoc(rsvpCollectionRef, newDoc);
+
+    // This is important: We update the document with its own ID.
+    // While our rules don't strictly require this, it's good practice for data consistency.
+    await addDoc(collection(firestore, 'users', userId, 'budgets', budgetId, 'rsvps'), { ...newDoc, id: docRef.id });
 
     return { success: true, rsvpId: docRef.id };
   } catch (error) {
@@ -64,5 +69,3 @@ export async function addRsvp(budgetId: string, data: RsvpData): Promise<{ succe
     throw new Error('Failed to save RSVP. Please try again later.');
   }
 }
-
-    

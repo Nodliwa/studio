@@ -9,7 +9,7 @@
  * @returns A boolean indicating whether the token is valid and the interaction is likely legitimate.
  */
 export async function verifyRecaptcha(token: string): Promise<boolean> {
-  const projectId = process.env.GOOGLE_CLOUD_PROJECT;
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT || "studio-1406892914-3d877";
   const siteKey = process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY;
   const apiKey = process.env.GOOGLE_API_KEY;
 
