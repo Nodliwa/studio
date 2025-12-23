@@ -29,7 +29,6 @@
  * design inherently secures list operations, as a user can only query collections
  * that are already inside their private data scope.
  *
- * Forcing a final, clean re-provision.
  * Final attempt: Forcing a complete re-provision of backend services.
  */
 rules_version = '2';
