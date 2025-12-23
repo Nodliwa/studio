@@ -5,9 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Facebook, Instagram, Send } from 'lucide-react';
+import { Facebook, Instagram, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
+import { submitContactForm } from '@/app/contact/actions';
+import { cn } from '@/lib/utils';
+
 
 const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 1200 1227" fill="currentColor" aria-hidden="true" {...props}>
@@ -16,26 +19,42 @@ const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 
-const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
-     <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true" {...props}>
-        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-1.06-.6-1.97-1.46-2.65-2.49-.86-1.28-1.3-2.78-1.3-4.29 0-1.51.52-3.02 1.47-4.25 1.11-1.44 2.65-2.39 4.3-2.73.05-1.07.01-2.14-.02-3.21-1.22-.26-2.39-.75-3.36-1.52-1.26-1.02-2.08-2.45-2.34-4.04h4.03c.14 1.09.64 2.14 1.45 2.94.05.06.1.12.16.18z" />
+export const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      role="img"
+      aria-label="TikTok icon"
+      {...props}
+    >
+      <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-1.06-.6-1.97-1.46-2.65-2.49-.86-1.28-1.3-2.78-1.3-4.29 0-1.51.52-3.02 1.47-4.25 1.11-1.44 2.65-2.39 4.3-2.73.05-1.07.01-2.14-.02-3.21-1.22-.26-2.39-.75-3.36-1.52-1.26-1.02-2.08-2.45-2.34-4.04h4.03c.14 1.09.64 2.14 1.45 2.94.05.06.1.12.16.18z" />
     </svg>
-);
+  );
 
 // This component will only render on the client side
 function ClientOnlyForm() {
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const name = formData.get('name') as string;
-        const fromEmail = formData.get('email') as string;
-        const message = formData.get('message') as string;
+    const [isPending, startTransition] = useTransition();
+    const [formState, setFormState] = useState<{ success: boolean; message: string; errors?: any } | null>(null);
 
-        const subject = `Message from ${name} (${fromEmail})`;
-        const body = encodeURIComponent(message);
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
         
-        window.location.href = `mailto:hello@simpliplan.co.za?subject=${encodeURIComponent(subject)}&body=${body}`;
+        startTransition(async () => {
+            const result = await submitContactForm(formData);
+            setFormState(result);
+        });
     };
+
+    if (formState?.success) {
+      return (
+        <div className="flex flex-col items-center justify-center text-center p-8 h-full rounded-lg bg-green-500/10 border border-green-500/20">
+          <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
+          <h3 className="text-xl font-bold">Message Sent!</h3>
+          <p className="text-green-900 dark:text-green-200">{formState.message}</p>
+        </div>
+      );
+    }
 
     return (
         <Card>
@@ -45,20 +64,29 @@ function ClientOnlyForm() {
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Input id="name" name="name" placeholder="Your Name" />
+                        <div className="space-y-1">
+                            <Input id="name" name="name" placeholder="Your Name" required />
+                            {formState?.errors?.name && <p className="text-xs text-destructive">{formState.errors.name[0]}</p>}
                         </div>
-                        <div className="space-y-2">
-                            <Input id="email" name="email" type="email" placeholder="Your Email" />
+                        <div className="space-y-1">
+                            <Input id="email" name="email" type="email" placeholder="Your Email" required />
+                             {formState?.errors?.email && <p className="text-xs text-destructive">{formState.errors.email[0]}</p>}
                         </div>
                     </div>
-                    <div className="relative">
-                        <Textarea id="message" name="message" placeholder="Your message..." className="pr-20 min-h-[120px]" />
-                        <Button type="submit" size="sm" className="absolute" style={{ bottom: '0.5rem', right: '0.5rem' }}>
-                            Send
+                    <div className="relative space-y-1">
+                        <Textarea id="message" name="message" placeholder="Your message..." className="pr-20 min-h-[120px]" required />
+                        <Button type="submit" size="sm" className="absolute" style={{ bottom: '0.5rem', right: '0.5rem' }} disabled={isPending}>
+                           {isPending ? "Sending..." : "Send"}
                             <Send className="ml-2 h-4 w-4"/>
                         </Button>
+                         {formState?.errors?.message && <p className="text-xs text-destructive">{formState.errors.message[0]}</p>}
                     </div>
+                     {formState && !formState.success && formState.message && (
+                        <div className="flex items-center gap-2 text-sm text-destructive p-2 rounded-md bg-destructive/10">
+                            <AlertCircle className="h-4 w-4" />
+                            <p>{formState.message}</p>
+                        </div>
+                     )}
                 </form>
             </CardContent>
         </Card>
