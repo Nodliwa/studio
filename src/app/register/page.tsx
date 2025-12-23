@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { initiateEmailSignUp, setUserData, handleGoogleRedirectResult, useFirebase, useUser } from '@/firebase';
+import { initiateEmailSignUp, setUserData, handleRedirectResult, useFirebase, useUser } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -94,7 +95,7 @@ export default function RegisterPage() {
         const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
 
         try {
-            const userCredential = await handleGoogleRedirectResult(auth);
+            const userCredential = await handleRedirectResult(auth);
             if (userCredential) {
                 sessionStorage.removeItem('firebase:pendingRedirect');
                 await processSocialUser(userCredential);

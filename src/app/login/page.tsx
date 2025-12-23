@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { setUserData, handleGoogleRedirectResult, useFirebase, useUser } from '@/firebase';
+import { setUserData, handleRedirectResult, useFirebase, useUser } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -84,7 +85,7 @@ export default function LoginPage() {
             
             try {
                 // getRedirectResult will resolve to null if no redirect is pending
-                const userCredential = await handleGoogleRedirectResult(auth);
+                const userCredential = await handleRedirectResult(auth);
                 if (userCredential) {
                     sessionStorage.removeItem('firebase:pendingRedirect');
                     await processSocialUser(userCredential);
