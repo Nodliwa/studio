@@ -353,7 +353,6 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
     deleteDocument(docRef);
   };
 
-  // ✅ Fetch and Score AI Suggestions
   const handleGetSuggestions = async () => {
     if (!eventType) {
       toast({
@@ -363,26 +362,28 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
       });
       return;
     }
-
+  
     setIsSuggesting(true);
     setSuggestions(null);
-
+  
     try {
       const existingTitles = items.map(item => item.title);
+      // Step 1: Get initial suggestions
       const result = await suggestMustDos({ eventType, existingTitles });
-
+  
       if (result.suggestions && result.suggestions.length > 0) {
         const titles = result.suggestions.map(s => s.title);
         const context = `Event type: ${eventType}`;
         
-        // Score and sort the suggestions
+        // Step 2: Score the suggestions for relevance
         const scored = await scoreSuggestions(titles, context);
+  
+        // Step 3: Sort by score, descending
         const sorted = scored.sort((a, b) => b.score - a.score);
-
+  
         setSuggestions(sorted);
         // Start with no suggestions selected
-        const initialSelection: Record<string, boolean> = {};
-        setSelectedSuggestions(initialSelection);
+        setSelectedSuggestions({});
       } else {
         toast({
           title: "No new suggestions found",
@@ -401,34 +402,28 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
     }
   };
 
-  // ✅ Add Selected Suggestions
   const handleAddSuggestions = async () => {
     if (!suggestions || isTemplateMode || !user || !budgetRef || !firestore) {
       setSuggestions(null);
       return;
     }
-
-    // This logic now needs to find the full suggestion object from the original, unsorted list.
-    // Or, more simply, the `suggestions` state already holds the sorted ScoredSuggestion objects.
-    const selected = suggestions.filter(s => selectedSuggestions[s.title]);
-    if (selected.length === 0) {
+  
+    const selectedTitles = Object.keys(selectedSuggestions).filter(title => selectedSuggestions[title]);
+    if (selectedTitles.length === 0) {
       toast({ title: "No items selected", description: "Please select at least one suggestion to add." });
       return;
     }
-
+  
     const batch = writeBatch(firestore);
     const mustDosCollection = collection(budgetRef, 'mustDos');
-
-    selected.forEach(suggestion => {
+  
+    selectedTitles.forEach(title => {
       const newDocRef = doc(mustDosCollection);
-      // We don't have the note, priority etc. from the scoring function
-      // Let's assume default values or find them from the original suggestion if we had it.
-      // For now, we'll use defaults.
       const newItem: Omit<MustDo, 'id'> = {
         budgetId,
         userId: user.uid,
-        title: suggestion.title,
-        note: '', // Note is not returned by the scoring function
+        title: title,
+        note: '', // Note and priority are not available from the scoring function, so we use defaults.
         status: 'todo',
         priority: 'medium', // Default priority
         createdAt: serverTimestamp(),
@@ -438,12 +433,12 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
       };
       batch.set(newDocRef, newItem);
     });
-
+  
     try {
       await batch.commit();
       toast({
         title: "Suggestions Added",
-        description: `${selected.length} new Must-Do item(s) have been added.`,
+        description: `${selectedTitles.length} new Must-Do item(s) have been added.`,
       });
     } catch (error) {
       console.error("Error adding suggestions:", error);
@@ -453,7 +448,7 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
         description: "Could not add the selected suggestions.",
       });
     }
-
+  
     setSuggestions(null);
   };
 
