@@ -25,3 +25,4 @@ rewrites:
     function: "next-server"
 
 # Forcing another full, clean redeployment to resolve persistent configuration issues.
+# Final attempt to force a full redeployment.
