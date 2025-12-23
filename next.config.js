@@ -31,7 +31,7 @@ const nextConfig = {
     ],
   },
   env: {
-    NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',
+    NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY: '6LfmYyssAAAAABtRJ_ZEl-k7Fgth7upCgBHL2SEy',
   }
 };
 
