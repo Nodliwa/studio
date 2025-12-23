@@ -131,3 +131,5 @@ export function RsvpManager({ budgetId, rsvps }: RsvpManagerProps) {
     </Card>
   );
 }
+
+    

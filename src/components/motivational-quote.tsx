@@ -42,3 +42,5 @@ const MotivationalQuote = ({ quote: propQuote }: { quote?: string }) => {
 };
 
 export default MotivationalQuote;
+
+    

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileoverview This file initializes the Genkit AI instance with necessary plugins.
@@ -15,3 +16,5 @@ export const ai = genkit({
     googleAI(), // Enables Google's generative AI models like Gemini.
   ],
 });
+
+    

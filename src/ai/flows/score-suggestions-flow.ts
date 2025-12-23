@@ -96,3 +96,5 @@ export async function scoreSuggestions(suggestions: string[], context: string): 
     return suggestions.map(title => ({ title, score: 0.5 }));
   }
 }
+
+    

@@ -269,3 +269,5 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
     </Card>
   );
 }
+
+    

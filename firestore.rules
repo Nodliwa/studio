@@ -29,7 +29,7 @@
  * design inherently secures list operations, as a user can only query collections
  * that are already inside their private data scope.
  *
- * Final attempt: Forcing a complete re-provision of backend services.
+ * Final attempt: Forcing a complete re-provision of backend services. This is a last-ditch effort to clear any cached configurations.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -138,3 +138,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

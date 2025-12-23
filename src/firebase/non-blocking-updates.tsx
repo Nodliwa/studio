@@ -90,4 +90,5 @@ export function deleteDocument(docRef: DocumentReference) {
     });
   return promise;
 }
+
     

@@ -20,6 +20,7 @@ export interface BudgetCategory {
   subCategories?: BudgetCategory[];
   total: number;
   order: number;
+  budgetId?: string; // Added for Firestore consistency
 }
 
 export interface Budget {
@@ -63,6 +64,5 @@ export interface RSVP {
     additionalGuests: number;
     respondedAt: any; // Firestore Timestamp
 }
-    
 
     

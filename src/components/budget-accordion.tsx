@@ -198,3 +198,5 @@ export function BudgetAccordion({ categories, onItemChange, onAddItem, categoryP
     </Accordion>
   );
 }
+
+    
