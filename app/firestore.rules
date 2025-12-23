@@ -32,6 +32,7 @@
  * This rules file has been updated to trigger a re-provisioning of the backend.
  * Forcing another backend re-provision to resolve 404 error.
  * Another attempt to force a re-provision of the backend.
+ * Final attempt to force a re-provision.
  */
 rules_version = '2';
 service cloud.firestore {

@@ -24,4 +24,4 @@ rewrites:
   - source: "**"
     function: "next-server"
 
-# Forcing a full redeployment to resolve persistent configuration issues.
+# Forcing another full redeployment to resolve persistent configuration issues.
