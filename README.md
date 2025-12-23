@@ -10,3 +10,4 @@ To get started, take a look at src/app/page.tsx.
 <!-- Another retry for the expired signed URL issue. -->
 <!-- And another one, just to be sure. -->
 <!-- Final attempt to force a clean rebuild to fix the 404 error. -->
+<!-- Forcing another full rebuild to address the persistent 404 issue. -->

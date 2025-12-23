@@ -30,6 +30,7 @@
  * that are already inside their private data scope.
  *
  * This rules file has been updated to trigger a re-provisioning of the backend.
+ * Forcing another backend re-provision to resolve 404 error.
  */
 rules_version = '2';
 service cloud.firestore {
