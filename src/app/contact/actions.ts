@@ -27,16 +27,11 @@ export async function submitContactForm(formData: FormData) {
 
   const { name, email, message } = parsed.data;
   
-  // This line securely reads the SMTP credentials from your environment variables.
-  // On your local machine, these are stored in the .env file.
-  // In production, you will set these in your hosting provider's settings.
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM_EMAIL, SMTP_TO_EMAIL } = process.env;
 
-  // If any of the required SMTP variables are missing, the email will not be sent.
-  // Instead, it will log the submission to the console for debugging.
   if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !SMTP_FROM_EMAIL || !SMTP_TO_EMAIL) {
     console.error('--- SMTP settings are missing in environment variables ---');
-    console.log('--- New Contact Form Submission (Logged, Not Sent) ---');
+    console.log('--- New Contact Form Submission ---');
     console.log(`From: ${name} <${email}>`);
     console.log(`Message: ${message}`);
     console.log('------------------------------------');
@@ -46,21 +41,20 @@ export async function submitContactForm(formData: FormData) {
     };
   }
 
-  // This is the configuration block for Nodemailer.
-  // It uses the variables loaded from your .env file.
-  // You do NOT need to add your password here directly.
   const transporter = nodemailer.createTransport({
     host: SMTP_HOST,
     port: parseInt(SMTP_PORT, 10),
     secure: parseInt(SMTP_PORT, 10) === 465, // true for 465, false for other ports
     auth: {
-      user: SMTP_USER, // Your email address from .env
-      pass: SMTP_PASS, // Your email password from .env
+      user: SMTP_USER,
+      pass: SMTP_PASS,
+    },
+    tls: {
+      rejectUnauthorized: false,
     },
   });
 
   try {
-    // Verify that the SMTP connection is valid
     await transporter.verify();
   } catch (error) {
     console.error('SMTP configuration error:', error);
@@ -71,10 +65,9 @@ export async function submitContactForm(formData: FormData) {
   }
 
   try {
-    // Send the email
     await transporter.sendMail({
-      from: `"${name}" <${SMTP_FROM_EMAIL}>`, // Sends from the email in .env
-      to: SMTP_TO_EMAIL, // Sends to the recipient email in .env
+      from: `"${name}" <${SMTP_FROM_EMAIL}>`,
+      to: SMTP_TO_EMAIL,
       replyTo: email,
       subject: `New message from ${name} via SimpliPlan`,
       html: `
