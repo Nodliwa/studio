@@ -13,13 +13,13 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
-# This minimal configuration allows the framework-aware build to correctly
-# configure Next.js routing and serving.
-headers:
-  - headers:
-      - key: "Cache-Control"
-        value: "no-store"
-rewrites:
-  - source: "**"
-    function: "next-server"
 # Final attempt with simplified build and serve v9.
+# This configuration is the most basic possible for a Next.js app.
+# It tells App Hosting to route all traffic to the Next.js server.
+headers:
+- headers:
+  - key: Cache-Control
+    value: no-store
+rewrites:
+- source: /.*
+  function: next-server
