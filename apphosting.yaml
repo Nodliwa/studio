@@ -22,4 +22,4 @@ headers:
 rewrites:
   - source: "**"
     function: "next-server"
-# Final deployment attempt trigger v7. Aligning all configs to the correct project ID.
+# Final attempt with simplified build and serve v9.
