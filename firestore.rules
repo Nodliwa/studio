@@ -29,7 +29,7 @@
  * design inherently secures list operations, as a user can only query collections
  * that are already inside their private data scope.
  *
- * Final deployment attempt trigger v1. Correcting repository path.
+ * Final deployment attempt trigger v1. Correcting repository path. v2
  */
 rules_version = '2';
 service cloud.firestore {
