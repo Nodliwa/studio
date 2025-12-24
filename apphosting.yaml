@@ -1,14 +1,13 @@
 # Settings to manage and configure a Firebase App Hosting backend.
 # https://firebase.google.com/docs/app-hosting/configure
+# This is a minimal, known-good configuration for a Next.js app.
 
 # Pin the backend to a specific region.
 location: us-central1
 backend:
   # The ID of the backend to create or update.
-  # This is a user-defined ID and not the name of the function.
   id: next-server
   # Pin the backend to a specific repository.
-  # The repository must be in the same Google Cloud project.
   repository: projects/studio-1406892914-3d877-dev/locations/us-central1/repositories/firebase-frameworks-nextn
 runConfig:
   # Increase this value if you'd like to automatically spin up
@@ -23,5 +22,3 @@ headers:
 rewrites:
   - source: "**"
     function: "next-server"
-
-# Final deployment attempt trigger v1. Correcting repository path.
