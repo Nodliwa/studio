@@ -29,7 +29,7 @@
  * design inherently secures list operations, as a user can only query collections
  * that are already inside their private data scope.
  *
- * Final deployment attempt trigger v6. Aligning all configs to the correct project ID.
+ * Final deployment attempt trigger v7. Aligning all configs to the correct project ID.
  */
 rules_version = '2';
 service cloud.firestore {
