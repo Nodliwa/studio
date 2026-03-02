@@ -1,4 +1,3 @@
-
 import type { BudgetCategory } from "./types";
 
 const funeralBudgetData: BudgetCategory[] = [
@@ -322,8 +321,87 @@ const weddingBudgetData: BudgetCategory[] = [
     },
 ];
 
+const umGidiBudgetData: BudgetCategory[] = [
+    {
+        id: 'livestock',
+        name: 'Livestock',
+        total: 0,
+        order: 1,
+        items: [
+            { id: 'livestock-1', name: 'Cow (Inkomo)', metric: 'item', quantity: 1, unitPrice: 15000, total: 0, comment: 'Main sacrifice' },
+            { id: 'livestock-2', name: 'Sheep (IGusha)', metric: 'item', quantity: 2, unitPrice: 2500, total: 0, comment: 'For rituals' },
+        ],
+    },
+    {
+        id: 'traditional-brewing',
+        name: 'Traditional Brewing (Umqombothi)',
+        total: 0,
+        order: 2,
+        items: [
+            { id: 'brew-1', name: 'Mealie Meal', metric: '50kg', quantity: 1, unitPrice: 650, total: 0, comment: '' },
+            { id: 'brew-2', name: 'Malt (Umthombo)', metric: '10kg', quantity: 2, unitPrice: 180, total: 0, comment: '' },
+            { id: 'brew-3', name: 'Sugar', metric: '10kg', quantity: 2, unitPrice: 260, total: 0, comment: '' },
+            { id: 'brew-4', name: 'Barrels/Drums hire', metric: 'item', quantity: 3, unitPrice: 100, total: 0, comment: '' },
+        ],
+    },
+    {
+        id: 'catering',
+        name: 'Catering',
+        total: 0,
+        order: 3,
+        subCategories: [
+            {
+                id: 'starch-umgidi',
+                name: 'Starch',
+                total: 0,
+                order: 1,
+                items: [
+                  { id: "starch-u-1", name: "Bread", metric: "per loaf", quantity: 30, unitPrice: 20, total: 0, comment: "" },
+                  { id: "starch-u-2", name: "Samp", metric: "10kg", quantity: 5, unitPrice: 150, total: 0, comment: "" },
+                  { id: "starch-u-3", name: "Rice", metric: "10 kg", quantity: 3, unitPrice: 175, total: 0, comment: "" },
+                  { id: "starch-u-4", name: "Steamed Bread Ingredients", metric: "lump sum", quantity: 1, unitPrice: 500, total: 0, comment: "" },
+                ],
+            },
+            {
+                id: 'vegetables-umgidi',
+                name: 'Vegetables',
+                total: 0,
+                order: 2,
+                items: [
+                    { id: "veg-u-1", name: "Potatoes", metric: "10kg", quantity: 4, unitPrice: 45, total: 0, comment: "" },
+                    { id: "veg-u-2", name: "Carrot", metric: "10kg", quantity: 2, unitPrice: 85, total: 0, comment: "" },
+                    { id: "veg-u-3", name: "Onion", metric: "10kg", quantity: 2, unitPrice: 175, total: 0, comment: "" },
+                    { id: "veg-u-4", name: "Butternut", metric: "bag", quantity: 3, unitPrice: 60, total: 0, comment: "" },
+                ],
+            },
+        ],
+    },
+    {
+        id: 'attire-umgidi',
+        name: 'Traditional Attire',
+        total: 0,
+        order: 4,
+        items: [
+            { id: 'attire-u-1', name: 'Initiate Outfit (Umbhaco)', metric: 'set', quantity: 1, unitPrice: 2500, total: 0, comment: '' },
+            { id: 'attire-u-2', name: 'Beadwork', metric: 'set', quantity: 1, unitPrice: 1500, total: 0, comment: '' },
+            { id: 'attire-u-3', name: 'Blankets', metric: 'item', quantity: 2, unitPrice: 850, total: 0, comment: '' },
+        ],
+    },
+    {
+        id: 'logistics-umgidi',
+        name: 'Logistics & Hire',
+        total: 0,
+        order: 5,
+        items: [
+            { id: 'log-u-1', name: 'Tent (Stretch/Frame)', metric: 'day', quantity: 1, unitPrice: 1500, total: 0, comment: '' },
+            { id: 'log-u-2', name: 'Chairs', metric: 'item', quantity: 50, unitPrice: 15, total: 0, comment: '' },
+            { id: 'log-u-3', name: 'Mobile Toilet', metric: 'day', quantity: 1, unitPrice: 850, total: 0, comment: '' },
+            { id: 'log-u-4', name: 'Sound System/DJ', metric: 'day', quantity: 1, unitPrice: 1200, total: 0, comment: '' },
+        ],
+    },
+];
+
 const otherBudgetData: BudgetCategory[] = [
-    // A simplified, generic version
     {
         id: 'venue',
         name: 'Venue & Setup',
@@ -352,7 +430,6 @@ const otherBudgetData: BudgetCategory[] = [
 export const budgetTemplates = {
     funeral: funeralBudgetData,
     wedding: weddingBudgetData,
+    umgidi: umGidiBudgetData,
     other: otherBudgetData
 };
-
-    

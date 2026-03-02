@@ -60,6 +60,7 @@ function calculateInitialTotal(categories: any[]): number {
 const eventTypeImages: { [key: string]: string } = {
     wedding: '/images/wedding.jpg',
     funeral: '/images/funeral2.png',
+    umgidi: '/images/umgidi1.jpg',
 };
 
 function PlanCard({ budget, onDelete }: { budget: Budget, onDelete: (id: string) => void }) {
@@ -327,7 +328,7 @@ function MyPlansPage() {
                                                 </div>
                                             </Card>
                                         </div>
-                                        <div className="group cursor-pointer" onClick={() => alert('Coming Soon!')}>
+                                        <div className="group cursor-pointer" onClick={() => handleNewPlan('umgidi')}>
                                             <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-video">
                                                 <Image src="/images/umgidi1.jpg" alt="umGidi" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
                                                 <div className="absolute inset-0 bg-black/40" />
@@ -419,5 +420,3 @@ function MyPlansPage() {
 }
 
 export default MyPlansPage;
-
-    
