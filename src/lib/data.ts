@@ -323,107 +323,175 @@ const weddingBudgetData: BudgetCategory[] = [
 
 const umGidiBudgetData: BudgetCategory[] = [
     {
-        id: 'livestock',
-        name: 'Livestock',
+        id: 'refreshments',
+        name: 'Refreshments',
         total: 0,
         order: 1,
         items: [
-            { id: 'livestock-1', name: 'Cow (Inkomo)', metric: 'item', quantity: 1, unitPrice: 15000, total: 0, comment: 'Main sacrifice' },
-            { id: 'livestock-2', name: 'Sheep (IGusha)', metric: 'item', quantity: 2, unitPrice: 2500, total: 0, comment: 'For rituals' },
-        ],
+            { id: 'ref-1', name: 'Brandy', metric: 'per bottle', quantity: 10, unitPrice: 180, total: 0, comment: '' },
+            { id: 'ref-2', name: 'Whisky / Gin', metric: 'per bottle', quantity: 5, unitPrice: 200, total: 0, comment: '' },
+            { id: 'ref-3', name: 'Umqombothi', metric: '100Ls', quantity: 3, unitPrice: 350, total: 0, comment: '' },
+            { id: 'ref-4', name: 'Beer', metric: 'Cases', quantity: 10, unitPrice: 250, total: 0, comment: '' },
+            { id: 'ref-5', name: 'Wine', metric: 'per bottle', quantity: 10, unitPrice: 75, total: 0, comment: '' },
+            { id: 'ref-6', name: 'Ice', metric: '2kg', quantity: 5, unitPrice: 75, total: 0, comment: '' },
+            { id: 'ref-7', name: 'Coffee', metric: '750g', quantity: 3, unitPrice: 120, total: 0, comment: '' },
+            { id: 'ref-8', name: 'Teabag', metric: "100's", quantity: 3, unitPrice: 50, total: 0, comment: '' },
+            { id: 'ref-9', name: 'Milk', metric: '6x1L', quantity: 10, unitPrice: 125, total: 0, comment: '' },
+            { id: 'ref-10', name: 'Sugar', metric: '10kg', quantity: 4, unitPrice: 260, total: 0, comment: '' },
+            { id: 'ref-11', name: 'Bottled Water', metric: '24 of 300ml', quantity: 5, unitPrice: 125, total: 0, comment: '' },
+            { id: 'ref-12', name: 'Juice', metric: '25 of 300ml', quantity: 4, unitPrice: 200, total: 0, comment: '' },
+            { id: 'ref-13', name: 'Fizz Drinks', metric: '2Ls', quantity: 10, unitPrice: 140, total: 0, comment: '' },
+        ]
     },
     {
-        id: 'traditional-brewing',
-        name: 'Traditional Brewing (Umqombothi)',
+        id: 'meat',
+        name: 'Meat',
         total: 0,
         order: 2,
         items: [
-            { id: 'brew-1', name: 'Mealie Meal', metric: '50kg', quantity: 1, unitPrice: 650, total: 0, comment: '' },
-            { id: 'brew-2', name: 'Malt (Umthombo)', metric: '10kg', quantity: 2, unitPrice: 180, total: 0, comment: '' },
-            { id: 'brew-3', name: 'Sugar', metric: '10kg', quantity: 2, unitPrice: 260, total: 0, comment: '' },
-            { id: 'brew-4', name: 'Barrels/Drums hire', metric: 'item', quantity: 3, unitPrice: 100, total: 0, comment: '' },
-        ],
+            { id: 'meat-u-1', name: 'Sheep', metric: 'per sheep', quantity: 5, unitPrice: 3000, total: 0, comment: '' },
+            { id: 'meat-u-2', name: 'Goat', metric: 'per goat', quantity: 1, unitPrice: 4000, total: 0, comment: '' },
+            { id: 'meat-u-3', name: 'Cow', metric: 'per cow', quantity: 1, unitPrice: 8500, total: 0, comment: '' },
+            { id: 'meat-u-4', name: 'Chicken', metric: '5kg', quantity: 10, unitPrice: 250, total: 0, comment: '' },
+        ]
     },
     {
-        id: 'catering',
-        name: 'Catering',
+        id: 'starch',
+        name: 'Starch',
         total: 0,
         order: 3,
-        subCategories: [
-            {
-                id: 'starch-umgidi',
-                name: 'Starch',
-                total: 0,
-                order: 1,
-                items: [
-                  { id: "starch-u-1", name: "Bread", metric: "per loaf", quantity: 30, unitPrice: 20, total: 0, comment: "" },
-                  { id: "starch-u-2", name: "Samp", metric: "10kg", quantity: 5, unitPrice: 150, total: 0, comment: "" },
-                  { id: "starch-u-3", name: "Rice", metric: "10 kg", quantity: 3, unitPrice: 175, total: 0, comment: "" },
-                  { id: "starch-u-4", name: "Steamed Bread Ingredients", metric: "lump sum", quantity: 1, unitPrice: 500, total: 0, comment: "" },
-                ],
-            },
-            {
-                id: 'vegetables-umgidi',
-                name: 'Vegetables',
-                total: 0,
-                order: 2,
-                items: [
-                    { id: "veg-u-1", name: "Potatoes", metric: "10kg", quantity: 4, unitPrice: 45, total: 0, comment: "" },
-                    { id: "veg-u-2", name: "Carrot", metric: "10kg", quantity: 2, unitPrice: 85, total: 0, comment: "" },
-                    { id: "veg-u-3", name: "Onion", metric: "10kg", quantity: 2, unitPrice: 175, total: 0, comment: "" },
-                    { id: "veg-u-4", name: "Butternut", metric: "bag", quantity: 3, unitPrice: 60, total: 0, comment: "" },
-                ],
-            },
-        ],
+        items: [
+            { id: 'starch-u-1', name: 'Bread', metric: 'per loaf', quantity: 40, unitPrice: 20, total: 0, comment: '' },
+            { id: 'starch-u-2', name: 'Samp (Umngqusho)', metric: '10kg', quantity: 5, unitPrice: 150, total: 0, comment: '' },
+            { id: 'starch-u-3', name: 'Rice', metric: '10 kg', quantity: 5, unitPrice: 175, total: 0, comment: '' },
+            { id: 'starch-u-4', name: 'Mealie Meal', metric: '10 kg', quantity: 4, unitPrice: 140, total: 0, comment: '' },
+        ]
     },
     {
-        id: 'attire-umgidi',
-        name: 'Traditional Attire',
+        id: 'vegetables',
+        name: 'Vegetables',
         total: 0,
         order: 4,
         items: [
-            { id: 'attire-u-1', name: 'Initiate Outfit (Umbhaco)', metric: 'set', quantity: 1, unitPrice: 2500, total: 0, comment: '' },
-            { id: 'attire-u-2', name: 'Beadwork', metric: 'set', quantity: 1, unitPrice: 1500, total: 0, comment: '' },
-            { id: 'attire-u-3', name: 'Blankets', metric: 'item', quantity: 2, unitPrice: 850, total: 0, comment: '' },
-        ],
+            { id: 'veg-u-1', name: 'Cabbage', metric: '8 heads', quantity: 4, unitPrice: 200, total: 0, comment: '' },
+            { id: 'veg-u-2', name: 'Potatoes', metric: '10kg', quantity: 5, unitPrice: 45, total: 0, comment: '' },
+            { id: 'veg-u-3', name: 'Carrot', metric: '10kg', quantity: 4, unitPrice: 85, total: 0, comment: '' },
+            { id: 'veg-u-4', name: 'Onion', metric: '10kg', quantity: 4, unitPrice: 175, total: 0, comment: '' },
+            { id: 'veg-u-5', name: 'Potatoes (Extra)', metric: '10kg', quantity: 4, unitPrice: 200, total: 0, comment: '' },
+        ]
     },
     {
-        id: 'logistics-umgidi',
-        name: 'Logistics & Hire',
+        id: 'fruit',
+        name: 'Fruit',
         total: 0,
         order: 5,
         items: [
-            { id: 'log-u-1', name: 'Tent (Stretch/Frame)', metric: 'day', quantity: 1, unitPrice: 1500, total: 0, comment: '' },
-            { id: 'log-u-2', name: 'Chairs', metric: 'item', quantity: 50, unitPrice: 15, total: 0, comment: '' },
-            { id: 'log-u-3', name: 'Mobile Toilet', metric: 'day', quantity: 1, unitPrice: 850, total: 0, comment: '' },
-            { id: 'log-u-4', name: 'Sound System/DJ', metric: 'day', quantity: 1, unitPrice: 1200, total: 0, comment: '' },
-        ],
-    },
-];
-
-const otherBudgetData: BudgetCategory[] = [
-    {
-        id: 'venue',
-        name: 'Venue & Setup',
-        total: 0,
-        order: 1,
-        items: [
-            { id: 'venue-1', name: 'Venue Rental', metric: 'flat fee', quantity: 1, unitPrice: 5000, total: 0, comment: '' },
-            { id: 'venue-2', name: 'Tables & Chairs', metric: 'per person', quantity: 50, unitPrice: 50, total: 0, comment: '' },
-            { id: 'venue-3', name: 'Decorations', metric: 'lump sum', quantity: 1, unitPrice: 2000, total: 0, comment: '' },
+            { id: 'fruit-u-1', name: 'Apples', metric: 'per box', quantity: 2, unitPrice: 225, total: 0, comment: '' },
+            { id: 'fruit-u-2', name: 'Banana', metric: 'per box', quantity: 3, unitPrice: 150, total: 0, comment: '' },
+            { id: 'fruit-u-3', name: 'Oranges', metric: '10 kg', quantity: 5, unitPrice: 30, total: 0, comment: '' },
         ]
     },
     {
-        id: 'food',
-        name: 'Food & Drinks',
+        id: 'implements',
+        name: 'Implements',
         total: 0,
-        order: 2,
+        order: 6,
         items: [
-            { id: 'food-1', name: 'Catering', metric: 'per person', quantity: 50, unitPrice: 250, total: 0, comment: '' },
-            { id: 'food-2', name: 'Cake', metric: 'item', quantity: 1, unitPrice: 1000, total: 0, comment: '' },
-            { id: 'food-3', name: 'Beverages', metric: 'lump sum', quantity: 1, unitPrice: 1500, total: 0, comment: '' },
+            { id: 'imp-1', name: 'Tent', metric: 'per item', quantity: 1, unitPrice: 1000, total: 0, comment: '' },
+            { id: 'imp-2', name: 'Tables', metric: 'per item', quantity: 4, unitPrice: 150, total: 0, comment: '' },
+            { id: 'imp-3', name: 'Chairs', metric: 'per item', quantity: 50, unitPrice: 15, total: 0, comment: '' },
+            { id: 'imp-4', name: 'Mobile Fridge', metric: 'per item', quantity: 1, unitPrice: 2000, total: 0, comment: '' },
+            { id: 'imp-5', name: 'Mobile Toilet', metric: 'per item', quantity: 3, unitPrice: 1000, total: 0, comment: '' },
+            { id: 'imp-6', name: 'Gas Stove / Burner', metric: 'per item', quantity: 1, unitPrice: 500, total: 0, comment: '' },
+            { id: 'imp-7', name: 'Imbiza / Pots', metric: 'per item', quantity: 6, unitPrice: 100, total: 0, comment: '' },
+            { id: 'imp-8', name: 'Plates', metric: 'per item', quantity: 40, unitPrice: 10, total: 0, comment: '' },
+            { id: 'imp-9', name: 'Takeaway plate', metric: '75 pcs', quantity: 1, unitPrice: 100, total: 0, comment: '' },
+            { id: 'imp-10', name: 'Spoons', metric: '10 pkt', quantity: 10, unitPrice: 20, total: 0, comment: '' },
+            { id: 'imp-11', name: 'Coffee Mugs', metric: '12 pack', quantity: 5, unitPrice: 200, total: 0, comment: '' },
+            { id: 'imp-12', name: 'Cooler Box', metric: 'per item', quantity: 4, unitPrice: 50, total: 0, comment: '' },
+            { id: 'imp-13', name: 'Spit Braai', metric: 'per item', quantity: 2, unitPrice: 1050, total: 0, comment: '' },
         ]
     },
+    {
+        id: 'clothing',
+        name: 'Clothing',
+        total: 0,
+        order: 7,
+        subCategories: [
+            {
+                id: 'umkhwetha',
+                name: 'Umkhwetha (The Boy)',
+                total: 0,
+                order: 1,
+                items: [
+                    { id: 'boy-1', name: 'Initiation Certification', metric: 'per event', quantity: 1, unitPrice: 950, total: 0, comment: '' },
+                    { id: 'boy-2', name: 'Ingubo yongena', metric: 'per item', quantity: 1, unitPrice: 450, total: 0, comment: '' },
+                    { id: 'boy-3', name: 'Ingcibi', metric: 'per event', quantity: 1, unitPrice: 2000, total: 0, comment: '' },
+                    { id: 'boy-4', name: 'Ikhankatha', metric: 'per event', quantity: 1, unitPrice: 3000, total: 0, comment: '' },
+                    { id: 'boy-5', name: 'Ibhuma', metric: 'per event', quantity: 1, unitPrice: 2000, total: 0, comment: '' },
+                ]
+            },
+            {
+                id: 'ikrwala',
+                name: 'iKrwala (The New Man)',
+                total: 0,
+                order: 2,
+                items: [
+                    { id: 'man-1', name: 'Ingubo Yophuma', metric: 'per item', quantity: 1, unitPrice: 450, total: 0, comment: '' },
+                    { id: 'man-2', name: 'Ikhetshemiya', metric: 'per item', quantity: 2, unitPrice: 300, total: 0, comment: '' },
+                    { id: 'man-3', name: 'Imbola', metric: 'per item', quantity: 5, unitPrice: 40, total: 0, comment: '' },
+                    { id: 'man-4', name: 'Shirts', metric: 'per item', quantity: 3, unitPrice: 350, total: 0, comment: '' },
+                    { id: 'man-5', name: 'Trousers/Pants', metric: 'per item', quantity: 2, unitPrice: 750, total: 0, comment: '' },
+                    { id: 'man-6', name: 'Shoes', metric: 'per item', quantity: 2, unitPrice: 1500, total: 0, comment: '' },
+                    { id: 'man-7', name: 'Socks', metric: 'per item', quantity: 4, unitPrice: 50, total: 0, comment: '' },
+                    { id: 'man-8', name: 'Chefu', metric: 'per item', quantity: 3, unitPrice: 75, total: 0, comment: '' },
+                    { id: 'man-9', name: 'Cap/Hat', metric: 'per item', quantity: 2, unitPrice: 750, total: 0, comment: '' },
+                    { id: 'man-10', name: 'Underwear', metric: 'per item', quantity: 5, unitPrice: 100, total: 0, comment: '' },
+                ]
+            },
+            {
+                id: 'izibanzana',
+                name: 'Izibanzana',
+                total: 0,
+                order: 3,
+                items: [
+                    { id: 'izi-1', name: 'Umbaco', metric: 'per set', quantity: 1, unitPrice: 5000, total: 0, comment: '' },
+                    { id: 'izi-2', name: 'Paskot', metric: 'per item', quantity: 1, unitPrice: 500, total: 0, comment: '' },
+                    { id: 'izi-3', name: 'Qhiya', metric: 'per item', quantity: 1, unitPrice: 350, total: 0, comment: '' },
+                    { id: 'izi-4', name: 'Bead art work', metric: 'per set', quantity: 1, unitPrice: 350, total: 0, comment: '' },
+                ]
+            },
+            {
+                id: 'utata',
+                name: 'Utata',
+                total: 0,
+                order: 4,
+                items: [
+                    { id: 'tata-1', name: 'Head band', metric: 'per item', quantity: 1, unitPrice: 400, total: 0, comment: '' },
+                    { id: 'tata-2', name: 'Beaded stick', metric: 'per item', quantity: 1, unitPrice: 400, total: 0, comment: '' },
+                    { id: 'tata-3', name: 'Umbaco', metric: 'per set', quantity: 1, unitPrice: 1050, total: 0, comment: '' },
+                ]
+            }
+        ]
+    },
+    {
+        id: 'event-execution',
+        name: 'Event Execution',
+        total: 0,
+        order: 8,
+        items: [
+            { id: 'exe-1', name: 'Abaxheli / Slaughters', metric: 'per day', quantity: 5, unitPrice: 100, total: 0, comment: '' },
+            { id: 'exe-2', name: 'Aboji', metric: 'per day', quantity: 2, unitPrice: 500, total: 0, comment: '' },
+            { id: 'exe-3', name: 'Abapheki (ebuhlanti)', metric: 'per day', quantity: 2, unitPrice: 500, total: 0, comment: '' },
+            { id: 'exe-4', name: 'Abapheki / Cookers', metric: 'per day', quantity: 1, unitPrice: 2000, total: 0, comment: '' },
+            { id: 'exe-5', name: 'Ababhaki', metric: 'per day', quantity: 1, unitPrice: 2000, total: 0, comment: '' },
+            { id: 'exe-6', name: 'Bakkie Hire', metric: 'per day', quantity: 1, unitPrice: 650, total: 0, comment: '' },
+            { id: 'exe-7', name: 'Video Capturing', metric: 'per day', quantity: 1, unitPrice: 2500, total: 0, comment: '' },
+            { id: 'exe-8', name: 'Music / DJ', metric: 'per day', quantity: 1, unitPrice: 2000, total: 0, comment: '' },
+            { id: 'exe-9', name: 'Imbongi', metric: 'per day', quantity: 1, unitPrice: 1000, total: 0, comment: '' },
+            { id: 'exe-10', name: 'Performers (live band)', metric: 'per day', quantity: 1, unitPrice: 2000, total: 0, comment: '' },
+        ]
+    }
 ];
 
 

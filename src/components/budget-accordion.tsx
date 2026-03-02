@@ -21,11 +21,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "./ui/button";
-import { PlusCircle, GripVertical, UtensilsCrossed, Wheat, Carrot, Apple, Coffee, Handshake, Truck, Ring, Gem, Cake, Shirt, Drama } from "lucide-react";
+import { PlusCircle, GripVertical, UtensilsCrossed, Wheat, Carrot, Apple, Coffee, Handshake, Truck, Ring, Gem, Cake, Shirt, Drama, Hammer, Zap, CrossIcon } from "lucide-react";
 import React from "react";
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CrossIcon } from "lucide-react";
 
 interface BudgetAccordionProps {
   categories: BudgetCategory[];
@@ -35,27 +34,39 @@ interface BudgetAccordionProps {
 }
 
 const iconMap: { [key: string]: React.ElementType } = {
-  // Funeral
-  'cat-1': UtensilsCrossed, // Meat
-  'cat-2': Wheat, // Starch
-  'cat-3': Carrot, // Vegetables
-  'cat-4': Apple, // Fruit
-  'cat-5': Coffee, // Refreshments
-  'cat-6': CrossIcon, // Deceased
-  'cat-7': Handshake, // Service
-  'cat-8': Truck, // Logistics
-  // Wedding
-  'bride': Gem,
-  'groom': Shirt,
-  'bridesmaids': Drama,
+  // Common
   'refreshments': Coffee,
   'meat': UtensilsCrossed,
   'starch': Wheat,
   'vegetables': Carrot,
   'fruit': Apple,
-  'desserts': Cake,
+  'catering': UtensilsCrossed,
   'service': Handshake,
   'logistics': Truck,
+  // Funeral specific
+  'cat-1': UtensilsCrossed, 
+  'cat-2': Wheat, 
+  'cat-3': Carrot, 
+  'cat-4': Apple, 
+  'cat-5': Coffee, 
+  'cat-6': CrossIcon, 
+  'cat-7': Handshake, 
+  'cat-8': Truck, 
+  // Wedding specific
+  'venue': Ring,
+  'attire': Shirt,
+  'bride': Gem,
+  'groom': Shirt,
+  'bridesmaids': Drama,
+  'desserts': Cake,
+  // Umgidi specific
+  'implements': Hammer,
+  'clothing': Shirt,
+  'umkhwetha': Gem,
+  'ikrwala': Shirt,
+  'izibanzana': Drama,
+  'utata': Handshake,
+  'event-execution': Zap,
 };
 
 
@@ -198,5 +209,3 @@ export function BudgetAccordion({ categories, onItemChange, onAddItem, categoryP
     </Accordion>
   );
 }
-
-    
