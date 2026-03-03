@@ -319,15 +319,6 @@ function MyPlansPage() {
                                                 </div>
                                             </Card>
                                         </div>
-                                        <div className="group cursor-pointer" onClick={() => alert('Coming Soon!')}>
-                                            <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-video">
-                                                <Image src="/images/umemulo.jpg" alt="uMemulo" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
-                                                <div className="absolute inset-0 bg-black/40" />
-                                                <div className="absolute inset-0 flex items-center justify-center p-4">
-                                                    <h3 className="text-xl font-semibold text-white">uMemulo</h3>
-                                                </div>
-                                            </Card>
-                                        </div>
                                         <div className="group cursor-pointer" onClick={() => handleNewPlan('umgidi')}>
                                             <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-video">
                                                 <Image src="/images/umgidi1.jpg" alt="umGidi" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
