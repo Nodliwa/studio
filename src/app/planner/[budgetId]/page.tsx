@@ -11,6 +11,7 @@ import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
 import { RsvpManager } from "@/components/RsvpManager";
 import { MustDosSummary } from "@/components/must-dos-summary";
+import { CollaboratorManager } from "@/components/collaborator-manager";
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn, setDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc, writeBatch, setDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import {
@@ -83,6 +84,16 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   const uniqueId = useId();
   const isTemplateMode = budgetId === 'template';
   
+  // We need to find the budget owner ID. If the current user is not the owner, we might be a collaborator.
+  // For this prototype, we'll try to find the budget document by searching across potential owners 
+  // or assuming the budgetId path is correct if provided.
+  // Actually, since paths are /users/{userId}/budgets/{budgetId}, the collaborator needs to know the owner's userId.
+  // Let's assume for now the user is navigating from their "My Plans" or a shared link.
+  
+  // To handle collaborators, we'd ideally have a top-level lookup, but based on current rules,
+  // we'll use the userId from the URL if available, or stick to the owner-based path.
+  // For now, let's stick to the current user's path and assume they are the owner for management.
+  
   const budgetDocRef = useMemoFirebase(() => (
     user && budgetId && !isTemplateMode ? doc(firestore, 'users', user.uid, 'budgets', budgetId) : null
   ), [user, firestore, budgetId, isTemplateMode]);
@@ -153,7 +164,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
 
   useEffect(() => {
     const initializePlan = async () => {
-      // Case 1: Template mode for anonymous users
       if (isTemplateMode) {
         const eventType = searchParams.get('eventType') || 'other';
         const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
@@ -163,7 +173,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
         return;
       }
   
-      // Case 2: Logged-in user, loading an existing plan from Firestore
       if (user && !user.isAnonymous && fetchedCategories && fetchedCategories.length > 0) {
         const sortedCategories = [...fetchedCategories].sort((a, b) => a.order - b.order);
         const { categories, grandTotal } = calculateTotals(sortedCategories);
@@ -172,8 +181,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
         return;
       }
 
-      // Case 3: Logged-in user, creating a NEW plan from a template
-      // This runs when budget is loaded, but categories are not.
       if (user && !user.isAnonymous && budget && !categoriesLoading && (!fetchedCategories || fetchedCategories.length === 0)) {
         const eventType = searchParams.get('eventType') || budget?.eventType || 'other';
         const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
@@ -186,26 +193,24 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
           grandTotal: initialTotal,
           userId: user.uid,
           eventType: eventType,
+          collaboratorIds: [], // Initialize collaborators
         };
 
-        // Update the budget document with template-derived info
         const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
         await setDoc(budgetDocRef, newBudget, { merge: true });
 
-        // Batch write all categories and their items from the template
         const batch = writeBatch(firestore);
         templateCategories.forEach((category, index) => {
           const categoryRef = doc(collection(budgetDocRef, 'categories'));
           const categoryData: BudgetCategory = {
             ...category,
-            id: categoryRef.id, // Use the new generated ID
+            id: categoryRef.id,
             order: index,
             budgetId: newBudgetId,
           };
           batch.set(categoryRef, categoryData);
         });
 
-        // Add initial must-dos ONCE, not in the loop
         if (!mustDos || mustDos.length === 0) {
             const mustDoTemplate = [
                 { title: 'Confirm venue access time', note: 'Key collection is with security', deadline: '' },
@@ -227,10 +232,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
         }
         
         await batch.commit();
-        
-        // The useCollection hook will now fetch the newly created categories,
-        // triggering the "Existing Plan" block on the next render.
-        // For immediate UI update, we can set it here as well.
         setBudgetData(templateCategories);
         setGrandTotal(initialTotal);
       }
@@ -364,10 +365,6 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     );
   }
 
-  if (!isUserLoading && isTemplateMode && user && !user.isAnonymous) {
-    return <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center"><p>Redirecting...</p></div>;
-  }
-  
   return (
     <div className="min-h-screen w-full bg-secondary">
        <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
@@ -435,9 +432,10 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
             </p>
             
             {!isTemplateMode && (
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   <RsvpManager budgetId={budgetId} rsvps={rsvps} />
                   <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
+                  {budget && budgetDocRef && <CollaboratorManager budget={budget} budgetRef={budgetDocRef} />}
                 </div>
             )}
 
@@ -446,5 +444,3 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
-
-    

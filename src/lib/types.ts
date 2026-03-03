@@ -32,6 +32,7 @@ export interface Budget {
   eventDate?: string;
   grandTotal: number;
   userId: string;
+  collaboratorIds?: string[]; // Array of UIDs for shared access
 }
 
 export interface User {
@@ -64,5 +65,3 @@ export interface RSVP {
     additionalGuests: number;
     respondedAt: any; // Firestore Timestamp
 }
-
-    
