@@ -2,7 +2,7 @@
 'use server';
 
 import { initializeFirebase } from '@/firebase';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, limit, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { z } from 'zod';
 
 const rsvpSchema = z.object({

@@ -20,9 +20,9 @@ import PageHeader from '@/components/page-header';
 const rsvpSchema = z.object({
   guestName: z.string().min(1, 'Please enter your name'),
   status: z.enum(['attending', 'not_attending'], {
-    required_error: 'Please select your attendance status',
+    error: 'Please select your attendance status',
   }),
-  additionalGuests: z.coerce.number().int().min(0).default(0),
+  additionalGuests: z.number().int().min(0).default(0),
 });
 
 type RsvpFormValues = z.infer<typeof rsvpSchema>;

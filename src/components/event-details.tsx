@@ -35,7 +35,7 @@ const formSchema = z.object({
   name: z.string().min(1, "Plan name is required"),
   eventLocation: z.string().optional(),
   eventDate: z.string().optional(),
-  expectedGuests: z.coerce.number().int().min(0).optional(),
+  expectedGuests: z.number().int().min(0).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;

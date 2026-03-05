@@ -494,6 +494,17 @@ const umGidiBudgetData: BudgetCategory[] = [
     }
 ];
 
+const otherBudgetData: BudgetCategory[] = [
+    {
+        id: 'general',
+        name: 'General',
+        total: 0,
+        order: 1,
+        items: [
+            { id: 'gen-1', name: 'New Item', metric: 'item', quantity: 1, unitPrice: 0, total: 0, comment: '' },
+        ],
+    }
+];
 
 export const budgetTemplates = {
     funeral: funeralBudgetData,

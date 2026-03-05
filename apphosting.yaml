@@ -1,16 +1,9 @@
 # Settings to manage and configure a Firebase App Hosting backend.
 # https://firebase.google.com/docs/app-hosting/configure
-# This is the final and definitive attempt to reset routing. v1.
 location: us-central1
-backend:
-  id: next-server
-  repository: projects/studio-1406892914-3d877/locations/us-central1/repositories/firebase-frameworks-nextn
 runConfig:
   maxInstances: 1
 headers:
 - headers:
   - key: Cache-Control
     value: no-store
-rewrites:
-- source: /.*
-  function: next-server

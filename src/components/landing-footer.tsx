@@ -40,9 +40,10 @@ function ClientOnlyForm() {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         
-        startTransition(async () => {
-            const result = await submitContactForm(formData);
-            setFormState(result);
+        startTransition(() => {
+            void submitContactForm(formData).then((result) => {
+                setFormState(result);
+            });
         });
     };
 

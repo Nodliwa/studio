@@ -2,13 +2,13 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/auth-provider';
+import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { PageHeader } from '@/components/page-header';
+import PageHeader from '@/components/page-header';
 
 export default function Home() {
-  const { user, isLoading } = useAuth();
+  const { user, isUserLoading: isLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {

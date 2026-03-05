@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "./ui/button";
-import { PlusCircle, GripVertical, UtensilsCrossed, Wheat, Carrot, Apple, Coffee, Handshake, Truck, Ring, Gem, Cake, Shirt, Drama, Hammer, Zap, CrossIcon } from "lucide-react";
+import { PlusCircle, GripVertical, UtensilsCrossed, Wheat, Carrot, Apple, Coffee, Handshake, Truck, Gem, Cake, Shirt, Drama, Hammer, Zap, CrossIcon } from "lucide-react";
 import React from "react";
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -53,7 +53,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   'cat-7': Handshake, 
   'cat-8': Truck, 
   // Wedding specific
-  'venue': Ring,
+  'venue': Gem,
   'attire': Shirt,
   'bride': Gem,
   'groom': Shirt,
