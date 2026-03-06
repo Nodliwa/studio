@@ -1,8 +1,7 @@
-
 "use client";
 
-import { useState, useEffect, useId, useMemo } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, useEffect, useId, useMemo } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import type { BudgetItem, BudgetCategory, Budget, MustDo } from "@/lib/types";
 import { budgetTemplates } from "@/lib/data";
 import PageHeader from "@/components/page-header";
@@ -12,8 +11,25 @@ import { EventDetails } from "@/components/event-details";
 import { RsvpManager } from "@/components/RsvpManager";
 import { MustDosSummary } from "@/components/must-dos-summary";
 import { CollaboratorManager } from "@/components/collaborator-manager";
-import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn, setDocumentNonBlocking, useDoc } from '@/firebase';
-import { collection, doc, writeBatch, setDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import {
+  useAuth,
+  useUser,
+  useFirestore,
+  useCollection,
+  useMemoFirebase,
+  initiateAnonymousSignIn,
+  setDocumentNonBlocking,
+  useDoc,
+} from "@/firebase";
+import {
+  collection,
+  doc,
+  writeBatch,
+  setDoc,
+  query,
+  orderBy,
+  serverTimestamp,
+} from "firebase/firestore";
 import {
   DndContext,
   closestCenter,
@@ -22,47 +38,53 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import Greeter from '@/components/greeter';
-import { Card, CardContent } from '@/components/ui/card';
-import type { RSVP } from '@/lib/types';
-
+} from "@dnd-kit/sortable";
+import Greeter from "@/components/greeter";
+import { Card, CardContent } from "@/components/ui/card";
+import type { RSVP } from "@/lib/types";
 
 const funeralQuotes = [
-    '"Blessed are those who mourn, for they will be comforted." - Matthew 5:4',
-    '"The Lord is close to the brokenhearted and saves those who are crushed in spirit." - Psalm 34:18',
-    '"Grief is the price we pay for love." - Queen Elizabeth II',
-    '"What is lovely never dies, but passes into other loveliness." - Thomas Bailey Aldrich',
-    '"To live in hearts we leave behind is not to die." - Thomas Campbell',
+  '"Blessed are those who mourn, for they will be comforted." - Matthew 5:4',
+  '"The Lord is close to the brokenhearted and saves those who are crushed in spirit." - Psalm 34:18',
+  '"Grief is the price we pay for love." - Queen Elizabeth II',
+  '"What is lovely never dies, but passes into other loveliness." - Thomas Bailey Aldrich',
+  '"To live in hearts we leave behind is not to die." - Thomas Campbell',
 ];
 
 const weddingQuotes = [
-    '"A successful marriage requires falling in love many times, always with the same person." - Mignon McLaughlin',
-    '"The best thing to hold onto in life is each other." - Audrey Hepburn',
-    '"Love doesnt make the world go round. Love is what makes the ride worthwhile." - Franklin P. Jones',
-    '"To love and be loved is to feel the sun from both sides." - David Viscott',
-    '"A great marriage is not when the perfect couple comes together. It is when an imperfect couple learns to enjoy their differences." - Dave Meurer',
+  '"A successful marriage requires falling in love many times, always with the same person." - Mignon McLaughlin',
+  '"The best thing to hold onto in life is each other." - Audrey Hepburn',
+  '"Love doesnt make the world go round. Love is what makes the ride worthwhile." - Franklin P. Jones',
+  '"To love and be loved is to feel the sun from both sides." - David Viscott',
+  '"A great marriage is not when the perfect couple comes together. It is when an imperfect couple learns to enjoy their differences." - Dave Meurer',
 ];
 
-
-function calculateTotals(categories: BudgetCategory[]): { categories: BudgetCategory[], grandTotal: number } {
+function calculateTotals(categories: BudgetCategory[]): {
+  categories: BudgetCategory[];
+  grandTotal: number;
+} {
   let newGrandTotal = 0;
-  const categoriesWithTotals = categories.map(category => {
+  const categoriesWithTotals = categories.map((category) => {
     let categoryTotal = 0;
     const items = category.items || [];
-    const itemsWithTotals = items.map(item => {
+    const itemsWithTotals = items.map((item) => {
       const itemTotal = (item.quantity || 0) * (item.unitPrice || 0);
       categoryTotal += itemTotal;
       return { ...item, total: itemTotal };
     });
-    const subCategories = category.subCategories ? calculateTotals(category.subCategories).categories : [];
-    const subCategoriesTotal = subCategories.reduce((acc, sub) => acc + sub.total, 0);
+    const subCategories = category.subCategories
+      ? calculateTotals(category.subCategories).categories
+      : [];
+    const subCategoriesTotal = subCategories.reduce(
+      (acc, sub) => acc + sub.total,
+      0,
+    );
 
     category.items = itemsWithTotals;
     category.total = categoryTotal + subCategoriesTotal;
@@ -72,7 +94,11 @@ function calculateTotals(categories: BudgetCategory[]): { categories: BudgetCate
   return { categories: categoriesWithTotals, grandTotal: newGrandTotal };
 }
 
-export default function PlannerPage({ params: { budgetId } }: { params: { budgetId: string } }) {
+export default function PlannerPage({
+  params: { budgetId },
+}: {
+  params: { budgetId: string };
+}) {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const firestore = useFirestore();
@@ -80,59 +106,95 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
   const router = useRouter();
   const [budgetData, setBudgetData] = useState<BudgetCategory[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
-  const [eventQuote, setEventQuote] = useState('');
+  const [eventQuote, setEventQuote] = useState("");
   const uniqueId = useId();
-  const isTemplateMode = budgetId === 'template';
-  
+  const isTemplateMode = budgetId === "template";
+
   // We need to find the budget owner ID. If the current user is not the owner, we might be a collaborator.
-  // For this prototype, we'll try to find the budget document by searching across potential owners 
+  // For this prototype, we'll try to find the budget document by searching across potential owners
   // or assuming the budgetId path is correct if provided.
   // Actually, since paths are /users/{userId}/budgets/{budgetId}, the collaborator needs to know the owner's userId.
   // Let's assume for now the user is navigating from their "My Plans" or a shared link.
-  
+
   // To handle collaborators, we'd ideally have a top-level lookup, but based on current rules,
   // we'll use the userId from the URL if available, or stick to the owner-based path.
   // For now, let's stick to the current user's path and assume they are the owner for management.
-  
-  const budgetDocRef = useMemoFirebase(() => (
-    user && budgetId && !isTemplateMode ? doc(firestore, 'users', user.uid, 'budgets', budgetId) : null
-  ), [user, firestore, budgetId, isTemplateMode]);
 
-  const { data: budget, isLoading: budgetLoading } = useDoc<Budget>(budgetDocRef);
+  const budgetDocRef = useMemoFirebase(
+    () =>
+      user && budgetId && !isTemplateMode
+        ? doc(firestore, "users", user.uid, "budgets", budgetId)
+        : null,
+    [user, firestore, budgetId, isTemplateMode],
+  );
 
-  const categoriesCollection = useMemoFirebase(() => (
-    user && budgetId && !isTemplateMode ? collection(firestore, 'users', user.uid, 'budgets', budgetId, 'categories') : null
-  ), [user, firestore, budgetId, isTemplateMode]);
+  const { data: budget, isLoading: budgetLoading } =
+    useDoc<Budget>(budgetDocRef);
 
-  const { data: fetchedCategories, isLoading: categoriesLoading } = useCollection<BudgetCategory>(categoriesCollection);
+  const categoriesCollection = useMemoFirebase(
+    () =>
+      user && budgetId && !isTemplateMode
+        ? collection(
+            firestore,
+            "users",
+            user.uid,
+            "budgets",
+            budgetId,
+            "categories",
+          )
+        : null,
+    [user, firestore, budgetId, isTemplateMode],
+  );
 
-  const mustDosCollection = useMemoFirebase(() => (
-    !isTemplateMode && user && budgetDocRef ? collection(budgetDocRef, 'mustDos') : null
-  ), [isTemplateMode, user, budgetDocRef]);
+  const { data: fetchedCategories, isLoading: categoriesLoading } =
+    useCollection<BudgetCategory>(categoriesCollection);
 
-  const mustDosQuery = useMemoFirebase(() => (
-    mustDosCollection ? query(mustDosCollection, orderBy('createdAt', 'desc')) : null
-  ), [mustDosCollection]);
+  const mustDosCollection = useMemoFirebase(
+    () =>
+      !isTemplateMode && user && budgetDocRef
+        ? collection(budgetDocRef, "mustDos")
+        : null,
+    [isTemplateMode, user, budgetDocRef],
+  );
+
+  const mustDosQuery = useMemoFirebase(
+    () =>
+      mustDosCollection
+        ? query(mustDosCollection, orderBy("createdAt", "desc"))
+        : null,
+    [mustDosCollection],
+  );
 
   const { data: mustDos } = useCollection<MustDo>(mustDosQuery);
-  
-  const rsvpsCollection = useMemoFirebase(() => (
-    !isTemplateMode && user && budgetDocRef ? collection(budgetDocRef, 'rsvps') : null
-  ), [isTemplateMode, user, budgetDocRef]);
 
-  const rsvpsQuery = useMemoFirebase(() => (
-    rsvpsCollection ? query(rsvpsCollection, orderBy('respondedAt', 'desc')) : null
-  ), [rsvpsCollection]);
+  const rsvpsCollection = useMemoFirebase(
+    () =>
+      !isTemplateMode && user && budgetDocRef
+        ? collection(budgetDocRef, "rsvps")
+        : null,
+    [isTemplateMode, user, budgetDocRef],
+  );
 
-  const { data: rsvps, isLoading: rsvpsLoading } = useCollection<RSVP>(rsvpsQuery);
+  const rsvpsQuery = useMemoFirebase(
+    () =>
+      rsvpsCollection
+        ? query(rsvpsCollection, orderBy("respondedAt", "desc"))
+        : null,
+    [rsvpsCollection],
+  );
 
-  const eventType = isTemplateMode ? searchParams.get('eventType') : budget?.eventType;
+  const { data: rsvps, isLoading: rsvpsLoading } =
+    useCollection<RSVP>(rsvpsQuery);
+
+  const eventType = isTemplateMode
+    ? (searchParams.get("eventType") ?? undefined)
+    : budget?.eventType;
 
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const daysLeft = useMemo(() => {
@@ -147,47 +209,68 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
     if (diffDays === 1) return "1 day";
     return `${diffDays} days`;
   }, [budget?.eventDate]);
-  
+
   const mustDosCount = useMemo(() => {
     if (!mustDos) return { completed: 0, total: 0 };
     return {
-      completed: mustDos.filter(item => item.status === 'done').length,
+      completed: mustDos.filter((item) => item.status === "done").length,
       total: mustDos.length,
     };
   }, [mustDos]);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      initiateAnonymousSignIn(auth);
+      router.push("/login");
     }
-  }, [user, isUserLoading, auth]);
+  }, [user, isUserLoading, router]);
 
   useEffect(() => {
     const initializePlan = async () => {
       if (isTemplateMode) {
-        const eventType = searchParams.get('eventType') || 'other';
-        const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
-        const { categories, grandTotal } = calculateTotals(JSON.parse(JSON.stringify(template)));
+        const eventType = searchParams.get("eventType") || "other";
+        const template =
+          budgetTemplates[eventType as keyof typeof budgetTemplates] ||
+          budgetTemplates.other;
+        const { categories, grandTotal } = calculateTotals(
+          JSON.parse(JSON.stringify(template)),
+        );
         setBudgetData(categories);
         setGrandTotal(grandTotal);
         return;
       }
-  
-      if (user && !user.isAnonymous && fetchedCategories && fetchedCategories.length > 0) {
-        const sortedCategories = [...fetchedCategories].sort((a, b) => a.order - b.order);
+
+      if (
+        user &&
+        !user.isAnonymous &&
+        fetchedCategories &&
+        fetchedCategories.length > 0
+      ) {
+        const sortedCategories = [...fetchedCategories].sort(
+          (a, b) => a.order - b.order,
+        );
         const { categories, grandTotal } = calculateTotals(sortedCategories);
         setBudgetData(categories);
         setGrandTotal(grandTotal);
         return;
       }
 
-      if (user && !user.isAnonymous && budget && !categoriesLoading && (!fetchedCategories || fetchedCategories.length === 0)) {
-        const eventType = searchParams.get('eventType') || budget?.eventType || 'other';
-        const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
-        
+      if (
+        user &&
+        !user.isAnonymous &&
+        budget &&
+        !categoriesLoading &&
+        (!fetchedCategories || fetchedCategories.length === 0)
+      ) {
+        const eventType =
+          searchParams.get("eventType") || budget?.eventType || "other";
+        const template =
+          budgetTemplates[eventType as keyof typeof budgetTemplates] ||
+          budgetTemplates.other;
+
         const newBudgetId = budgetId;
-        const { categories: templateCategories, grandTotal: initialTotal } = calculateTotals(JSON.parse(JSON.stringify(template)));
-        
+        const { categories: templateCategories, grandTotal: initialTotal } =
+          calculateTotals(JSON.parse(JSON.stringify(template)));
+
         const newBudget: Partial<Budget> = {
           name: "",
           grandTotal: initialTotal,
@@ -196,12 +279,18 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
           collaboratorIds: [], // Initialize collaborators
         };
 
-        const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
+        const budgetDocRef = doc(
+          firestore,
+          "users",
+          user.uid,
+          "budgets",
+          newBudgetId,
+        );
         await setDoc(budgetDocRef, newBudget, { merge: true });
 
         const batch = writeBatch(firestore);
         templateCategories.forEach((category, index) => {
-          const categoryRef = doc(collection(budgetDocRef, 'categories'));
+          const categoryRef = doc(collection(budgetDocRef, "categories"));
           const categoryData: BudgetCategory = {
             ...category,
             id: categoryRef.id,
@@ -212,125 +301,176 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
         });
 
         if (!mustDos || mustDos.length === 0) {
-            const mustDoTemplate = [
-                { title: 'Confirm venue access time', note: 'Key collection is with security', deadline: '' },
-                { title: 'Pick up decorations', note: '', deadline: '' }
-            ];
-            mustDoTemplate.forEach(item => {
-                const mustDoRef = doc(collection(budgetDocRef, 'mustDos'));
-                batch.set(mustDoRef, {
-                    ...item,
-                    budgetId: newBudgetId,
-                    userId: user.uid,
-                    status: 'todo',
-                    priority: 'medium',
-                    createdAt: serverTimestamp(),
-                    reminderType: 'none',
-                    reminderDaysBefore: 1,
-                });
+          const mustDoTemplate = [
+            {
+              title: "Confirm venue access time",
+              note: "Key collection is with security",
+              deadline: "",
+            },
+            { title: "Pick up decorations", note: "", deadline: "" },
+          ];
+          mustDoTemplate.forEach((item) => {
+            const mustDoRef = doc(collection(budgetDocRef, "mustDos"));
+            batch.set(mustDoRef, {
+              ...item,
+              budgetId: newBudgetId,
+              userId: user.uid,
+              status: "todo",
+              priority: "medium",
+              createdAt: serverTimestamp(),
+              reminderType: "none",
+              reminderDaysBefore: 1,
             });
+          });
         }
-        
+
         await batch.commit();
         setBudgetData(templateCategories);
         setGrandTotal(initialTotal);
       }
     };
-  
+
     initializePlan();
-  }, [isTemplateMode, searchParams, user, isUserLoading, budget, budgetLoading, fetchedCategories, categoriesLoading, firestore, budgetId, auth, router, mustDos]);
+  }, [
+    isTemplateMode,
+    searchParams,
+    user,
+    isUserLoading,
+    budget,
+    budgetLoading,
+    fetchedCategories,
+    categoriesLoading,
+    firestore,
+    budgetId,
+    auth,
+    router,
+    mustDos,
+  ]);
 
   useEffect(() => {
-    if (eventType === 'funeral') {
-        setEventQuote(funeralQuotes[Math.floor(Math.random() * funeralQuotes.length)]);
-    } else if (eventType === 'wedding') {
-        setEventQuote(weddingQuotes[Math.floor(Math.random() * weddingQuotes.length)]);
+    if (eventType === "funeral") {
+      setEventQuote(
+        funeralQuotes[Math.floor(Math.random() * funeralQuotes.length)],
+      );
+    } else if (eventType === "wedding") {
+      setEventQuote(
+        weddingQuotes[Math.floor(Math.random() * weddingQuotes.length)],
+      );
     }
   }, [eventType]);
 
-  useEffect(() => {
-    if (!isUserLoading && isTemplateMode && user && !user.isAnonymous) {
-      router.push('/my-plans');
-    }
-  }, [isUserLoading, isTemplateMode, user, router]);
+  // Logged-in users can freely browse template mode — no redirect
 
   const updateStateAndTotals = (newBudgetData: BudgetCategory[]) => {
-      const { categories, grandTotal } = calculateTotals(newBudgetData);
-      setBudgetData(categories);
-      setGrandTotal(grandTotal);
-      if (budgetDocRef) {
-        setDocumentNonBlocking(budgetDocRef, { grandTotal }, { merge: true });
-      }
+    const { categories, grandTotal } = calculateTotals(newBudgetData);
+    setBudgetData(categories);
+    setGrandTotal(grandTotal);
+    if (budgetDocRef) {
+      setDocumentNonBlocking(budgetDocRef, { grandTotal }, { merge: true });
+    }
   };
-  
+
   const handleItemChange = (
     categoryPath: string[],
     itemIndex: number,
     field: keyof BudgetItem,
-    value: string | number
+    value: string | number,
   ) => {
     const updatedBudgetData = JSON.parse(JSON.stringify(budgetData));
-    let currentLevel = updatedBudgetData;
+    let currentLevel: BudgetCategory[] = updatedBudgetData;
     let categoryToUpdate: BudgetCategory | undefined;
 
     for (const id of categoryPath) {
-        const foundCategory = currentLevel.find(c => c.id === id);
-        if (foundCategory) {
-            categoryToUpdate = foundCategory;
-            currentLevel = foundCategory.subCategories || [];
-        }
+      const foundCategory = currentLevel.find(
+        (c: BudgetCategory) => c.id === id,
+      );
+      if (foundCategory) {
+        categoryToUpdate = foundCategory;
+        currentLevel = foundCategory.subCategories || [];
+      }
     }
 
     if (categoryToUpdate) {
-        const updatedItem = { ...categoryToUpdate.items[itemIndex] };
-        if (field === 'quantity' || field === 'unitPrice') {
-            updatedItem[field] = parseFloat(value as string) || 0;
-        } else {
-            (updatedItem[field] as any) = value;
-        }
-        categoryToUpdate.items[itemIndex] = updatedItem;
+      const updatedItem = { ...categoryToUpdate.items[itemIndex] };
+      if (field === "quantity" || field === "unitPrice") {
+        updatedItem[field] = parseFloat(value as string) || 0;
+      } else {
+        (updatedItem[field] as any) = value;
+      }
+      categoryToUpdate.items[itemIndex] = updatedItem;
 
-        if (!isTemplateMode && user && !user.isAnonymous && budgetId) {
-             const rootCategoryId = categoryPath[0];
-             const rootCategoryToUpdate = updatedBudgetData.find(c => c.id === rootCategoryId);
-             const categoryDocRef = doc(firestore, 'users', user.uid, 'budgets', budgetId, 'categories', rootCategoryId);
-             if (rootCategoryToUpdate) {
-                setDocumentNonBlocking(categoryDocRef, rootCategoryToUpdate, { merge: true });
-             }
+      if (!isTemplateMode && user && !user.isAnonymous && budgetId) {
+        const rootCategoryId = categoryPath[0];
+        const rootCategoryToUpdate = updatedBudgetData.find(
+          (c) => c.id === rootCategoryId,
+        );
+        const categoryDocRef = doc(
+          firestore,
+          "users",
+          user.uid,
+          "budgets",
+          budgetId,
+          "categories",
+          rootCategoryId,
+        );
+        if (rootCategoryToUpdate) {
+          setDocumentNonBlocking(categoryDocRef, rootCategoryToUpdate, {
+            merge: true,
+          });
         }
-        updateStateAndTotals(updatedBudgetData);
+      }
+      updateStateAndTotals(updatedBudgetData);
     }
   };
-  
+
   const handleAddItem = (categoryPath: string[]) => {
     const updatedBudgetData = JSON.parse(JSON.stringify(budgetData));
-    let currentLevel = updatedBudgetData;
+    let currentLevel: BudgetCategory[] = updatedBudgetData;
     let categoryToUpdate: BudgetCategory | undefined;
 
     for (const id of categoryPath) {
-        const foundCategory = currentLevel.find(c => c.id === id);
-        if (foundCategory) {
-            categoryToUpdate = foundCategory;
-            currentLevel = foundCategory.subCategories || [];
-        }
+      const foundCategory = currentLevel.find(
+        (c: BudgetCategory) => c.id === id,
+      );
+      if (foundCategory) {
+        categoryToUpdate = foundCategory;
+        currentLevel = foundCategory.subCategories || [];
+      }
     }
 
     if (categoryToUpdate) {
-        const newItem: BudgetItem = {
-            id: `${categoryPath.join('-')}-item-${Date.now()}`,
-            name: "", metric: "", quantity: 0, unitPrice: 0, total: 0, comment: "",
-        };
-        categoryToUpdate.items = [...(categoryToUpdate.items || []), newItem];
+      const newItem: BudgetItem = {
+        id: `${categoryPath.join("-")}-item-${Date.now()}`,
+        name: "",
+        metric: "",
+        quantity: 0,
+        unitPrice: 0,
+        total: 0,
+        comment: "",
+      };
+      categoryToUpdate.items = [...(categoryToUpdate.items || []), newItem];
 
-        if (!isTemplateMode && user && !user.isAnonymous && budgetId) {
-            const rootCategoryId = categoryPath[0];
-            const rootCategoryToUpdate = updatedBudgetData.find(c => c.id === rootCategoryId);
-            const categoryDocRef = doc(firestore, 'users', user.uid, 'budgets', budgetId, 'categories', rootCategoryId);
-            if(rootCategoryToUpdate) {
-                setDocumentNonBlocking(categoryDocRef, rootCategoryToUpdate, { merge: true });
-            }
+      if (!isTemplateMode && user && !user.isAnonymous && budgetId) {
+        const rootCategoryId = categoryPath[0];
+        const rootCategoryToUpdate = updatedBudgetData.find(
+          (c) => c.id === rootCategoryId,
+        );
+        const categoryDocRef = doc(
+          firestore,
+          "users",
+          user.uid,
+          "budgets",
+          budgetId,
+          "categories",
+          rootCategoryId,
+        );
+        if (rootCategoryToUpdate) {
+          setDocumentNonBlocking(categoryDocRef, rootCategoryToUpdate, {
+            merge: true,
+          });
         }
-        updateStateAndTotals(updatedBudgetData);
+      }
+      updateStateAndTotals(updatedBudgetData);
     }
   };
 
@@ -346,41 +486,59 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
         if (!isTemplateMode && user && !user.isAnonymous && budgetId) {
           const batch = writeBatch(firestore);
           newOrder.forEach((category, index) => {
-            const docRef = doc(firestore, 'users', user.uid, 'budgets', budgetId, 'categories', category.id);
+            const docRef = doc(
+              firestore,
+              "users",
+              user.uid,
+              "budgets",
+              budgetId,
+              "categories",
+              category.id,
+            );
             batch.update(docRef, { order: index });
           });
           batch.commit();
         }
-        
+
         return newOrder;
       });
     }
   };
 
-  if (isUserLoading || (!isTemplateMode && (categoriesLoading || budgetLoading || rsvpsLoading)) || budgetData.length === 0) {
+  if (
+    isUserLoading ||
+    (!isTemplateMode && (categoriesLoading || budgetLoading || rsvpsLoading)) ||
+    budgetData.length === 0
+  ) {
     return (
-        <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-            <p>Loading...</p>
-        </div>
+      <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
     );
   }
 
   return (
     <div className="min-h-screen w-full bg-secondary">
-       <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
+      <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
         <PageHeader />
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
           <div className="w-full">
             <Greeter quote={eventQuote} />
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
             <div className="flex flex-col">
-              <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} eventType={eventType} />
+              <EventDetails
+                budget={budget}
+                budgetRef={budgetDocRef}
+                isBudgetLoading={budgetLoading}
+                isTemplateMode={isTemplateMode}
+                eventType={eventType}
+              />
             </div>
 
             <div className="flex flex-col">
-               <BudgetSummary 
+              <BudgetSummary
                 grandTotal={grandTotal}
                 daysLeft={daysLeft}
                 mustDosTotal={mustDosCount.total}
@@ -390,55 +548,72 @@ export default function PlannerPage({ params: { budgetId } }: { params: { budget
               />
             </div>
           </div>
-          
-           <p className="text-center text-sm text-muted-foreground mt-8">
-            Click on each category below to open shopping items and start creating your plan.
+
+          <p className="text-center text-sm text-muted-foreground mt-8">
+            Click on each category below to open shopping items and start
+            creating your plan.
           </p>
-          
+
           {isTemplateMode && (
             <Card className="mt-4 bg-yellow-100 border-yellow-300">
               <CardContent className="p-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-bold text-sm">You are in Preview Mode</h3>
-                    <p className="text-xs text-yellow-800">Your changes won't be saved. <a href="/register" className="underline font-semibold">Register now</a> to save your plan!</p>
+                    <h3 className="font-bold text-sm">
+                      You are in Preview Mode
+                    </h3>
+                    <p className="text-xs text-yellow-800">
+                      Your changes won't be saved.{" "}
+                      {user && !user.isAnonymous ? (
+                        <a href="/my-plans" className="underline font-semibold">
+                          Go to My Plans
+                        </a>
+                      ) : (
+                        <a href="/register" className="underline font-semibold">
+                          Register now
+                        </a>
+                      )}{" "}
+                      to save your plan!
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           )}
 
-           <div className="mt-4">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
+          <div className="mt-4">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={budgetData}
+                strategy={verticalListSortingStrategy}
               >
-                <SortableContext
-                  items={budgetData}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <BudgetAccordion 
-                    categories={budgetData}
-                    onItemChange={handleItemChange}
-                    onAddItem={handleAddItem}
-                  />
-                </SortableContext>
-              </DndContext>
-            </div>
-            
-            <p className="text-center text-xs text-muted-foreground mt-8 px-4 font-bold">
-              All prices shown are estimates only. Actual costs may vary depending on location, supplier, availability, and personal preferences.
-            </p>
-            
-            {!isTemplateMode && (
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  <RsvpManager budgetId={budgetId} rsvps={rsvps} />
-                  <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
-                  {budget && budgetDocRef && <CollaboratorManager budget={budget} budgetRef={budgetDocRef} />}
-                </div>
-            )}
+                <BudgetAccordion
+                  categories={budgetData}
+                  onItemChange={handleItemChange}
+                  onAddItem={handleAddItem}
+                />
+              </SortableContext>
+            </DndContext>
+          </div>
 
+          <p className="text-center text-xs text-muted-foreground mt-8 px-4 font-bold">
+            All prices shown are estimates only. Actual costs may vary depending
+            on location, supplier, availability, and personal preferences.
+          </p>
+
+          {!isTemplateMode && (
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <RsvpManager budgetId={budgetId} rsvps={rsvps} />
+              <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
+              {budget && budgetDocRef && (
+                <CollaboratorManager budget={budget} budgetRef={budgetDocRef} />
+              )}
+            </div>
+          )}
         </main>
       </div>
     </div>

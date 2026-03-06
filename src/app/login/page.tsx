@@ -1,55 +1,96 @@
+"use client";
 
-'use client';
-
-import { useState, useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { setUserData, handleRedirectResult, useFirebase, useUser } from '@/firebase';
-import { FirebaseError } from 'firebase/app';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import PageHeader from '@/components/page-header';
-import { signInWithEmailAndPassword, sendPasswordResetEmail, type UserCredential } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useToast } from '@/hooks/use-toast';
-import { initiateGoogleSignIn } from '@/firebase/auth-operations';
-import { Eye, EyeOff } from 'lucide-react';
-import ReCAPTCHA from 'react-google-recaptcha';
-import { verifyRecaptcha } from '@/app/actions';
+import { useState, useEffect, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { setUserData, useFirebase, useUser } from "@/firebase";
+import { FirebaseError } from "firebase/app";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import PageHeader from "@/components/page-header";
+import {
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  type UserCredential,
+} from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+import { initiateGoogleSignIn, initiateFacebookSignIn } from "@/firebase/auth-operations";
+import { Eye, EyeOff } from "lucide-react";
+import Script from "next/script";
+import { verifyRecaptcha } from "@/app/actions";
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="24" height="24" viewBox="0 0 48 48" {...props}>
+    <linearGradient id="login-fb-grad-unique" x1="9.993" x2="40.615" y1="9.993" y2="40.615" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stopColor="#2aa4f4"></stop>
+      <stop offset="1" stopColor="#007ad9"></stop>
+    </linearGradient>
+    <path fill="url(#login-fb-grad-unique)" d="M24,4C12.954,4,4,12.954,4,24s8.954,20,20,20s20-8.954,20-20S35.046,4,24,4z"></path>
+    <path fill="#fff" d="M26.707,26.707v11.729h5.895V26.707h4.228l0.58-4.885h-4.808v-2.883c0-1.428,0.395-2.399,2.444-2.399h2.583v-4.364c-0.445-0.059-1.979-0.19-3.757-0.19c-3.717,0-6.257,2.272-6.257,6.425v3.411h-4.25v4.885h4.25V26.707z"></path>
+  </svg>
+);
+
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
-      <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
-      <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
-      <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.612-3.512-11.284-8.285l-6.571,4.819C9.656,39.663,16.318,44,24,44z" />
-      <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.99,34.551,44,29.869,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
-    </svg>
-  );
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 48 48"
+    width="24px"
+    height="24px"
+    {...props}
+  >
+    <path
+      fill="#FFC107"
+      d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
+    />
+    <path
+      fill="#FF3D00"
+      d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
+    />
+    <path
+      fill="#4CAF50"
+      d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.612-3.512-11.284-8.285l-6.571,4.819C9.656,39.663,16.318,44,24,44z"
+    />
+    <path
+      fill="#1976D2"
+      d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.99,34.551,44,29.869,44,24C44,22.659,43.862,21.35,43.611,20.083z"
+    />
+  </svg>
+);
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || "";
 
 export default function LoginPage() {
   const { auth, firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
-  const isMobile = useIsMobile();
-  const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] = useState(true);
+  // Start false — only set true while actively processing a redirect result
+  const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] =
+    useState(false);
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
+  const recaptchaWidgetId = useRef<number | null>(null);
 
   const {
     register,
@@ -62,83 +103,85 @@ export default function LoginPage() {
 
   const processSocialUser = async (userCredential: UserCredential) => {
     if (!firestore || !userCredential.user.email) return;
-    const userRef = doc(firestore, 'users', userCredential.user.uid);
-    
+    const userRef = doc(firestore, "users", userCredential.user.uid);
     const userSnap = await getDoc(userRef);
     if (!userSnap.exists()) {
-      await setUserData(userRef, userCredential.user.email, userCredential.user.displayName || 'New User');
+      await setUserData(
+        userRef,
+        userCredential.user.email,
+        userCredential.user.displayName || "New User",
+      );
     }
   };
-  
-    useEffect(() => {
-        if (!isUserLoading && user && !user.isAnonymous) {
-            router.push('/my-plans');
-            return;
-        }
 
-        const processAuth = async () => {
-            if (!auth || user) {
-                setIsProcessingSocialSignIn(false);
-                return;
-            }
-            
-            const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
-            
-            try {
-                const userCredential = await handleRedirectResult(auth);
-                if (userCredential) {
-                    sessionStorage.removeItem('firebase:pendingRedirect');
-                    await processSocialUser(userCredential);
-                }
-            } catch (error) {
-                sessionStorage.removeItem('firebase:pendingRedirect');
-                if (error instanceof FirebaseError) {
-                    setFirebaseError(error.message);
-                } else {
-                    setFirebaseError('An unexpected error occurred during social sign-in.');
-                }
-            } finally {
-                if (isRedirecting) {
-                   setIsProcessingSocialSignIn(false);
-                }
-            }
-        };
+  // Redirect already-logged-in users
+  useEffect(() => {
+    if (!isUserLoading && user && !user.isAnonymous) {
+      router.push("/my-plans");
+    }
+  }, [user, isUserLoading, router]);
 
-        const isRedirecting = sessionStorage.getItem('firebase:pendingRedirect') === 'true';
-        if (!isRedirecting) {
-          setIsProcessingSocialSignIn(false);
-        }
+  const renderEnterpriseRecaptcha = () => {
+    if (!RECAPTCHA_SITE_KEY || !recaptchaContainerRef.current) return;
+    if (recaptchaWidgetId.current !== null) return;
+    const enterprise = (window as any).grecaptcha?.enterprise;
+    if (!enterprise) return;
+    enterprise.ready(() => {
+      if (!recaptchaContainerRef.current || recaptchaWidgetId.current !== null) return;
+      recaptchaWidgetId.current = enterprise.render(recaptchaContainerRef.current, {
+        sitekey: RECAPTCHA_SITE_KEY,
+        callback: (token: string) => setRecaptchaToken(token),
+        "expired-callback": () => setRecaptchaToken(null),
+        "error-callback": () => setRecaptchaToken(null),
+      });
+    });
+  };
 
-        processAuth();
-    }, [user, isUserLoading, auth, router]);
+  // Handles SPA navigation case where script is already loaded
+  useEffect(() => {
+    renderEnterpriseRecaptcha();
+  }, []); // valid: all deps are stable refs/setters/constants
 
   const onEmailSubmit = async (data: LoginFormValues) => {
     if (!auth) return;
     setFirebaseError(null);
 
-    if (!recaptchaToken) {
-        setFirebaseError('Please complete the reCAPTCHA challenge.');
-        return;
+    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
+      setFirebaseError("Please complete the reCAPTCHA challenge.");
+      return;
     }
 
     try {
-      const isVerified = await verifyRecaptcha(recaptchaToken);
-      if (!isVerified) {
-          setFirebaseError('reCAPTCHA verification failed. Please try again.');
-          recaptchaRef.current?.reset();
+      if (RECAPTCHA_SITE_KEY && recaptchaToken) {
+        const isVerified = await verifyRecaptcha(recaptchaToken);
+        if (!isVerified) {
+          setFirebaseError("reCAPTCHA verification failed. Please try again.");
+          if (recaptchaWidgetId.current !== null) {
+            (window as any).grecaptcha?.enterprise?.reset(recaptchaWidgetId.current);
+          }
           setRecaptchaToken(null);
           return;
+        }
       }
-      
-      await signInWithEmailAndPassword(auth, data.email, data.password);
 
+      await signInWithEmailAndPassword(auth, data.email, data.password);
     } catch (error) {
       if (error instanceof FirebaseError) {
-        setFirebaseError(error.message);
+        const friendlyMessages: Record<string, string> = {
+          'auth/invalid-credential': 'Incorrect email or password. Please try again.',
+          'auth/user-not-found': 'No account found with this email address.',
+          'auth/wrong-password': 'Incorrect password. Please try again.',
+          'auth/too-many-requests': 'Too many failed attempts. Please wait a moment and try again.',
+          'auth/user-disabled': 'This account has been disabled.',
+          'auth/invalid-email': 'Please enter a valid email address.',
+        };
+        setFirebaseError(friendlyMessages[error.code] || error.message);
       } else {
-        setFirebaseError('An unexpected error occurred.');
+        setFirebaseError("An unexpected error occurred.");
       }
-      recaptchaRef.current?.reset();
+      if (recaptchaWidgetId.current !== null) {
+        (window as any).grecaptcha?.enterprise?.reset(recaptchaWidgetId.current);
+      }
       setRecaptchaToken(null);
     }
   };
@@ -148,160 +191,226 @@ export default function LoginPage() {
     setFirebaseError(null);
     setIsProcessingSocialSignIn(true);
     try {
-        if (isMobile) {
-            sessionStorage.setItem('firebase:pendingRedirect', 'true');
-        }
-        const userCredential = await initiateGoogleSignIn(auth, isMobile);
-        if (userCredential) {
-            await processSocialUser(userCredential);
-        }
-        if(!isMobile) {
-            setIsProcessingSocialSignIn(false);
-        }
+      const userCredential = await initiateGoogleSignIn(auth);
+      if (userCredential) {
+        await processSocialUser(userCredential);
+      }
     } catch (error) {
-        sessionStorage.removeItem('firebase:pendingRedirect');
-        if (error instanceof FirebaseError) {
-            if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
-                setFirebaseError(error.message);
-            }
-        } else {
-            setFirebaseError('An unexpected error occurred during Google sign-in.');
-        }
-        setIsProcessingSocialSignIn(false);
+      console.error("Google sign-in error:", error);
+      setFirebaseError("Could not complete Google sign-in. Please try again.");
+    } finally {
+      setIsProcessingSocialSignIn(false);
+    }
+  };
+
+  const handleFacebookSignIn = async () => {
+    if (!auth) return;
+    setFirebaseError(null);
+    setIsProcessingSocialSignIn(true);
+    try {
+      const userCredential = await initiateFacebookSignIn(auth);
+      if (userCredential) {
+        await processSocialUser(userCredential);
+      }
+    } catch (error) {
+      console.error("Facebook sign-in error:", error);
+      setFirebaseError("Could not complete Facebook sign-in. Please try again.");
+    } finally {
+      setIsProcessingSocialSignIn(false);
     }
   };
 
   const handlePasswordReset = async () => {
     if (!auth) return;
     setFirebaseError(null);
-    const email = getValues('email');
+    const email = getValues("email");
     if (!email) {
-      setFirebaseError('Please enter your email address to reset your password.');
+      setFirebaseError(
+        "Please enter your email address to reset your password.",
+      );
       return;
     }
-    
+
     try {
       await sendPasswordResetEmail(auth, email);
       toast({
-        title: 'Password Reset Email Sent',
+        title: "Password Reset Email Sent",
         description: `If an account exists for ${email}, a password reset link has been sent to it.`,
       });
     } catch (error) {
       if (error instanceof FirebaseError) {
         setFirebaseError(error.message);
       } else {
-        setFirebaseError('An unexpected error occurred while sending the password reset email.');
+        setFirebaseError(
+          "An unexpected error occurred while sending the password reset email.",
+        );
       }
     }
   };
 
-  if (isUserLoading || isProcessingSocialSignIn || (user && !user.isAnonymous)) {
+  if (
+    isUserLoading ||
+    isProcessingSocialSignIn ||
+    (user && !user.isAnonymous)
+  ) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-          <p>Loading...</p>
+        <p>Loading...</p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-secondary">
-       <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
+      <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
         <PageHeader />
         <main className="container mx-auto flex items-center justify-center px-4 flex-grow mb-16">
-            <Card className="w-full max-w-md">
+          <Card className="w-full max-w-md">
             <CardHeader>
-                <CardTitle>Login</CardTitle>
-                <CardDescription>Access your celebration plans.</CardDescription>
+              <CardTitle>Login</CardTitle>
+              <CardDescription>Access your celebration plans.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-center">
-                    <Button type="button" variant="outline" size="icon" className="rounded-full" onClick={handleGoogleSignIn} disabled={isSubmitting}>
-                        <GoogleIcon />
-                    </Button>
+              <div className="space-y-4">
+                <div className="flex justify-center gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={handleGoogleSignIn}
+                    disabled={isSubmitting}
+                  >
+                    <GoogleIcon />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={handleFacebookSignIn}
+                    disabled={isSubmitting}
+                  >
+                    <FacebookIcon />
+                  </Button>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
+
+                <form
+                  onSubmit={handleSubmit(onEmailSubmit)}
+                  className="space-y-4"
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" {...register("email")} />
+                    {errors.email && (
+                      <p className="text-destructive text-sm">
+                        {errors.email.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Password</Label>
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="h-auto p-0 text-xs"
+                        onClick={handlePasswordReset}
+                      >
+                        Forgot Password?
+                      </Button>
+                    </div>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        {...register("password")}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-0 right-0 h-full px-3"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    {errors.password && (
+                      <p className="text-destructive text-sm">
+                        {errors.password.message}
+                      </p>
+                    )}
                   </div>
 
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-card px-2 text-muted-foreground">
-                            Or continue with
-                            </span>
-                        </div>
-                    </div>
-
-                    <form onSubmit={handleSubmit(onEmailSubmit)} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" {...register('email')} />
-                        {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-                    </div>
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <Label htmlFor="password">Password</Label>
-                            <Button type="button" variant="link" className="h-auto p-0 text-xs" onClick={handlePasswordReset}>
-                                Forgot Password?
-                            </Button>
-                        </div>
-                        <div className="relative">
-                            <Input id="password" type={showPassword ? 'text' : 'password'} {...register('password')} />
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="absolute top-0 right-0 h-full px-3"
-                                onClick={() => setShowPassword(!showPassword)}
-                            >
-                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </Button>
-                        </div>
-                        {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
-                    </div>
-
+                  {RECAPTCHA_SITE_KEY && (
                     <div className="flex justify-center">
-                      <ReCAPTCHA
-                        ref={recaptchaRef}
-                        sitekey={process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || ''}
-                        onChange={(token) => setRecaptchaToken(token)}
-                        onExpired={() => setRecaptchaToken(null)}
-                        onError={() => setRecaptchaToken(null)}
+                      <div ref={recaptchaContainerRef} />
+                      <Script
+                        src="https://www.google.com/recaptcha/enterprise.js"
+                        strategy="afterInteractive"
+                        onLoad={renderEnterpriseRecaptcha}
                       />
                     </div>
+                  )}
 
-                    {firebaseError && <p className="text-destructive text-sm">{firebaseError}</p>}
-                    
-                     <div className="pb-6 pt-2 px-6">
-                        <Button type="submit" className="w-full" disabled={isSubmitting || !recaptchaToken}>
-                            {isSubmitting ? 'Logging in...' : 'Login'}
-                        </Button>
-                         <p className="mt-4 text-center text-sm">
-                            Don't have an account?{' '}
-                            <Link href="/register" className="underline">
-                                Sign up
-                            </Link>
-                        </p>
-                        <p className="mt-6 text-center text-xs text-muted-foreground">
-                        By continuing, you agree to our{' '}
-                        <Link href="/terms" className="underline hover:text-primary">
-                            Terms of Service
-                        </Link>{' '}
-                        and{' '}
-                        <Link href="/privacy" className="underline hover:text-primary">
-                            Privacy Policy
-                        </Link>
-                        .
-                        </p>
-                    </div>
-                    </form>
-                </div>
+                  {firebaseError && (
+                    <p className="text-destructive text-sm">{firebaseError}</p>
+                  )}
+
+                  <div className="pb-6 pt-2 px-6">
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isSubmitting || (!!RECAPTCHA_SITE_KEY && !recaptchaToken)}
+                    >
+                      {isSubmitting ? "Logging in..." : "Login"}
+                    </Button>
+                    <p className="mt-4 text-center text-sm">
+                      Don't have an account?{" "}
+                      <Link href="/register" className="underline">
+                        Sign up
+                      </Link>
+                    </p>
+                    <p className="mt-6 text-center text-xs text-muted-foreground">
+                      By continuing, you agree to our{" "}
+                      <Link
+                        href="/terms"
+                        className="underline hover:text-primary"
+                      >
+                        Terms of Service
+                      </Link>{" "}
+                      and{" "}
+                      <Link
+                        href="/privacy"
+                        className="underline hover:text-primary"
+                      >
+                        Privacy Policy
+                      </Link>
+                      .
+                    </p>
+                  </div>
+                </form>
+              </div>
             </CardContent>
-            </Card>
+          </Card>
         </main>
       </div>
     </div>
   );
 }
-
-    

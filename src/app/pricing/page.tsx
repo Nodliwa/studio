@@ -1,5 +1,6 @@
 
 import PageHeader from '@/components/page-header';
+import LandingFooter from '@/components/landing-footer';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, Star } from 'lucide-react';
@@ -56,63 +57,60 @@ const tiers = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-secondary">
-      <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
-        <PageHeader />
-        <main className="container mx-auto px-4 flex-grow my-16">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl font-bold font-headline text-foreground/90">
-              Choose the Right Plan for Your Celebration
-            </h1>
-            <p className="mt-4 text-lg text-muted-foreground">
-              From a quick look to detailed planning for multiple events, we have a plan that fits your needs.
-            </p>
-          </div>
+    <div className="min-h-screen bg-background">
+      <PageHeader />
+      <main className="container mx-auto px-4 flex-grow my-16 max-w-6xl">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <h1 className="text-4xl font-bold font-headline text-foreground/90">
+            Choose the Right Plan for Your Celebration
+          </h1>
+          <p className="mt-4 text-lg text-muted-foreground">
+            From a quick look to detailed planning for multiple events, we have a plan that fits your needs.
+          </p>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12 items-stretch justify-center">
-            {tiers.map((tier) => (
-              <Card key={tier.name} className={cn("flex flex-col relative overflow-hidden", tier.isMostPopular ? "border-primary shadow-lg" : "")}>
-                {tier.name === 'Free' && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full bg-amber-500 text-white p-2 text-center text-xs font-semibold z-10">
-                    Plan will be saved for a limited period
-                  </div>
-                )}
-                {(tier.name === 'Basic' || tier.name === 'Standard') && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full bg-primary text-primary-foreground p-2 text-center text-xs font-semibold z-10">
-                    <Star className="h-4 w-4 inline-block mr-1" />
-                    1st 100 subscribers keep their 1st event for life!
-                  </div>
-                )}
-                <CardHeader className={cn("text-center pt-12")}>
-                  <CardTitle className="text-2xl font-headline">{tier.name}</CardTitle>
-                  <CardDescription>{tier.description}</CardDescription>
-                  <div className="pt-4">
-                    <span className="text-4xl font-bold">{tier.price}</span>
-                    {tier.priceSuffix && <span className="text-muted-foreground">{tier.priceSuffix}</span>}
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                  <ul className="space-y-3">
-                    {tier.features.map((feature, index) => (
-                      <li key={index} className="flex items-start">
-                        <Check className="h-5 w-5 text-primary mr-2 shrink-0 mt-0.5" />
-                        <span className="text-muted-foreground">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button asChild className="w-full" variant={tier.isMostPopular ? 'default' : 'outline'}>
-                    <Link href={tier.href}>{tier.cta}</Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </main>
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch justify-center">
+          {tiers.map((tier) => (
+            <Card key={tier.name} className={cn("flex flex-col relative overflow-hidden", tier.isMostPopular ? "border-primary shadow-lg" : "")}>
+              {tier.name === 'Free' && (
+                <div className="absolute top-0 left-0 w-full bg-amber-500 text-white py-2 text-center text-xs font-semibold z-10">
+                  Plan will be saved for a limited period
+                </div>
+              )}
+              {(tier.name === 'Basic' || tier.name === 'Standard') && (
+                <div className="absolute top-0 left-0 w-full bg-primary text-primary-foreground py-2 text-center text-xs font-semibold z-10">
+                  <Star className="h-3 w-3 inline-block mr-1" />
+                  1st 100 subscribers keep their 1st event for life!
+                </div>
+              )}
+              <CardHeader className="text-center pt-12">
+                <CardTitle className="text-2xl font-headline">{tier.name}</CardTitle>
+                <CardDescription>{tier.description}</CardDescription>
+                <div className="pt-4">
+                  <span className="text-4xl font-bold">{tier.price}</span>
+                  {tier.priceSuffix && <span className="text-muted-foreground ml-1">{tier.priceSuffix}</span>}
+                </div>
+              </CardHeader>
+              <CardContent className="flex-grow">
+                <ul className="space-y-3">
+                  {tier.features.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <Check className="h-5 w-5 text-primary mr-2 shrink-0 mt-0.5" />
+                      <span className="text-muted-foreground">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button asChild className="w-full" variant={tier.isMostPopular ? 'default' : 'outline'}>
+                  <Link href={tier.href}>{tier.cta}</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </main>
+      <LandingFooter />
     </div>
   );
 }
-
-    

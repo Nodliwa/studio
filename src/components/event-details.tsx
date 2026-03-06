@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 interface EventDetailsProps {
   budget: Budget | null;
   budgetRef: DocumentReference | null;
+  isBudgetLoading?: boolean;
   isTemplateMode?: boolean;
   eventType?: string;
 }
@@ -42,7 +43,7 @@ type FormData = z.infer<typeof formSchema>;
 
 const DEFAULT_BUDGET_NAME = "";
 
-export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventType }: EventDetailsProps) {
+export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTemplateMode = false, eventType }: EventDetailsProps) {
   const { user } = useUser();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(isTemplateMode);
@@ -113,7 +114,7 @@ export function EventDetails({ budget, budgetRef, isTemplateMode = false, eventT
       };
       reset(initialValues);
        setIsEditing(!budget.name || budget.name === DEFAULT_BUDGET_NAME && !budget.eventLocation);
-    } else if (user && budgetRef && !budget) {
+    } else if (user && budgetRef && !budget && !isBudgetLoading) {
         const initialBudget: Omit<Budget, 'id'> = {
             name: DEFAULT_BUDGET_NAME,
             grandTotal: 0,

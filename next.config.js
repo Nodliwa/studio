@@ -7,6 +7,18 @@ const nextConfig = {
     // here; fix them incrementally in local dev.
     ignoreBuildErrors: true,
   },
+  // Prevent webpack from bundling Node.js-only server packages.
+  // These are loaded natively at runtime instead of being bundled.
+  experimental: {
+    serverComponentsExternalPackages: [
+      'genkit',
+      '@genkit-ai/google-genai',
+      'openai',
+    ],
+  },
+  // react-day-picker v9 uses a package exports field that Next.js 14
+  // webpack cannot resolve without explicit transpilation.
+  transpilePackages: ['react-day-picker'],
   // Allow Firebase Studio cloud workstation preview to load /_next/* bundles
   allowedDevOrigins: [
     "*.cloudworkstations.dev",

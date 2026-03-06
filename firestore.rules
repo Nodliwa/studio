@@ -21,7 +21,7 @@ service cloud.firestore {
      */
     function isCollaborator(ownerId, budgetId) {
       let budget = get(/databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId)).data;
-      return isSignedIn() && (request.auth.uid in budget.collaboratorIds);
+      return isSignedIn() && budget.collaboratorIds is list && (request.auth.uid in budget.collaboratorIds);
     }
 
     function hasAccess(userId, budgetId) {
@@ -53,7 +53,9 @@ service cloud.firestore {
       match /budgets/{budgetId} {
         // Public read for RSVP, owner/collaborator for others
         allow get: if true;
-        allow list, create, update, delete: if hasAccess(userId, budgetId);
+        allow list: if isOwner(userId);
+        allow create, delete: if isOwner(userId);
+        allow update: if hasAccess(userId, budgetId);
 
         match /categories/{categoryId} {
           allow get, list, create, update, delete: if hasAccess(userId, budgetId);

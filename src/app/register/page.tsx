@@ -18,7 +18,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   initiateEmailSignUp,
   setUserData,
-  handleRedirectResult,
   useFirebase,
   useUser,
 } from "@/firebase";
@@ -34,7 +33,7 @@ import {
   initiateFacebookSignIn,
 } from "@/firebase/auth-operations";
 import { Eye, EyeOff } from "lucide-react";
-import ReCAPTCHA from "react-google-recaptcha";
+import Script from "next/script";
 import { verifyRecaptcha } from "@/app/actions";
 
 const emailRegisterSchema = z.object({
@@ -109,17 +108,21 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || "";
+
 export default function RegisterPage() {
   const { auth, firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
   const isMobile = useIsMobile();
+  // Start false — only set true while actively processing a redirect result
   const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] =
-    useState(true);
+    useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
+  const recaptchaWidgetId = useRef<number | null>(null);
 
   const {
     register,
@@ -143,68 +146,54 @@ export default function RegisterPage() {
     );
   };
 
+  // Redirect already-logged-in users
   useEffect(() => {
     if (!isUserLoading && user && !user.isAnonymous) {
       router.push("/my-plans");
-      return;
     }
+  }, [user, isUserLoading, router]);
 
-    const processAuth = async () => {
-      if (!auth || user) {
-        setIsProcessingSocialSignIn(false);
-        return;
-      }
+  const renderEnterpriseRecaptcha = () => {
+    if (!RECAPTCHA_SITE_KEY || !recaptchaContainerRef.current) return;
+    if (recaptchaWidgetId.current !== null) return;
+    const enterprise = (window as any).grecaptcha?.enterprise;
+    if (!enterprise) return;
+    enterprise.ready(() => {
+      if (!recaptchaContainerRef.current || recaptchaWidgetId.current !== null) return;
+      recaptchaWidgetId.current = enterprise.render(recaptchaContainerRef.current, {
+        sitekey: RECAPTCHA_SITE_KEY,
+        callback: (token: string) => setRecaptchaToken(token),
+        "expired-callback": () => setRecaptchaToken(null),
+        "error-callback": () => setRecaptchaToken(null),
+      });
+    });
+  };
 
-      const isRedirecting =
-        sessionStorage.getItem("firebase:pendingRedirect") === "true";
-
-      try {
-        const userCredential = await handleRedirectResult(auth);
-        if (userCredential) {
-          sessionStorage.removeItem("firebase:pendingRedirect");
-          await processSocialUser(userCredential);
-        }
-      } catch (error) {
-        sessionStorage.removeItem("firebase:pendingRedirect");
-        if (error instanceof FirebaseError) {
-          setFirebaseError(error.message);
-        } else {
-          setFirebaseError(
-            "An unexpected error occurred during social sign-in.",
-          );
-        }
-      } finally {
-        if (isRedirecting) {
-          setIsProcessingSocialSignIn(false);
-        }
-      }
-    };
-
-    const isRedirecting =
-      sessionStorage.getItem("firebase:pendingRedirect") === "true";
-    if (!isRedirecting) {
-      setIsProcessingSocialSignIn(false);
-    }
-
-    processAuth();
-  }, [user, isUserLoading, auth, router]);
+  // Handles SPA navigation case where script is already loaded
+  useEffect(() => {
+    renderEnterpriseRecaptcha();
+  }, []); // valid: all deps are stable refs/setters/constants
 
   const onSubmit = async (data: RegisterFormValues) => {
     if (!auth || !firestore) return;
     setFirebaseError(null);
 
-    if (!recaptchaToken) {
+    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
       setFirebaseError("Please complete the reCAPTCHA challenge.");
       return;
     }
 
     try {
-      const isVerified = await verifyRecaptcha(recaptchaToken);
-      if (!isVerified) {
-        setFirebaseError("reCAPTCHA verification failed. Please try again.");
-        recaptchaRef.current?.reset();
-        setRecaptchaToken(null);
-        return;
+      if (RECAPTCHA_SITE_KEY && recaptchaToken) {
+        const isVerified = await verifyRecaptcha(recaptchaToken);
+        if (!isVerified) {
+          setFirebaseError("reCAPTCHA verification failed. Please try again.");
+          if (recaptchaWidgetId.current !== null) {
+            (window as any).grecaptcha?.enterprise?.reset(recaptchaWidgetId.current);
+          }
+          setRecaptchaToken(null);
+          return;
+        }
       }
 
       const displayName = `${data.firstName} ${data.lastName}`;
@@ -226,11 +215,19 @@ export default function RegisterPage() {
       }
     } catch (error) {
       if (error instanceof FirebaseError) {
-        setFirebaseError(error.message);
+        const friendlyMessages: Record<string, string> = {
+          'auth/email-already-in-use': 'An account with this email already exists. Try logging in instead.',
+          'auth/invalid-email': 'Please enter a valid email address.',
+          'auth/weak-password': 'Password is too weak. Please use at least 6 characters.',
+          'auth/too-many-requests': 'Too many attempts. Please wait a moment and try again.',
+        };
+        setFirebaseError(friendlyMessages[error.code] || error.message);
       } else {
         setFirebaseError("An unexpected error occurred during registration.");
       }
-      recaptchaRef.current?.reset();
+      if (recaptchaWidgetId.current !== null) {
+        (window as any).grecaptcha?.enterprise?.reset(recaptchaWidgetId.current);
+      }
       setRecaptchaToken(null);
     }
   };
@@ -239,37 +236,21 @@ export default function RegisterPage() {
     if (!auth) return;
     setFirebaseError(null);
     setIsProcessingSocialSignIn(true);
-
-    const signInFunction = {
-      google: initiateGoogleSignIn,
-      facebook: initiateFacebookSignIn,
-    }[provider];
-
     try {
-      if (isMobile) {
-        sessionStorage.setItem("firebase:pendingRedirect", "true");
+      let userCredential: UserCredential | null = null;
+      if (provider === "google") {
+        userCredential = await initiateGoogleSignIn(auth);
+      } else {
+        userCredential = await initiateFacebookSignIn(auth);
       }
-      const userCredential = await signInFunction(auth, isMobile);
       if (userCredential) {
         await processSocialUser(userCredential);
-      }
-      if (!isMobile) {
-        setIsProcessingSocialSignIn(false);
+        // onAuthStateChanged fires → redirects to /my-plans
       }
     } catch (error) {
-      sessionStorage.removeItem("firebase:pendingRedirect");
-      if (error instanceof FirebaseError) {
-        if (
-          error.code !== "auth/popup-closed-by-user" &&
-          error.code !== "auth/cancelled-popup-request"
-        ) {
-          setFirebaseError(error.message);
-        }
-      } else {
-        setFirebaseError(
-          `An unexpected error occurred during ${provider} sign-in.`,
-        );
-      }
+      console.error(`${provider} sign-in error:`, error);
+      setFirebaseError(`Could not complete ${provider} sign-in. Please try again.`);
+    } finally {
       setIsProcessingSocialSignIn(false);
     }
   };
@@ -420,23 +401,22 @@ export default function RegisterPage() {
                     )}
                   </div>
 
-                  <div className="flex justify-center">
-                    <ReCAPTCHA
-                      ref={recaptchaRef}
-                      sitekey={
-                        process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || ""
-                      }
-                      onChange={(token) => setRecaptchaToken(token)}
-                      onExpired={() => setRecaptchaToken(null)}
-                      onError={() => setRecaptchaToken(null)}
-                    />
-                  </div>
+                  {RECAPTCHA_SITE_KEY && (
+                    <div className="flex justify-center">
+                      <div ref={recaptchaContainerRef} />
+                      <Script
+                        src="https://www.google.com/recaptcha/enterprise.js"
+                        strategy="afterInteractive"
+                        onLoad={renderEnterpriseRecaptcha}
+                      />
+                    </div>
+                  )}
 
                   <div className="items-top flex space-x-2">
                     <Checkbox
                       id="consent"
                       {...register("consent")}
-                      onCheckedChange={(checked) =>
+                      onCheckedChange={(checked: boolean | "indeterminate") =>
                         setValue("consent", checked === true, {
                           shouldValidate: true,
                         })
@@ -472,7 +452,7 @@ export default function RegisterPage() {
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={isSubmitting || !recaptchaToken}
+                    disabled={isSubmitting || (!!RECAPTCHA_SITE_KEY && !recaptchaToken)}
                   >
                     {isSubmitting ? "Creating Account..." : "Sign Up"}
                   </Button>
