@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useId, useMemo } from "react";
@@ -17,7 +18,6 @@ import {
   useFirestore,
   useCollection,
   useMemoFirebase,
-  initiateAnonymousSignIn,
   setDocumentNonBlocking,
   useDoc,
 } from "@/firebase";
@@ -110,7 +110,6 @@ export default function PlannerPage({
   const [budgetData, setBudgetData] = useState<BudgetCategory[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
   const [eventQuote, setEventQuote] = useState("");
-  const uniqueId = useId();
   const isTemplateMode = budgetId === "template";
 
   // Redirect logged-in users from 'template' mode to a persistent new plan
@@ -203,7 +202,7 @@ export default function PlannerPage({
     if (!budget?.eventDate) return null;
     const eventDate = new Date(budget.eventDate);
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize today's date
+    today.setHours(0, 0, 0, 0); 
     const diffTime = eventDate.getTime() - today.getTime();
     if (diffTime < 0) return "Event has passed";
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -241,6 +240,7 @@ export default function PlannerPage({
         return;
       }
 
+      // If categories already exist in Firestore, use them
       if (
         user &&
         !user.isAnonymous &&
@@ -256,7 +256,7 @@ export default function PlannerPage({
         return;
       }
 
-      // Initialize from template if we have a real ID but no data yet
+      // Initialize from template if we have a real ID but no data yet in Firestore
       if (
         user &&
         !user.isAnonymous &&
@@ -264,23 +264,21 @@ export default function PlannerPage({
         !categoriesLoading &&
         (!fetchedCategories || fetchedCategories.length === 0)
       ) {
-        const eventType =
-          searchParams.get("eventType") || budget?.eventType || "other";
+        const eventTypeFromParams = searchParams.get("eventType") || budget?.eventType || "other";
         const template =
-          budgetTemplates[eventType as keyof typeof budgetTemplates] ||
+          budgetTemplates[eventTypeFromParams as keyof typeof budgetTemplates] ||
           budgetTemplates.other;
 
-        const newBudgetId = budgetId;
         const { categories: templateCategories, grandTotal: initialTotal } =
           calculateTotals(JSON.parse(JSON.stringify(template)));
 
         const newBudget: Partial<Budget> = {
-          id: newBudgetId,
+          id: budgetId,
           name: "",
           grandTotal: initialTotal,
           userId: user.uid,
-          eventType: eventType,
-          collaboratorIds: [], // Initialize collaborators
+          eventType: eventTypeFromParams,
+          collaboratorIds: [],
           eventDate: "",
           eventLocation: "",
           expectedGuests: 0,
@@ -291,10 +289,10 @@ export default function PlannerPage({
           "users",
           user.uid,
           "budgets",
-          newBudgetId,
+          budgetId,
         );
         
-        // Use standard non-blocking update for diagnostic error reporting
+        // Initialize the budget document
         setDoc(budgetDocRef, newBudget, { merge: true }).catch(error => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: budgetDocRef.path,
@@ -303,6 +301,7 @@ export default function PlannerPage({
             }));
         });
 
+        // Batch set categories and sample must-dos
         const batch = writeBatch(firestore);
         templateCategories.forEach((category, index) => {
           const categoryRef = doc(collection(budgetDocRef, "categories"));
@@ -310,39 +309,33 @@ export default function PlannerPage({
             ...category,
             id: categoryRef.id,
             order: index,
-            budgetId: newBudgetId,
+            budgetId: budgetId,
           };
           batch.set(categoryRef, categoryData);
         });
 
-        if (!mustDos || mustDos.length === 0) {
-          const mustDoTemplate = [
-            {
-              title: "Confirm venue access time",
-              note: "Key collection is with security",
-              deadline: "",
-            },
-            { title: "Pick up decorations", note: "", deadline: "" },
-          ];
-          mustDoTemplate.forEach((item) => {
-            const mustDoRef = doc(collection(budgetDocRef, "mustDos"));
-            batch.set(mustDoRef, {
-              ...item,
-              budgetId: newBudgetId,
-              userId: user.uid,
-              status: "todo",
-              priority: "medium",
-              createdAt: serverTimestamp(),
-              reminderType: "none",
-              reminderDaysBefore: 1,
-            });
+        // Add some default Must-Do items
+        const mustDoTemplate = [
+          { title: "Confirm venue access time", note: "Key collection is with security", deadline: "" },
+          { title: "Finalize guest list", note: "", deadline: "" },
+        ];
+        mustDoTemplate.forEach((item) => {
+          const mustDoRef = doc(collection(budgetDocRef, "mustDos"));
+          batch.set(mustDoRef, {
+            ...item,
+            budgetId: budgetId,
+            userId: user.uid,
+            status: "todo",
+            priority: "medium",
+            createdAt: serverTimestamp(),
+            reminderType: "none",
+            reminderDaysBefore: 1,
           });
-        }
+        });
 
         batch.commit().catch(error => {
-            // Permission error on batch initialization
             errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: budgetDocRef.path, // Batch fail usually relates to parent budget access
+                path: budgetDocRef.path,
                 operation: 'write',
             }));
         });
@@ -364,9 +357,6 @@ export default function PlannerPage({
     categoriesLoading,
     firestore,
     budgetId,
-    auth,
-    router,
-    mustDos,
   ]);
 
   useEffect(() => {
@@ -537,10 +527,13 @@ export default function PlannerPage({
   ) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-        <p>Loading...</p>
+        <p>Loading your celebration plan...</p>
       </div>
     );
   }
+
+  // Show "Preview Mode" only for truly anonymous/guest users on the template path
+  const showPreviewWarning = isTemplateMode && (!user || user.isAnonymous);
 
   return (
     <div className="min-h-screen w-full bg-secondary">
@@ -579,7 +572,7 @@ export default function PlannerPage({
             creating your plan.
           </p>
 
-          {isTemplateMode && (!user || user.isAnonymous) && (
+          {showPreviewWarning && (
             <Card className="mt-4 bg-yellow-100 border-yellow-300">
               <CardContent className="p-2">
                 <div className="flex items-center justify-between">

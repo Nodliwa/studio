@@ -17,13 +17,11 @@ service cloud.firestore {
 
     /**
      * Checks if the user is a collaborator on the budget.
-     * Uses a cross-document lookup to the parent budget document.
+     * Uses a direct lookup on the budget document's collaboratorIds array.
      */
     function isCollaborator(ownerId, budgetId) {
       let budgetPath = /databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId);
-      return isSignedIn() && 
-             exists(budgetPath) && 
-             request.auth.uid in get(budgetPath).data.get('collaboratorIds', []);
+      return isSignedIn() && exists(budgetPath) && (request.auth.uid in get(budgetPath).data.get('collaboratorIds', []));
     }
 
     // -------------------------------------------------------------------------
@@ -37,7 +35,7 @@ service cloud.firestore {
       allow get, write: if isOwner(userId);
 
       match /budgets/{budgetId} {
-        // Owners have full control over their own budgets
+        // Owners have full control over their own budgets (includes create, update, delete)
         allow read, write: if isOwner(userId);
         
         // Public read access for specific budget metadata (needed for RSVP pages)
@@ -46,19 +44,14 @@ service cloud.firestore {
         // Collaborators can view and update shared budgets
         allow read, update: if isCollaborator(userId, budgetId);
 
-        match /categories/{allPaths=**} {
-          allow read, write: if isOwner(userId) || isCollaborator(userId, budgetId);
-        }
-        
-        match /mustDos/{mustDoId} {
+        // Subcollections (categories, items, mustDos, rsvps)
+        match /{allPaths=**} {
           allow read, write: if isOwner(userId) || isCollaborator(userId, budgetId);
         }
         
         match /rsvps/{rsvpId} {
             // RSVPs can be submitted by anyone with the link
-            allow create: if request.resource.data.budgetId == budgetId;
-            // Only owner and collaborators can see or manage the guest list
-            allow read, update, delete: if isOwner(userId) || isCollaborator(userId, budgetId);
+            allow create: if true;
         }
       }
     }

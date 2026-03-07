@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -11,11 +12,7 @@ import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { DocumentReference } from "firebase/firestore";
-import usePlacesAutocomplete, {
-  getGeocode,
-  getLatLng,
-} from "use-places-autocomplete";
-import { useLoadScript } from "@react-google-maps/api";
+import usePlacesAutocomplete from "use-places-autocomplete";
 import {
   Popover,
   PopoverContent,
@@ -43,18 +40,16 @@ type FormData = z.infer<typeof formSchema>;
 const DEFAULT_BUDGET_NAME = "";
 
 export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTemplateMode = false, eventType }: EventDetailsProps) {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(isTemplateMode);
 
   const {
     ready,
-    value,
     suggestions: { status, data: autocompleteData },
     setValue: setAutocompleteValue,
     clearSuggestions,
   } = usePlacesAutocomplete({
-    requestOptions: { /* Define search scope here */ },
     debounce: 300,
   });
 
@@ -64,7 +59,7 @@ export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTem
     reset,
     setValue: setFormValue,
     watch,
-    formState: { isDirty, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -81,7 +76,7 @@ export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTem
     if (!budget?.eventDate) return null;
     const eventDate = new Date(budget.eventDate);
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize today's date
+    today.setHours(0, 0, 0, 0); 
     const diffTime = eventDate.getTime() - today.getTime();
     if (diffTime < 0) return "The event has passed.";
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -116,25 +111,16 @@ export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTem
         expectedGuests: budget.expectedGuests || 0,
       };
       reset(initialValues);
-       setIsEditing(!budget.name || budget.name === DEFAULT_BUDGET_NAME && !budget.eventLocation);
-    } else if (user && budgetRef && !budget && !isBudgetLoading) {
-        const initialBudget: Omit<Budget, 'id'> = {
-            name: DEFAULT_BUDGET_NAME,
-            grandTotal: 0,
-            userId: user.uid,
-            eventLocation: "",
-            eventDate: "",
-            expectedGuests: 0,
-            eventType: ""
-        };
-        setDocumentNonBlocking(budgetRef, initialBudget, {});
+      // Auto-open editing if it's a completely blank new plan
+      if (!budget.name || budget.name === DEFAULT_BUDGET_NAME) {
         setIsEditing(true);
+      }
     }
-  }, [budget, reset, user, budgetRef, isTemplateMode, setAutocompleteValue]);
+  }, [budget, reset, isTemplateMode]);
 
 
   const onSubmit = (data: FormData) => {
-    if (isTemplateMode && (!user || user.isAnonymous)) {
+    if (!isUserLoading && (!user || user.isAnonymous)) {
       router.push('/register');
       return;
     }
@@ -156,6 +142,9 @@ export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTem
       clearSuggestions();
   }
 
+  // Determine if we should show the "Signup to Save" state
+  const showGuestState = isTemplateMode && (!user || user.isAnonymous);
+
   return (
     <Card className="shadow-lg h-full card-glass">
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -166,8 +155,8 @@ export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTem
                     </CardTitle>
                     <p className="text-sm font-semibold text-primary">{daysLeftText}</p>
                 </div>
-                {isTemplateMode && (!user || user.isAnonymous) ? (
-                    <Button onClick={() => router.push('/register')} size="sm">Sign Up to Save</Button>
+                {showGuestState ? (
+                    <Button type="button" onClick={() => router.push('/register')} size="sm">Sign Up to Save</Button>
                 ) : isEditing ? (
                     <div className="flex items-center gap-2">
                          <Button type="button" variant="ghost" size="sm" onClick={() => {
@@ -188,7 +177,7 @@ export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTem
                         </Button>
                     </div>
                 ) : (
-                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>Edit</Button>
+                    <Button variant="outline" size="sm" type="button" onClick={() => setIsEditing(true)}>Edit</Button>
                 )}
             </CardHeader>
             <CardContent className="p-4 pt-4">
