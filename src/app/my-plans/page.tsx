@@ -307,15 +307,13 @@ function MyPlansPage() {
     router.push(`/planner/${newId}?eventType=${eventType}`);
   };
 
-  if (isUserLoading || (budgetsLoading && budgets === null)) {
+  if (isUserLoading) {
     return (
       <div className="min-h-screen bg-secondary flex flex-col">
-        <div className="bg-background shadow-2xl container mx-auto flex flex-col flex-grow">
-          <PageHeader />
-          <main className="container mx-auto px-4 flex-grow flex items-center justify-center">
-             <RefreshCw className="h-10 w-10 animate-spin text-primary" />
-          </main>
-        </div>
+        <PageHeader />
+        <main className="flex-grow flex items-center justify-center">
+           <RefreshCw className="h-10 w-10 animate-spin text-primary" />
+        </main>
       </div>
     );
   }
@@ -335,7 +333,7 @@ function MyPlansPage() {
                     ? budgets.length > 0
                       ? `You have ${budgets.length} active celebration plan(s).`
                       : "You have no active plans yet."
-                    : null}
+                    : "Retrieving your plans..."}
                 </h3>
                 <p className="text-muted-foreground">
                   Manage your celebrations or start a new one.
@@ -384,7 +382,11 @@ function MyPlansPage() {
               </Dialog>
             </div>
 
-            {!budgetsLoading && budgets && budgets.length > 0 ? (
+            {budgetsLoading && !budgets ? (
+               <div className="flex justify-center items-center py-20">
+                  <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+               </div>
+            ) : budgets && budgets.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
                 {budgets.map((budget) => (
                   <PlanCard
@@ -404,54 +406,6 @@ function MyPlansPage() {
                 </div>
               )
             )}
-          </div>
-
-          <div className="mt-12 w-full max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold font-headline text-center">
-              Features
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-              <Card>
-                <CardFooter className="flex flex-col items-center gap-2 p-4 pt-6">
-                  <ListChecks className="h-6 w-6 text-primary" />
-                  <span className="text-base font-semibold">Don’t forget a thing</span>
-                  <p className="text-sm text-muted-foreground text-center">
-                    We give you a handy list of items to think about for your
-                    event, so nothing slips through the cracks.
-                  </p>
-                </CardFooter>
-              </Card>
-              <Card>
-                <CardFooter className="flex flex-col items-center gap-2 p-4 pt-6">
-                  <CalendarDays className="h-6 w-6 text-primary" />
-                  <span className="text-base font-semibold">Planning That Fits Your Life</span>
-                  <p className="text-sm text-muted-foreground text-center">
-                    Plan anywhere, with anyone, whenever it suits you — simple,
-                    flexible, and stress-free.
-                  </p>
-                </CardFooter>
-              </Card>
-              <Card>
-                <CardFooter className="flex flex-col items-center gap-2 p-4 pt-6">
-                  <Wallet className="h-6 w-6 text-primary" />
-                  <span className="text-base font-semibold">Effortless Budgeting</span>
-                  <p className="text-sm text-muted-foreground text-center">
-                    Forget diaries & spreadsheets - Organise your spending and
-                    see where your money goes, all in one place
-                  </p>
-                </CardFooter>
-              </Card>
-              <Card>
-                <CardFooter className="flex flex-col items-center gap-2 p-4 pt-6">
-                  <RefreshCw className="h-6 w-6 text-primary" />
-                  <span className="text-base font-semibold">Real-Time Updates</span>
-                  <p className="text-sm text-muted-foreground text-center">
-                    See your grand total update instantly as you adjust
-                    quantities and prices. No surprises.
-                  </p>
-                </CardFooter>
-              </Card>
-            </div>
           </div>
         </main>
       </div>

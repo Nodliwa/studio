@@ -27,6 +27,7 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 import {
   DndContext,
@@ -48,6 +49,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { RSVP } from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
 import { RefreshCw } from "lucide-react";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 function calculateTotals(categories: BudgetCategory[]): {
   categories: BudgetCategory[];
@@ -251,7 +254,7 @@ export default function PlannerPage({
         const { categories: templateCategories, grandTotal: initialTotal } =
           calculateTotals(JSON.parse(JSON.stringify(template)));
 
-        const newBudget: Partial<Budget> = {
+        const newBudget: Budget = {
           id: budgetId,
           name: "",
           grandTotal: initialTotal,
@@ -272,7 +275,13 @@ export default function PlannerPage({
         );
         
         // Initialize the budget document
-        setDocumentNonBlocking(budgetDocRef, newBudget, { merge: true });
+        setDoc(budgetDocRef, newBudget, { merge: true }).catch(error => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: budgetDocRef.path,
+                operation: 'update',
+                requestResourceData: newBudget
+            }));
+        });
 
         // Batch set categories and sample must-dos
         const batch = writeBatch(firestore);
@@ -478,12 +487,10 @@ export default function PlannerPage({
   ) {
     return (
       <div className="min-h-screen bg-secondary flex flex-col">
-        <div className="bg-background shadow-2xl container mx-auto flex flex-col flex-grow">
-          <PageHeader />
-          <main className="container mx-auto px-4 flex-grow flex items-center justify-center">
-             <RefreshCw className="h-10 w-10 animate-spin text-primary" />
-          </main>
-        </div>
+        <PageHeader />
+        <main className="flex-grow flex items-center justify-center">
+           <RefreshCw className="h-10 w-10 animate-spin text-primary" />
+        </main>
       </div>
     );
   }
