@@ -14,7 +14,7 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import type { Budget } from "@/lib/types";
 import PageHeader from "@/components/page-header";
 import {
@@ -43,13 +43,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   ListChecks,
   Wallet,
   CalendarDays,
@@ -57,87 +50,15 @@ import {
   Menu,
   MapPin,
   Users,
-  Plus,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
-import { v4 as uuidv4 } from "uuid";
 
 const eventTypeImages: { [key: string]: string } = {
   wedding: "/images/wedding.jpg",
   funeral: "/images/funeral2.png",
   umgidi: "/images/umgidi1.jpg",
 };
-
-const eventCategories = [
-  {
-    name: "Wedding",
-    image: "/images/wedding.jpg",
-    eventType: "wedding",
-  },
-  {
-    name: "Funeral",
-    image: "/images/funeral2.png",
-    eventType: "funeral",
-  },
-  {
-    name: "uMemulo",
-    image: "/images/umemulo.jpg",
-    eventType: "umemulo",
-  },
-  {
-    name: "uMgidi",
-    image: "/images/umgidi1.jpg",
-    eventType: "umgidi",
-  },
-];
-
-function CreatePlanDialog() {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Add New Plan
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-headline">Select a Celebration Template</DialogTitle>
-        </DialogHeader>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-          {eventCategories.map((cat) => (
-            <div
-              key={cat.eventType}
-              onClick={() => {
-                setOpen(false);
-                // Generate a fresh ID immediately for logged-in users
-                router.push(`/planner/${uuidv4()}?eventType=${cat.eventType}`);
-              }}
-              className="relative aspect-square rounded-xl overflow-hidden shadow-md group cursor-pointer border border-border/50 hover:border-primary/50 transition-all"
-            >
-              <Image
-                src={cat.image}
-                alt={cat.name}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-110"
-                sizes="(max-width: 768px) 50vw, 25vw"
-              />
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-end justify-center pb-4">
-                <span className="text-white font-bold text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                  {cat.name}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function PlanCard({
   budget,
@@ -386,7 +307,7 @@ function MyPlansPage() {
 
             <div className="mt-8">
               <Card>
-                <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                <CardContent className="p-6">
                   <div className="space-y-1 text-center md:text-left">
                     <h3 className="text-xl font-bold font-headline">
                       {!budgetsLoading && budgets
@@ -396,10 +317,9 @@ function MyPlansPage() {
                         : null}
                     </h3>
                     <p className="text-muted-foreground">
-                      All your saved celebrations are listed below.
+                      All your saved celebrations are listed below. To start a new one, please select a template from the home page.
                     </p>
                   </div>
-                  <CreatePlanDialog />
                 </CardContent>
               </Card>
             </div>
@@ -419,7 +339,7 @@ function MyPlansPage() {
                 <div className="text-center py-16">
                   <p className="text-lg text-muted-foreground">
                     You haven't saved any celebration plans yet. 
-                    Explore templates above to get started.
+                    <Link href="/" className="text-primary underline ml-1">Explore templates</Link> on the home page to get started.
                   </p>
                 </div>
               )
