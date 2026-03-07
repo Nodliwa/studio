@@ -35,7 +35,8 @@ service cloud.firestore {
 
       match /budgets/{budgetId} {
         // Owners have full control over their own budgets
-        allow read, write: if isOwner(userId);
+        // Simplified check to ensure creation/update is never blocked for the owner
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
         
         // Public read access for specific budget metadata (needed for RSVP pages)
         allow get: if true; 
@@ -45,7 +46,7 @@ service cloud.firestore {
 
         // Subcollections (categories, items, mustDos, rsvps)
         match /{allPaths=**} {
-          allow read, write: if isOwner(userId) || isCollaborator(userId, budgetId);
+          allow read, write: if (isSignedIn() && request.auth.uid == userId) || isCollaborator(userId, budgetId);
         }
         
         match /rsvps/{rsvpId} {

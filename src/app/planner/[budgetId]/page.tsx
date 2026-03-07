@@ -50,6 +50,7 @@ import type { RSVP } from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
+import { RefreshCw } from "lucide-react";
 
 const funeralQuotes = [
   '"Blessed are those who mourn, for they will be comforted." - Matthew 5:4',
