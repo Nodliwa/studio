@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -7,27 +6,21 @@ import {
   useMemoFirebase,
   useFirestore,
   deleteDocument,
-  useAuth,
-  setDocumentNonBlocking,
 } from "@/firebase";
 import {
   collection,
   doc,
   writeBatch,
   getDocs,
-  setDoc,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import type { Budget, BudgetCategory } from "@/lib/types";
+import { useEffect } from "react";
+import type { Budget } from "@/lib/types";
 import PageHeader from "@/components/page-header";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -58,7 +51,6 @@ import {
   MapPin,
   Users,
 } from "lucide-react";
-import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 
@@ -251,7 +243,6 @@ function MyPlansPage() {
   const {
     data: budgets,
     isLoading: budgetsLoading,
-    error,
   } = useCollection<Budget>(budgetsCollection);
 
   useEffect(() => {
@@ -289,8 +280,6 @@ function MyPlansPage() {
       toast({ title: "Plan deleted successfully" });
     } catch (e) {
       console.error("Error deleting plan:", e);
-      // We still attempt standard deletion if batch fails, 
-      // but standard deleteDocument helper will report permission errors correctly.
       deleteDocument(budgetDocRef);
     }
   };
@@ -324,7 +313,7 @@ function MyPlansPage() {
                       ? budgets.length > 0
                         ? `You have ${budgets.length} active celebration plan(s).`
                         : "You have no active plans yet."
-                      : "Loading your plans..."}
+                      : null}
                   </h3>
                   <p className="text-muted-foreground">
                     All your saved celebrations are listed below.
@@ -332,14 +321,6 @@ function MyPlansPage() {
                 </CardContent>
               </Card>
             </div>
-
-            {budgetsLoading && (
-              <div className="text-center py-16">
-                <p className="text-lg text-muted-foreground">
-                  Loading your plans...
-                </p>
-              </div>
-            )}
 
             {!budgetsLoading && budgets && budgets.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
@@ -369,60 +350,44 @@ function MyPlansPage() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
               <Card>
-                <CardHeader className="p-4">
-                  <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                    <ListChecks className="h-6 w-6 text-primary" />
-                    <span>Don’t forget a thing</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
+                <CardFooter className="flex flex-col items-center gap-2 p-4 pt-6">
+                  <ListChecks className="h-6 w-6 text-primary" />
+                  <span className="text-base font-semibold">Don’t forget a thing</span>
                   <p className="text-sm text-muted-foreground text-center">
                     We give you a handy list of items to think about for your
                     event, so nothing slips through the cracks.
                   </p>
-                </CardContent>
+                </CardFooter>
               </Card>
               <Card>
-                <CardHeader className="p-4">
-                  <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                    <CalendarDays className="h-6 w-6 text-primary" />
-                    <span>Planning That Fits Your Life</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
+                <CardFooter className="flex flex-col items-center gap-2 p-4 pt-6">
+                  <CalendarDays className="h-6 w-6 text-primary" />
+                  <span className="text-base font-semibold">Planning That Fits Your Life</span>
                   <p className="text-sm text-muted-foreground text-center">
                     Plan anywhere, with anyone, whenever it suits you — simple,
                     flexible, and stress-free.
                   </p>
-                </CardContent>
+                </CardFooter>
               </Card>
               <Card>
-                <CardHeader className="p-4">
-                  <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                    <Wallet className="h-6 w-6 text-primary" />
-                    <span>Effortless Budgeting</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
+                <CardFooter className="flex flex-col items-center gap-2 p-4 pt-6">
+                  <Wallet className="h-6 w-6 text-primary" />
+                  <span className="text-base font-semibold">Effortless Budgeting</span>
                   <p className="text-sm text-muted-foreground text-center">
                     Forget diaries & spreadsheets - Organise your spending and
                     see where your money goes, all in one place
                   </p>
-                </CardContent>
+                </CardFooter>
               </Card>
               <Card>
-                <CardHeader className="p-4">
-                  <CardTitle className="flex flex-col items-center gap-2 text-base font-semibold">
-                    <RefreshCw className="h-6 w-6 text-primary" />
-                    <span>Real-Time Updates</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
+                <CardFooter className="flex flex-col items-center gap-2 p-4 pt-6">
+                  <RefreshCw className="h-6 w-6 text-primary" />
+                  <span className="text-base font-semibold">Real-Time Updates</span>
                   <p className="text-sm text-muted-foreground text-center">
                     See your grand total update instantly as you adjust
                     quantities and prices. No surprises.
                   </p>
-                </CardContent>
+                </CardFooter>
               </Card>
             </div>
           </div>
