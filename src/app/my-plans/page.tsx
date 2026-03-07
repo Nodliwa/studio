@@ -15,7 +15,7 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Budget } from "@/lib/types";
 import PageHeader from "@/components/page-header";
 import {
@@ -85,9 +85,7 @@ function PlanCard({
   onDelete: (id: string) => void;
 }) {
   const router = useRouter();
-  const imageUrl = budget.eventType
-    ? eventTypeImages[budget.eventType]
-    : undefined;
+  const imageUrl = budget.eventType ? eventTypeImages[budget.eventType.toLowerCase()] : undefined;
 
   const formattedDate = budget.eventDate
     ? new Date(budget.eventDate).toLocaleDateString("en-ZA", {
@@ -97,14 +95,10 @@ function PlanCard({
       })
     : null;
 
-  const handleCardClick = () => {
-    router.push(`/planner/${budget.id}`);
-  };
-
   return (
     <Card
       className="overflow-hidden group relative flex flex-col bg-card shadow-sm transition-shadow duration-300 hover:shadow-xl cursor-pointer"
-      onClick={handleCardClick}
+      onClick={() => router.push(`/planner/${budget.id}`)}
     >
       <div className="relative w-full aspect-[4/3]">
         {imageUrl ? (
@@ -123,42 +117,19 @@ function PlanCard({
 
         <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
           <div className="space-y-2">
-            <h3
-              className="text-xl font-bold truncate text-shadow"
-              title={budget.name}
-            >
-              {budget.name || "My Celebration Plan"}
+            <h3 className="text-xl font-bold truncate text-shadow" title={budget.name}>
+              {budget.name || "Unnamed Celebration"}
             </h3>
             <div className="space-y-1 text-sm text-white/90 text-shadow-sm">
-              {formattedDate ? (
-                <p className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 shrink-0" /> {formattedDate}
-                </p>
-              ) : (
-                <p className="flex items-center gap-2 italic">
-                  <CalendarDays className="h-4 w-4 shrink-0" /> No date set
-                </p>
-              )}
-              {budget.eventLocation ? (
-                <p className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 shrink-0" />{" "}
-                  <span className="truncate">{budget.eventLocation}</span>
-                </p>
-              ) : (
-                <p className="flex items-center gap-2 italic">
-                  <MapPin className="h-4 w-4 shrink-0" /> No location set
-                </p>
-              )}
-              {budget.expectedGuests ? (
-                <p className="flex items-center gap-2">
-                  <Users className="h-4 w-4 shrink-0" /> {budget.expectedGuests}{" "}
-                  guests
-                </p>
-              ) : (
-                <p className="flex items-center gap-2 italic">
-                  <Users className="h-4 w-4 shrink-0" /> No guests set
-                </p>
-              )}
+              <p className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 shrink-0" /> {formattedDate || "No date set"}
+              </p>
+              <p className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 shrink-0" /> <span className="truncate">{budget.eventLocation || "No location set"}</span>
+              </p>
+              <p className="flex items-center gap-2">
+                <Users className="h-4 w-4 shrink-0" /> {budget.expectedGuests || 0} guests
+              </p>
             </div>
           </div>
 
@@ -175,33 +146,17 @@ function PlanCard({
       </div>
 
       <AlertDialog>
-        <div
-          className="absolute top-2 right-2 z-30"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div className="absolute top-2 right-2 z-30" onClick={(e) => e.stopPropagation()}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative h-8 w-8 hover:bg-white/20 text-white"
-              >
+              <Button variant="ghost" size="icon" className="relative h-8 w-8 hover:bg-white/20 text-white">
                 <Menu className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="bg-background/80 backdrop-blur text-foreground"
-            >
-              <DropdownMenuItem
-                onClick={() => router.push(`/planner/${budget.id}`)}
-              >
-                Edit Budget
-              </DropdownMenuItem>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => router.push(`/planner/${budget.id}`)}>Edit Budget</DropdownMenuItem>
               <AlertDialogTrigger asChild>
-                <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                  Delete
-                </DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
               </AlertDialogTrigger>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -210,16 +165,12 @@ function PlanCard({
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              plan and all of its data.
+              This action cannot be undone. This will permanently delete your plan and all associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => onDelete(budget.id)}
-              className="bg-destructive hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={() => onDelete(budget.id)} className="bg-destructive hover:bg-destructive/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -250,50 +201,31 @@ export default function MyPlansPage() {
   const { toast } = useToast();
 
   const budgetsCollection = useMemoFirebase(
-    () =>
-      user && !user.isAnonymous
-        ? collection(firestore, "users", user.uid, "budgets")
-        : null,
-    [user, firestore],
+    () => (user && !user.isAnonymous ? collection(firestore, "users", user.uid, "budgets") : null),
+    [user, firestore]
   );
 
-  const {
-    data: budgets,
-    isLoading: budgetsLoading,
-  } = useCollection<Budget>(budgetsCollection);
+  const { data: budgets, isLoading: budgetsLoading } = useCollection<Budget>(budgetsCollection);
 
   useEffect(() => {
-    if (isUserLoading) return;
-
-    if (!user || user.isAnonymous) {
-      router.push("/register");
+    if (!isUserLoading && (!user || user.isAnonymous)) {
+      router.push("/login");
     }
   }, [user, isUserLoading, router]);
 
   const handleDeletePlan = async (budgetId: string) => {
     if (!user || !firestore) return;
-
     const budgetDocRef = doc(firestore, "users", user.uid, "budgets", budgetId);
-
     try {
-      const categoriesCollectionRef = collection(budgetDocRef, "categories");
-      const categoriesSnapshot = await getDocs(categoriesCollectionRef);
-
+      const categoriesSnap = await getDocs(collection(budgetDocRef, "categories"));
       const batch = writeBatch(firestore);
-
-      for (const categoryDoc of categoriesSnapshot.docs) {
-        const itemsCollectionRef = collection(categoryDoc.ref, "items");
-        const itemsSnapshot = await getDocs(itemsCollectionRef);
-        itemsSnapshot.forEach((itemDoc) => {
-          batch.delete(itemDoc.ref);
-        });
-        batch.delete(categoryDoc.ref);
+      for (const catDoc of categoriesSnap.docs) {
+        const itemsSnap = await getDocs(collection(catDoc.ref, "items"));
+        itemsSnap.forEach(itemDoc => batch.delete(itemDoc.ref));
+        batch.delete(catDoc.ref);
       }
-
       batch.delete(budgetDocRef);
-
       await batch.commit();
-
       toast({ title: "Plan deleted successfully" });
     } catch (e) {
       console.error("Error deleting plan:", e);
@@ -311,7 +243,7 @@ export default function MyPlansPage() {
       <div className="min-h-screen bg-secondary flex flex-col">
         <PageHeader />
         <main className="flex-grow flex items-center justify-center">
-           <RefreshCw className="h-10 w-10 animate-spin text-primary" />
+          <RefreshCw className="h-10 w-10 animate-spin text-primary" />
         </main>
       </div>
     );
@@ -322,90 +254,68 @@ export default function MyPlansPage() {
       <div className="bg-background shadow-2xl container mx-auto flex flex-col flex-grow">
         <PageHeader />
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
-          <div className="flex-grow">
-            <Greeter />
+          <Greeter />
 
-            <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="space-y-1 text-center md:text-left flex-1">
-                <h3 className="text-xl font-bold font-headline">
-                  {!budgetsLoading && budgets
-                    ? budgets.length > 0
-                      ? `You have ${budgets.length} active celebration plan(s).`
-                      : "You have no active plans yet."
-                    : ""}
-                </h3>
-                <p className="text-muted-foreground">
-                  Manage your celebrations or start a new one.
-                </p>
-              </div>
-
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size="lg" className="font-bold">
-                    <Plus className="mr-2 h-5 w-5" />
-                    Add New Plan
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Start a New Celebration</DialogTitle>
-                    <DialogDescription>
-                      Choose a template to begin planning your event.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
-                    {creationCategories.map((cat) => (
-                      <Card
-                        key={cat.type}
-                        className="overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all"
-                        onClick={() => handleCreateNewPlan(cat.type)}
-                      >
-                        <div className="relative h-32 w-full">
-                          <Image
-                            src={cat.image}
-                            alt={cat.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <CardContent className="p-4 text-center">
-                          <h4 className="font-bold">{cat.name}</h4>
-                          <Button variant="link" className="mt-2 h-auto p-0">
-                            Select <ArrowRight className="ml-1 h-3 w-3" />
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </DialogContent>
-              </Dialog>
+          <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="space-y-1 text-center md:text-left flex-1">
+              <h3 className="text-xl font-bold font-headline">
+                {budgets ? (budgets.length > 0 ? `You have ${budgets.length} active celebration plan(s).` : "You have no active plans yet.") : ""}
+              </h3>
+              <p className="text-muted-foreground">Manage your celebrations or start a new one.</p>
             </div>
 
-            {budgetsLoading && !budgets ? (
-               <div className="flex justify-center items-center py-20">
-                  <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-               </div>
-            ) : budgets && budgets.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-                {budgets.map((budget) => (
-                  <PlanCard
-                    key={budget.id}
-                    budget={budget}
-                    onDelete={handleDeletePlan}
-                  />
-                ))}
-              </div>
-            ) : (
-              !budgetsLoading && (
-                <div className="text-center py-16">
-                  <p className="text-lg text-muted-foreground">
-                    You haven't saved any celebration plans yet.
-                    Start a new one above to get started!
-                  </p>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="lg" className="font-bold">
+                  <Plus className="mr-2 h-5 w-5" />
+                  Add New Plan
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Start a New Celebration</DialogTitle>
+                  <DialogDescription>Choose a template to begin planning your event.</DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
+                  {creationCategories.map((cat) => (
+                    <Card
+                      key={cat.type}
+                      className="overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                      onClick={() => handleCreateNewPlan(cat.type)}
+                    >
+                      <div className="relative h-32 w-full">
+                        <Image src={cat.image} alt={cat.name} fill className="object-cover" />
+                      </div>
+                      <CardContent className="p-4 text-center">
+                        <h4 className="font-bold">{cat.name}</h4>
+                        <Button variant="link" className="mt-2 h-auto p-0">
+                          Select <ArrowRight className="ml-1 h-3 w-3" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-              )
-            )}
+              </DialogContent>
+            </Dialog>
           </div>
+
+          {budgetsLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : budgets && budgets.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+              {budgets.map((budget) => (
+                <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <p className="text-lg text-muted-foreground">
+                You haven't saved any celebration plans yet. Start a new one above to get started!
+              </p>
+            </div>
+          )}
         </main>
       </div>
     </div>

@@ -17,7 +17,6 @@ service cloud.firestore {
 
     /**
      * Checks if the user is a collaborator on the budget.
-     * The userId parameter is the owner of the budget.
      */
     function isCollaborator(ownerId, budgetId) {
       let path = /databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId);
@@ -30,7 +29,7 @@ service cloud.firestore {
 
     match /users/{userId} {
       // Owner has full control over their profile and everything under it
-      allow get, write: if isOwner(userId);
+      allow read, write: if isOwner(userId);
       // Allow searching for users by email to add them as collaborators
       allow list: if isSignedIn();
 
