@@ -33,14 +33,6 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Greeter from "@/components/greeter";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -58,8 +50,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  PlusCircle,
-  Heart,
   ListChecks,
   Wallet,
   CalendarDays,
@@ -67,31 +57,10 @@ import {
   Menu,
   MapPin,
   Users,
-  MessageSquare,
-  Star,
-  Gift,
 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
-import { CrossIcon } from "lucide-react";
-import { budgetTemplates } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
-import MotivationalQuote from "@/components/motivational-quote";
-
-function calculateInitialTotal(categories: BudgetCategory[]): number {
-  let grandTotal = 0;
-  categories.forEach((category) => {
-    (category.items || []).forEach(
-      (item: { quantity?: number; unitPrice?: number }) => {
-        grandTotal += (item.quantity || 0) * (item.unitPrice || 0);
-      },
-    );
-    if (category.subCategories) {
-      grandTotal += calculateInitialTotal(category.subCategories);
-    }
-  });
-  return grandTotal;
-}
 
 const eventTypeImages: { [key: string]: string } = {
   wedding: "/images/wedding.jpg",
@@ -269,7 +238,6 @@ function MyPlansPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
-  const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const budgetsCollection = useMemoFirebase(
@@ -293,45 +261,6 @@ function MyPlansPage() {
       router.push("/register");
     }
   }, [user, isUserLoading, router]);
-
-  const handleNewPlan = async (eventType: string) => {
-    setDialogOpen(false);
-    if (!user || user.isAnonymous) {
-      router.push(`/planner/template?eventType=${eventType}`);
-      return;
-    }
-
-    const newBudgetId = uuidv4();
-    const template =
-      budgetTemplates[eventType as keyof typeof budgetTemplates] ||
-      budgetTemplates.other;
-    const initialTotal = calculateInitialTotal(template);
-
-    const newBudget: Budget = {
-      id: newBudgetId,
-      name: "",
-      grandTotal: initialTotal,
-      userId: user.uid,
-      eventType: eventType,
-      collaboratorIds: [],
-      eventDate: "",
-      eventLocation: "",
-      expectedGuests: 0,
-    };
-
-    const budgetDocRef = doc(
-      firestore,
-      "users",
-      user.uid,
-      "budgets",
-      newBudgetId,
-    );
-    
-    // Explicitly use merge: true to avoid unhandled security rules complications during potential creation race
-    setDocumentNonBlocking(budgetDocRef, newBudget, { merge: true });
-
-    router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
-  };
 
   const handleDeletePlan = async (budgetId: string) => {
     if (!user || !firestore) return;
@@ -388,98 +317,20 @@ function MyPlansPage() {
             <Greeter />
 
             <div className="mt-8">
-              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <Card>
-                  <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div>
-                      <h3 className="text-xl font-bold font-headline">
-                        {!budgetsLoading && budgets
-                          ? budgets.length > 0
-                            ? `You have ${budgets.length} active plan(s).`
-                            : "You have no active plans."
-                          : "Loading plans..."}
-                      </h3>
-                      <p className="text-muted-foreground">
-                        Ready to start planning your next celebration?
-                      </p>
-                    </div>
-                    <DialogTrigger asChild>
-                      <Button size="lg">
-                        <PlusCircle className="mr-2 h-5 w-5" />
-                        Add New Plan
-                      </Button>
-                    </DialogTrigger>
-                  </CardContent>
-                </Card>
-
-                <DialogContent className="sm:max-w-[600px]">
-                  <DialogHeader>
-                    <DialogTitle>Create a new plan</DialogTitle>
-                    <DialogDescription>
-                      Select an event type to get started with a template.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid grid-cols-2 gap-4 py-4">
-                    <div
-                      className="group cursor-pointer"
-                      onClick={() => handleNewPlan("wedding")}
-                    >
-                      <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-video">
-                        <Image
-                          src="/images/wedding.jpg"
-                          alt="Wedding"
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-black/40" />
-                        <div className="absolute inset-0 flex items-center justify-center p-4">
-                          <h3 className="text-xl font-semibold text-white">
-                            Wedding
-                          </h3>
-                        </div>
-                      </Card>
-                    </div>
-                    <div
-                      className="group cursor-pointer"
-                      onClick={() => handleNewPlan("funeral")}
-                    >
-                      <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-video">
-                        <Image
-                          src="/images/funeral2.png"
-                          alt="Funeral"
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-black/40" />
-                        <div className="absolute inset-0 flex items-center justify-center p-4">
-                          <h3 className="text-xl font-semibold text-white">
-                            Funeral
-                          </h3>
-                        </div>
-                      </Card>
-                    </div>
-                    <div
-                      className="group cursor-pointer"
-                      onClick={() => handleNewPlan("umgidi")}
-                    >
-                      <Card className="relative overflow-hidden transition-all group-hover:shadow-xl group-hover:-translate-y-1 aspect-video">
-                        <Image
-                          src="/images/umgidi1.jpg"
-                          alt="umGidi"
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-black/40" />
-                        <div className="absolute inset-0 flex items-center justify-center p-4">
-                          <h3 className="text-xl font-semibold text-white">
-                            umGidi
-                          </h3>
-                        </div>
-                      </Card>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold font-headline">
+                    {!budgetsLoading && budgets
+                      ? budgets.length > 0
+                        ? `You have ${budgets.length} active celebration plan(s).`
+                        : "You have no active plans yet."
+                      : "Loading your plans..."}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    All your saved celebrations are listed below.
+                  </p>
+                </CardContent>
+              </Card>
             </div>
 
             {budgetsLoading && (
@@ -504,8 +355,8 @@ function MyPlansPage() {
               !budgetsLoading && (
                 <div className="text-center py-16">
                   <p className="text-lg text-muted-foreground">
-                    Click "Add New Plan" above to create your first celebration
-                    budget.
+                    You haven't saved any celebration plans yet. 
+                    Explore templates on the <Link href="/" className="underline font-bold">Home Page</Link> to get started.
                   </p>
                 </div>
               )
