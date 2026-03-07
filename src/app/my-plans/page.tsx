@@ -7,6 +7,7 @@ import {
   useFirestore,
   deleteDocument,
   useAuth,
+  setDocumentNonBlocking,
 } from "@/firebase";
 import {
   collection,
@@ -324,7 +325,9 @@ function MyPlansPage() {
       "budgets",
       newBudgetId,
     );
-    await setDoc(budgetDocRef, newBudget, {});
+    
+    // Refactored to use non-blocking updates with standard error reporting
+    setDocumentNonBlocking(budgetDocRef, newBudget, {});
 
     router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
   };
@@ -356,11 +359,8 @@ function MyPlansPage() {
       toast({ title: "Plan deleted successfully" });
     } catch (e) {
       console.error("Error deleting plan:", e);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not delete plan.",
-      });
+      // We still attempt standard deletion if batch fails, 
+      // but standard deleteDocument helper will report permission errors correctly.
       deleteDocument(budgetDocRef);
     }
   };

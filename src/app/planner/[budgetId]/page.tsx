@@ -48,6 +48,8 @@ import {
 import Greeter from "@/components/greeter";
 import { Card, CardContent } from "@/components/ui/card";
 import type { RSVP } from "@/lib/types";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const funeralQuotes = [
   '"Blessed are those who mourn, for they will be comforted." - Matthew 5:4',
@@ -276,7 +278,15 @@ export default function PlannerPage({
           "budgets",
           newBudgetId,
         );
-        await setDoc(budgetDocRef, newBudget, { merge: true });
+        
+        // Use standard non-blocking update for diagnostic error reporting
+        setDoc(budgetDocRef, newBudget, { merge: true }).catch(error => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: budgetDocRef.path,
+                operation: 'update',
+                requestResourceData: newBudget
+            }));
+        });
 
         const batch = writeBatch(firestore);
         templateCategories.forEach((category, index) => {
@@ -314,7 +324,14 @@ export default function PlannerPage({
           });
         }
 
-        await batch.commit();
+        batch.commit().catch(error => {
+            // Permission error on batch initialization
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: budgetDocRef.path, // Batch fail usually relates to parent budget access
+                operation: 'write',
+            }));
+        });
+        
         setBudgetData(templateCategories);
         setGrandTotal(initialTotal);
       }
@@ -485,7 +502,12 @@ export default function PlannerPage({
             );
             batch.update(docRef, { order: index });
           });
-          batch.commit();
+          batch.commit().catch(error => {
+              errorEmitter.emit('permission-error', new FirestorePermissionError({
+                  path: `/users/${user.uid}/budgets/${budgetId}/categories`,
+                  operation: 'update',
+              }));
+          });
         }
 
         return newOrder;
@@ -511,7 +533,7 @@ export default function PlannerPage({
         <PageHeader />
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
           <div className="w-full">
-            <Greeter quote={eventQuote} />
+            <Greeter />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
