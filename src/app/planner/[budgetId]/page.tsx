@@ -15,7 +15,6 @@ import {
   useFirestore,
   useCollection,
   useMemoFirebase,
-  setDocumentNonBlocking,
   useDoc,
 } from "@/firebase";
 import {
@@ -87,6 +86,7 @@ export default function PlannerPage({
   const [grandTotal, setGrandTotal] = useState(0);
   const isTemplateMode = budgetId === "template";
 
+  // Redirect members away from generic 'template' ID to a persistent unique ID
   useEffect(() => {
     if (isTemplateMode && !isUserLoading && user && !user.isAnonymous) {
       const newId = uuidv4();
@@ -163,6 +163,7 @@ export default function PlannerPage({
 
   useEffect(() => {
     const initializePlan = async () => {
+      // 1. Template Mode (Guests only)
       if (isTemplateMode) {
         const eventType = searchParams.get("eventType") || "other";
         const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
@@ -172,6 +173,7 @@ export default function PlannerPage({
         return;
       }
 
+      // 2. Load Existing Member Plan
       if (user && !user.isAnonymous && fetchedCategories && fetchedCategories.length > 0) {
         const { categories, grandTotal } = calculateTotals([...fetchedCategories].sort((a, b) => a.order - b.order));
         setBudgetData(categories);
@@ -179,6 +181,7 @@ export default function PlannerPage({
         return;
       }
 
+      // 3. Initialize New Member Plan from Template
       if (user && !user.isAnonymous && !budgetLoading && !categoriesLoading && (!fetchedCategories || fetchedCategories.length === 0)) {
         const eventTypeFromParams = searchParams.get("eventType") || budget?.eventType || "other";
         const template = budgetTemplates[eventTypeFromParams as keyof typeof budgetTemplates] || budgetTemplates.other;
@@ -195,19 +198,21 @@ export default function PlannerPage({
           expectedGuests: 0,
         };
 
-        const budgetDocRef = doc(firestore, "users", user.uid, "budgets", budgetId);
+        const budgetRef = doc(firestore, "users", user.uid, "budgets", budgetId);
         
-        setDoc(budgetDocRef, newBudget, { merge: true }).catch(error => {
+        // Save initial budget doc
+        setDoc(budgetRef, newBudget, { merge: true }).catch(error => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: budgetDocRef.path,
+                path: budgetRef.path,
                 operation: 'update',
                 requestResourceData: newBudget
             }));
         });
 
+        // Save categories
         const batch = writeBatch(firestore);
         templateCategories.forEach((category, index) => {
-          const catRef = doc(collection(budgetDocRef, "categories"));
+          const catRef = doc(collection(budgetRef, "categories"));
           batch.set(catRef, { ...category, id: catRef.id, order: index, budgetId });
         });
         await batch.commit().catch(console.error);
@@ -236,12 +241,29 @@ export default function PlannerPage({
       if (!isTemplateMode && user && !user.isAnonymous) {
         const rootId = categoryPath[0];
         const rootCat = updated.find((c: BudgetCategory) => c.id === rootId);
-        if (rootCat) setDocumentNonBlocking(doc(firestore, "users", user.uid, "budgets", budgetId, "categories", rootId), rootCat, { merge: true });
+        if (rootCat) {
+            const rootCatRef = doc(firestore, "users", user.uid, "budgets", budgetId, "categories", rootId);
+            setDoc(rootCatRef, rootCat, { merge: true }).catch(err => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: rootCatRef.path,
+                    operation: 'update',
+                    requestResourceData: rootCat
+                }));
+            });
+        }
       }
       const { categories, grandTotal } = calculateTotals(updated);
       setBudgetData(categories);
       setGrandTotal(grandTotal);
-      if (budgetDocRef) setDocumentNonBlocking(budgetDocRef, { grandTotal }, { merge: true });
+      if (budgetDocRef) {
+          setDoc(budgetDocRef, { grandTotal }, { merge: true }).catch(err => {
+              errorEmitter.emit('permission-error', new FirestorePermissionError({
+                  path: budgetDocRef.path,
+                  operation: 'update',
+                  requestResourceData: { grandTotal }
+              }));
+          });
+      }
     }
   };
 
@@ -258,7 +280,10 @@ export default function PlannerPage({
       if (!isTemplateMode && user && !user.isAnonymous) {
         const rootId = categoryPath[0];
         const rootCat = updated.find((c: BudgetCategory) => c.id === rootId);
-        if (rootCat) setDocumentNonBlocking(doc(firestore, "users", user.uid, "budgets", budgetId, "categories", rootId), rootCat, { merge: true });
+        if (rootCat) {
+            const rootCatRef = doc(firestore, "users", user.uid, "budgets", budgetId, "categories", rootId);
+            setDoc(rootCatRef, rootCat, { merge: true });
+        }
       }
       const { categories, grandTotal } = calculateTotals(updated);
       setBudgetData(categories);
@@ -301,8 +326,20 @@ export default function PlannerPage({
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
           <Greeter />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-            <EventDetails budget={budget} budgetRef={budgetDocRef} isTemplateMode={isTemplateMode} eventType={isTemplateMode ? (searchParams.get("eventType") || "other") : budget?.eventType} />
-            <BudgetSummary grandTotal={grandTotal} daysLeft={daysLeft} mustDosTotal={mustDos?.length || 0} mustDosCompleted={mustDos?.filter(m => m.status === 'done').length || 0} budgetId={isTemplateMode ? undefined : budgetId} isTemplateMode={isTemplateMode} />
+            <EventDetails 
+                budget={budget} 
+                budgetRef={budgetDocRef} 
+                isTemplateMode={isTemplateMode} 
+                eventType={isTemplateMode ? (searchParams.get("eventType") || "other") : budget?.eventType} 
+            />
+            <BudgetSummary 
+                grandTotal={grandTotal} 
+                daysLeft={daysLeft} 
+                mustDosTotal={mustDos?.length || 0} 
+                mustDosCompleted={mustDos?.filter(m => m.status === 'done').length || 0} 
+                budgetId={isTemplateMode ? undefined : budgetId} 
+                isTemplateMode={isTemplateMode} 
+            />
           </div>
 
           <div className="mt-8">
