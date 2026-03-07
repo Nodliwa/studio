@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -326,8 +327,8 @@ function MyPlansPage() {
       newBudgetId,
     );
     
-    // Refactored to use non-blocking updates with standard error reporting
-    setDocumentNonBlocking(budgetDocRef, newBudget, {});
+    // Explicitly use merge: true to avoid unhandled security rules complications during potential creation race
+    setDocumentNonBlocking(budgetDocRef, newBudget, { merge: true });
 
     router.push(`/planner/${newBudgetId}?eventType=${eventType}`);
   };

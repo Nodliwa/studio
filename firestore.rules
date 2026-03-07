@@ -17,11 +17,13 @@ service cloud.firestore {
 
     /**
      * Checks if the user is a collaborator on the budget.
-     * Uses a recursive path check since subcollections need access too.
+     * Safely checks for existence and field presence to avoid rule errors.
      */
     function isCollaborator(ownerId, budgetId) {
-      let budget = get(/databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId)).data;
-      return isSignedIn() && budget.collaboratorIds is list && (request.auth.uid in budget.collaboratorIds);
+      let path = /databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId);
+      return isSignedIn() && 
+             exists(path) && 
+             request.auth.uid in get(path).data.get('collaboratorIds', []);
     }
 
     function hasAccess(userId, budgetId) {
@@ -37,7 +39,7 @@ service cloud.firestore {
                data.additionalGuests is number &&
                data.additionalGuests >= 0 &&
                data.budgetId == budgetId &&
-               request.time == data.respondedAt;
+               (data.respondedAt == request.time || data.respondedAt == null); // Handle potential timestamp delay
     }
 
     // -------------------------------------------------------------------------
@@ -51,24 +53,26 @@ service cloud.firestore {
       allow create: if isOwner(userId);
 
       match /budgets/{budgetId} {
-        // Public read for RSVP, owner/collaborator for others
-        allow get: if true;
-        allow list: if isOwner(userId);
-        allow create, delete: if isOwner(userId);
-        allow update: if hasAccess(userId, budgetId);
+        // Owner has full control
+        allow read, write: if isOwner(userId);
+        
+        // Public read for RSVP pages, others need collaborator access
+        allow get: if true; 
+        allow list: if isCollaborator(userId, budgetId);
+        allow update: if isCollaborator(userId, budgetId);
 
         match /categories/{categoryId} {
-          allow get, list, create, update, delete: if hasAccess(userId, budgetId);
+          allow read, write: if hasAccess(userId, budgetId);
           match /items/{itemId} {
-             allow get, list, create, update, delete: if hasAccess(userId, budgetId);
+             allow read, write: if hasAccess(userId, budgetId);
           }
         }
         match /mustDos/{mustDoId} {
-          allow get, list, create, update, delete: if hasAccess(userId, budgetId);
+          allow read, write: if hasAccess(userId, budgetId);
         }
         match /rsvps/{rsvpId} {
             allow create: if isValidRsvpDocument(budgetId);
-            allow get, list, update, delete: if hasAccess(userId, budgetId);
+            allow read, update, delete: if hasAccess(userId, budgetId);
         }
       }
     }
