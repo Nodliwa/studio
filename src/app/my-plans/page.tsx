@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -308,7 +309,6 @@ function MyPlansPage() {
   ) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-        <p>Loading...</p>
       </div>
     );
   }

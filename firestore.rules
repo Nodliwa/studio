@@ -17,7 +17,6 @@ service cloud.firestore {
 
     /**
      * Checks if the user is a collaborator on the budget.
-     * Uses a direct lookup on the budget document's collaboratorIds array.
      */
     function isCollaborator(ownerId, budgetId) {
       let budgetPath = /databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId);
@@ -35,7 +34,7 @@ service cloud.firestore {
       allow get, write: if isOwner(userId);
 
       match /budgets/{budgetId} {
-        // Owners have full control over their own budgets (includes create, update, delete)
+        // Owners have full control over their own budgets
         allow read, write: if isOwner(userId);
         
         // Public read access for specific budget metadata (needed for RSVP pages)

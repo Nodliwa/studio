@@ -25,7 +25,6 @@ import {
   collection,
   doc,
   writeBatch,
-  setDoc,
   query,
   orderBy,
   serverTimestamp,
@@ -48,8 +47,6 @@ import {
 import Greeter from "@/components/greeter";
 import { Card, CardContent } from "@/components/ui/card";
 import type { RSVP } from "@/lib/types";
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import { v4 as uuidv4 } from "uuid";
 
 const funeralQuotes = [
@@ -292,14 +289,8 @@ export default function PlannerPage({
           budgetId,
         );
         
-        // Initialize the budget document
-        setDoc(budgetDocRef, newBudget, { merge: true }).catch(error => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: budgetDocRef.path,
-                operation: 'update',
-                requestResourceData: newBudget
-            }));
-        });
+        // Initialize the budget document using the non-blocking helper for diagnostic safety
+        setDocumentNonBlocking(budgetDocRef, newBudget, { merge: true });
 
         // Batch set categories and sample must-dos
         const batch = writeBatch(firestore);
@@ -333,12 +324,7 @@ export default function PlannerPage({
           });
         });
 
-        batch.commit().catch(error => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: budgetDocRef.path,
-                operation: 'write',
-            }));
-        });
+        batch.commit().catch(console.error);
         
         setBudgetData(templateCategories);
         setGrandTotal(initialTotal);
@@ -507,12 +493,7 @@ export default function PlannerPage({
             );
             batch.update(docRef, { order: index });
           });
-          batch.commit().catch(error => {
-              errorEmitter.emit('permission-error', new FirestorePermissionError({
-                  path: `/users/${user.uid}/budgets/${budgetId}/categories`,
-                  operation: 'update',
-              }));
-          });
+          batch.commit().catch(console.error);
         }
 
         return newOrder;
@@ -527,7 +508,6 @@ export default function PlannerPage({
   ) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-        <p>Loading your celebration plan...</p>
       </div>
     );
   }
