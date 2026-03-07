@@ -142,8 +142,7 @@ export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTem
       clearSuggestions();
   }
 
-  // Determine if we should show the "Signup to Save" state
-  // Only show for anonymous users on the template path
+  // Hide guest-only "Sign up to save" for authenticated users
   const showGuestState = !isUserLoading && isTemplateMode && (!user || user.isAnonymous);
 
   return (

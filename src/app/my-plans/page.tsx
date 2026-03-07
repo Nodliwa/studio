@@ -24,7 +24,6 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import Greeter from "@/components/greeter";
 import {
   AlertDialog,
@@ -244,7 +243,7 @@ function PlanCard({
   );
 }
 
-function MyPlansPage() {
+export default function MyPlansPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
@@ -333,7 +332,7 @@ function MyPlansPage() {
                     ? budgets.length > 0
                       ? `You have ${budgets.length} active celebration plan(s).`
                       : "You have no active plans yet."
-                    : "Retrieving your plans..."}
+                    : ""}
                 </h3>
                 <p className="text-muted-foreground">
                   Manage your celebrations or start a new one.
@@ -412,5 +411,3 @@ function MyPlansPage() {
     </div>
   );
 }
-
-export default MyPlansPage;

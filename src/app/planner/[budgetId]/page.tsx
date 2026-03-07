@@ -274,7 +274,7 @@ export default function PlannerPage({
           budgetId,
         );
         
-        // Initialize the budget document
+        // Initialize the budget document using helper to avoid blocking
         setDoc(budgetDocRef, newBudget, { merge: true }).catch(error => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: budgetDocRef.path,
@@ -495,7 +495,7 @@ export default function PlannerPage({
     );
   }
 
-  // Show "Preview Mode" only for truly anonymous/guest users on the template path
+  // Show warnings only for truly anonymous guest users
   const showPreviewWarning = isTemplateMode && (!user || user.isAnonymous);
 
   return (
