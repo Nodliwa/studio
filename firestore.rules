@@ -17,29 +17,13 @@ service cloud.firestore {
 
     /**
      * Checks if the user is a collaborator on the budget.
-     * Safely checks for existence and field presence to avoid rule errors.
+     * Uses a cross-document lookup to the parent budget document.
      */
     function isCollaborator(ownerId, budgetId) {
-      let path = /databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId);
+      let budgetPath = /databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId);
       return isSignedIn() && 
-             exists(path) && 
-             request.auth.uid in get(path).data.get('collaboratorIds', []);
-    }
-
-    function hasAccess(userId, budgetId) {
-      return isOwner(userId) || isCollaborator(userId, budgetId);
-    }
-
-    function isValidRsvpDocument(budgetId) {
-        let data = request.resource.data;
-        return data.guestName is string &&
-               data.guestName.size() > 0 &&
-               data.status is string &&
-               (data.status == 'attending' || data.status == 'not_attending') &&
-               data.additionalGuests is number &&
-               data.additionalGuests >= 0 &&
-               data.budgetId == budgetId &&
-               (data.respondedAt == request.time || data.respondedAt == null); // Handle potential timestamp delay
+             exists(budgetPath) && 
+             request.auth.uid in get(budgetPath).data.get('collaboratorIds', []);
     }
 
     // -------------------------------------------------------------------------
@@ -49,30 +33,35 @@ service cloud.firestore {
     match /users/{userId} {
       // Allow searching for users by email to add them as collaborators
       allow list: if isSignedIn();
-      allow get, update, delete: if isOwner(userId);
-      allow create: if isOwner(userId);
+      // Owner has full control over their profile
+      allow get, write: if isOwner(userId);
 
       match /budgets/{budgetId} {
-        // Owner has full control
-        allow read, write: if isOwner(userId);
+        // Creation is strictly for the path owner
+        allow create: if isOwner(userId);
         
-        // Public read for RSVP pages, others need collaborator access
+        // Owners and collaborators can read/manage existing budgets
+        allow read, update, delete: if isOwner(userId) || isCollaborator(userId, budgetId);
+        
+        // Public read access for specific budget metadata (needed for RSVP pages)
         allow get: if true; 
-        allow list: if isCollaborator(userId, budgetId);
-        allow update: if isCollaborator(userId, budgetId);
 
         match /categories/{categoryId} {
-          allow read, write: if hasAccess(userId, budgetId);
+          allow read, write: if isOwner(userId) || isCollaborator(userId, budgetId);
           match /items/{itemId} {
-             allow read, write: if hasAccess(userId, budgetId);
+             allow read, write: if isOwner(userId) || isCollaborator(userId, budgetId);
           }
         }
+        
         match /mustDos/{mustDoId} {
-          allow read, write: if hasAccess(userId, budgetId);
+          allow read, write: if isOwner(userId) || isCollaborator(userId, budgetId);
         }
+        
         match /rsvps/{rsvpId} {
-            allow create: if isValidRsvpDocument(budgetId);
-            allow read, update, delete: if hasAccess(userId, budgetId);
+            // RSVPs can be submitted by anyone with the link
+            allow create: if request.resource.data.budgetId == budgetId;
+            // Only owner and collaborators can see or manage the guest list
+            allow read, update, delete: if isOwner(userId) || isCollaborator(userId, budgetId);
         }
       }
     }
