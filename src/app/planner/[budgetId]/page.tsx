@@ -50,6 +50,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { RSVP } from "@/lib/types";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { v4 as uuidv4 } from "uuid";
 
 const funeralQuotes = [
   '"Blessed are those who mourn, for they will be comforted." - Matthew 5:4',
@@ -111,6 +112,15 @@ export default function PlannerPage({
   const [eventQuote, setEventQuote] = useState("");
   const uniqueId = useId();
   const isTemplateMode = budgetId === "template";
+
+  // Redirect logged-in users from 'template' mode to a persistent new plan
+  useEffect(() => {
+    if (isTemplateMode && !isUserLoading && user && !user.isAnonymous) {
+      const newId = uuidv4();
+      const eventTypeParam = searchParams.get("eventType") || "other";
+      router.replace(`/planner/${newId}?eventType=${eventTypeParam}`);
+    }
+  }, [isTemplateMode, isUserLoading, user, router, searchParams]);
 
   const budgetDocRef = useMemoFirebase(
     () =>
@@ -246,10 +256,11 @@ export default function PlannerPage({
         return;
       }
 
+      // Initialize from template if we have a real ID but no data yet
       if (
         user &&
         !user.isAnonymous &&
-        budget &&
+        !budgetLoading &&
         !categoriesLoading &&
         (!fetchedCategories || fetchedCategories.length === 0)
       ) {
@@ -264,11 +275,15 @@ export default function PlannerPage({
           calculateTotals(JSON.parse(JSON.stringify(template)));
 
         const newBudget: Partial<Budget> = {
+          id: newBudgetId,
           name: "",
           grandTotal: initialTotal,
           userId: user.uid,
           eventType: eventType,
           collaboratorIds: [], // Initialize collaborators
+          eventDate: "",
+          eventLocation: "",
+          expectedGuests: 0,
         };
 
         const budgetDocRef = doc(

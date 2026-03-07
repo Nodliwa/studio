@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -131,10 +130,11 @@ export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTem
 
 
   const onSubmit = (data: FormData) => {
-    if (isTemplateMode) {
+    if (isTemplateMode && (!user || user.isAnonymous)) {
       router.push('/register');
       return;
     }
+    
     if (!budgetRef) return;
     
     const dataToSave = {
@@ -162,7 +162,7 @@ export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTem
                     </CardTitle>
                     <p className="text-sm font-semibold text-primary">{daysLeftText}</p>
                 </div>
-                {isTemplateMode ? (
+                {isTemplateMode && (!user || user.isAnonymous) ? (
                     <Button onClick={() => router.push('/register')} size="sm">Sign Up to Save</Button>
                 ) : isEditing ? (
                     <div className="flex items-center gap-2">
@@ -180,7 +180,7 @@ export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTem
                             clearSuggestions();
                         }}>Cancel</Button>
                         <Button type="submit" size="sm" disabled={isSubmitting}>
-                            Save
+                            Save Plan
                         </Button>
                     </div>
                 ) : (
@@ -270,5 +270,3 @@ export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTem
     </Card>
   );
 }
-
-    

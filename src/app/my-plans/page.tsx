@@ -61,6 +61,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { v4 as uuidv4 } from "uuid";
 
 const eventTypeImages: { [key: string]: string } = {
   wedding: "/images/wedding.jpg",
@@ -113,7 +114,8 @@ function CreatePlanDialog() {
               key={cat.eventType}
               onClick={() => {
                 setOpen(false);
-                router.push(`/planner/template?eventType=${cat.eventType}`);
+                // Generate a fresh ID immediately for logged-in users
+                router.push(`/planner/${uuidv4()}?eventType=${cat.eventType}`);
               }}
               className="relative aspect-square rounded-xl overflow-hidden shadow-md group cursor-pointer border border-border/50 hover:border-primary/50 transition-all"
             >
