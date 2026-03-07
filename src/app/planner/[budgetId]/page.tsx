@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useId, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { BudgetItem, BudgetCategory, Budget, MustDo } from "@/lib/types";
 import { budgetTemplates } from "@/lib/data";
@@ -13,7 +13,6 @@ import { RsvpManager } from "@/components/RsvpManager";
 import { MustDosSummary } from "@/components/must-dos-summary";
 import { CollaboratorManager } from "@/components/collaborator-manager";
 import {
-  useAuth,
   useUser,
   useFirestore,
   useCollection,
@@ -28,6 +27,7 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 import {
   DndContext,
@@ -48,6 +48,8 @@ import Greeter from "@/components/greeter";
 import { Card, CardContent } from "@/components/ui/card";
 import type { RSVP } from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 const funeralQuotes = [
   '"Blessed are those who mourn, for they will be comforted." - Matthew 5:4',
@@ -100,7 +102,6 @@ export default function PlannerPage({
   params: { budgetId: string };
 }) {
   const { user, isUserLoading } = useUser();
-  const auth = useAuth();
   const firestore = useFirestore();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -289,8 +290,14 @@ export default function PlannerPage({
           budgetId,
         );
         
-        // Initialize the budget document using the non-blocking helper for diagnostic safety
-        setDocumentNonBlocking(budgetDocRef, newBudget, { merge: true });
+        // Initialize the budget document
+        setDoc(budgetDocRef, newBudget, { merge: true }).catch(error => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: budgetDocRef.path,
+                operation: 'update',
+                requestResourceData: newBudget
+            }));
+        });
 
         // Batch set categories and sample must-dos
         const batch = writeBatch(firestore);
@@ -507,7 +514,13 @@ export default function PlannerPage({
     budgetData.length === 0
   ) {
     return (
-      <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
+      <div className="min-h-screen bg-secondary flex flex-col">
+        <div className="bg-background shadow-2xl container mx-auto flex flex-col flex-grow">
+          <PageHeader />
+          <main className="container mx-auto px-4 flex-grow flex items-center justify-center">
+             <RefreshCw className="h-10 w-10 animate-spin text-primary" />
+          </main>
+        </div>
       </div>
     );
   }

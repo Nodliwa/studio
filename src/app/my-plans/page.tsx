@@ -64,6 +64,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { v4 as uuidv4 } from "uuid";
 
 const eventTypeImages: { [key: string]: string } = {
   wedding: "/images/wedding.jpg",
@@ -162,7 +163,7 @@ function PlanCard({
             </div>
           </div>
 
-          <p className="flex items-start gap-2 text-2xl font-bold text-white text-shadow mt-3 self-end">
+          <div className="flex items-start gap-2 text-2xl font-bold text-white text-shadow mt-3 self-end">
             <Wallet className="inline-block h-6 w-6 mt-1 shrink-0" />
             {new Intl.NumberFormat("en-ZA", {
               style: "currency",
@@ -170,7 +171,7 @@ function PlanCard({
               minimumFractionDigits: 0,
               maximumFractionDigits: 0,
             }).format(budget.grandTotal)}
-          </p>
+          </div>
         </div>
       </div>
 
@@ -301,14 +302,20 @@ function MyPlansPage() {
     }
   };
 
-  if (
-    isUserLoading ||
-    !user ||
-    (user && user.isAnonymous) ||
-    (budgetsLoading && budgets === null)
-  ) {
+  const handleCreateNewPlan = (eventType: string) => {
+    const newId = uuidv4();
+    router.push(`/planner/${newId}?eventType=${eventType}`);
+  };
+
+  if (isUserLoading || (budgetsLoading && budgets === null)) {
     return (
-      <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
+      <div className="min-h-screen bg-secondary flex flex-col">
+        <div className="bg-background shadow-2xl container mx-auto flex flex-col flex-grow">
+          <PageHeader />
+          <main className="container mx-auto px-4 flex-grow flex items-center justify-center">
+             <RefreshCw className="h-10 w-10 animate-spin text-primary" />
+          </main>
+        </div>
       </div>
     );
   }
@@ -354,7 +361,7 @@ function MyPlansPage() {
                       <Card
                         key={cat.type}
                         className="overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all"
-                        onClick={() => router.push(`/planner/template?eventType=${cat.type}`)}
+                        onClick={() => handleCreateNewPlan(cat.type)}
                       >
                         <div className="relative h-32 w-full">
                           <Image

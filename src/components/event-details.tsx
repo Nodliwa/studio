@@ -143,7 +143,7 @@ export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTem
   }
 
   // Determine if we should show the "Signup to Save" state
-  const showGuestState = isTemplateMode && (!user || user.isAnonymous);
+  const showGuestState = !isUserLoading && isTemplateMode && (!user || user.isAnonymous);
 
   return (
     <Card className="shadow-lg h-full card-glass">
