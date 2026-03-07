@@ -579,7 +579,7 @@ export default function PlannerPage({
             creating your plan.
           </p>
 
-          {isTemplateMode && (
+          {isTemplateMode && (!user || user.isAnonymous) && (
             <Card className="mt-4 bg-yellow-100 border-yellow-300">
               <CardContent className="p-2">
                 <div className="flex items-center justify-between">
@@ -589,15 +589,9 @@ export default function PlannerPage({
                     </h3>
                     <p className="text-xs text-yellow-800">
                       Your changes won't be saved.{" "}
-                      {user && !user.isAnonymous ? (
-                        <a href="/my-plans" className="underline font-semibold">
-                          Go to My Plans
-                        </a>
-                      ) : (
-                        <a href="/register" className="underline font-semibold">
-                          Register now
-                        </a>
-                      )}{" "}
+                      <a href="/register" className="underline font-semibold">
+                        Register now
+                      </a>{" "}
                       to save your plan!
                     </p>
                   </div>

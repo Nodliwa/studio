@@ -43,6 +43,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   ListChecks,
   Wallet,
   CalendarDays,
@@ -50,6 +58,8 @@ import {
   Menu,
   MapPin,
   Users,
+  Plus,
+  ArrowRight,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -59,6 +69,12 @@ const eventTypeImages: { [key: string]: string } = {
   funeral: "/images/funeral2.png",
   umgidi: "/images/umgidi1.jpg",
 };
+
+const creationCategories = [
+  { name: "Wedding", type: "wedding", image: "/images/wedding.jpg" },
+  { name: "Funeral", type: "funeral", image: "/images/funeral2.png" },
+  { name: "uMgidi", type: "umgidi", image: "/images/umgidi1.jpg" },
+];
 
 function PlanCard({
   budget,
@@ -305,23 +321,60 @@ function MyPlansPage() {
           <div className="flex-grow">
             <Greeter />
 
-            <div className="mt-8">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="space-y-1 text-center md:text-left">
-                    <h3 className="text-xl font-bold font-headline">
-                      {!budgetsLoading && budgets
-                        ? budgets.length > 0
-                          ? `You have ${budgets.length} active celebration plan(s).`
-                          : "You have no active plans yet."
-                        : null}
-                    </h3>
-                    <p className="text-muted-foreground">
-                      All your saved celebrations are listed below. To start a new one, please select a template from the home page.
-                    </p>
+            <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="space-y-1 text-center md:text-left flex-1">
+                <h3 className="text-xl font-bold font-headline">
+                  {!budgetsLoading && budgets
+                    ? budgets.length > 0
+                      ? `You have ${budgets.length} active celebration plan(s).`
+                      : "You have no active plans yet."
+                    : null}
+                </h3>
+                <p className="text-muted-foreground">
+                  Manage your celebrations or start a new one.
+                </p>
+              </div>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="lg" className="font-bold">
+                    <Plus className="mr-2 h-5 w-5" />
+                    Add New Plan
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Start a New Celebration</DialogTitle>
+                    <DialogDescription>
+                      Choose a template to begin planning your event.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
+                    {creationCategories.map((cat) => (
+                      <Card
+                        key={cat.type}
+                        className="overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                        onClick={() => router.push(`/planner/template?eventType=${cat.type}`)}
+                      >
+                        <div className="relative h-32 w-full">
+                          <Image
+                            src={cat.image}
+                            alt={cat.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <CardContent className="p-4 text-center">
+                          <h4 className="font-bold">{cat.name}</h4>
+                          <Button variant="link" className="mt-2 h-auto p-0">
+                            Select <ArrowRight className="ml-1 h-3 w-3" />
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                </CardContent>
-              </Card>
+                </DialogContent>
+              </Dialog>
             </div>
 
             {!budgetsLoading && budgets && budgets.length > 0 ? (
@@ -338,8 +391,8 @@ function MyPlansPage() {
               !budgetsLoading && (
                 <div className="text-center py-16">
                   <p className="text-lg text-muted-foreground">
-                    You haven't saved any celebration plans yet. 
-                    <Link href="/" className="text-primary underline ml-1">Explore templates</Link> on the home page to get started.
+                    You haven't saved any celebration plans yet.
+                    Start a new one above to get started!
                   </p>
                 </div>
               )

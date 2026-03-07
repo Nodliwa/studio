@@ -95,6 +95,10 @@ export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTem
     return `${eventType.charAt(0).toUpperCase() + eventType.slice(1)} Details`;
   }, [eventType]);
 
+  const isNewPlan = useMemo(() => {
+    return !budget?.name || budget.name === DEFAULT_BUDGET_NAME;
+  }, [budget?.name]);
+
   useEffect(() => {
     if (eventLocationValue) {
       setAutocompleteValue(eventLocationValue);
@@ -180,7 +184,7 @@ export function EventDetails({ budget, budgetRef, isBudgetLoading = false, isTem
                             clearSuggestions();
                         }}>Cancel</Button>
                         <Button type="submit" size="sm" disabled={isSubmitting}>
-                            Save Plan
+                            {isNewPlan ? "Add New Plan" : "Save Changes"}
                         </Button>
                     </div>
                 ) : (
