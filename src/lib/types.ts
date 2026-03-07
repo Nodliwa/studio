@@ -1,5 +1,5 @@
 import type { LucideProps } from "lucide-react";
-import type { ComponentType, ForwardRefExoticComponent } from "react";
+import type { ForwardRefExoticComponent } from "react";
 
 export interface BudgetItem {
   id: string;
@@ -19,7 +19,7 @@ export interface BudgetCategory {
   subCategories?: BudgetCategory[];
   total: number;
   order: number;
-  budgetId?: string; // Added for Firestore consistency
+  budgetId?: string;
 }
 
 export interface Budget {

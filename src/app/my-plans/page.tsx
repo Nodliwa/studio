@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -15,7 +14,7 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import type { Budget } from "@/lib/types";
 import PageHeader from "@/components/page-header";
 import {
@@ -238,17 +237,6 @@ export default function MyPlansPage() {
     router.push(`/planner/${newId}?eventType=${eventType}`);
   };
 
-  if (isUserLoading) {
-    return (
-      <div className="min-h-screen bg-secondary flex flex-col">
-        <PageHeader />
-        <main className="flex-grow flex items-center justify-center">
-          <RefreshCw className="h-10 w-10 animate-spin text-primary" />
-        </main>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-secondary flex flex-col">
       <div className="bg-background shadow-2xl container mx-auto flex flex-col flex-grow">
@@ -259,7 +247,7 @@ export default function MyPlansPage() {
           <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="space-y-1 text-center md:text-left flex-1">
               <h3 className="text-xl font-bold font-headline">
-                {budgets ? (budgets.length > 0 ? `You have ${budgets.length} active celebration plan(s).` : "You have no active plans yet.") : ""}
+                {budgets ? (budgets.length > 0 ? `You have ${budgets.length} active celebration plan(s).` : "You have no active plans yet.") : "Loading plans..."}
               </h3>
               <p className="text-muted-foreground">Manage your celebrations or start a new one.</p>
             </div>

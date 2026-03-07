@@ -24,7 +24,6 @@ import {
   writeBatch,
   query,
   orderBy,
-  serverTimestamp,
   setDoc,
 } from "firebase/firestore";
 import {
@@ -43,7 +42,6 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import Greeter from "@/components/greeter";
-import { Card, CardContent } from "@/components/ui/card";
 import type { RSVP } from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
 import { RefreshCw } from "lucide-react";
@@ -89,7 +87,6 @@ export default function PlannerPage({
   const [grandTotal, setGrandTotal] = useState(0);
   const isTemplateMode = budgetId === "template";
 
-  // Redirect logged-in users from 'template' mode to a persistent new plan
   useEffect(() => {
     if (isTemplateMode && !isUserLoading && user && !user.isAnonymous) {
       const newId = uuidv4();

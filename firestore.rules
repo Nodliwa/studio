@@ -1,46 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // -------------------------------------------------------------------------
-    // Helper Functions
-    // -------------------------------------------------------------------------
-
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    // -------------------------------------------------------------------------
-    // Collection Rules
-    // -------------------------------------------------------------------------
-
-    match /users/{userId} {
-      // Owner has full control over their profile and everything under it
-      allow read, write: if isOwner(userId);
-      // Allow searching for users by email (limited usage)
-      allow list: if isSignedIn();
-
-      match /budgets/{budgetId} {
-        // Owners have full control
-        allow read, write: if isOwner(userId);
-        
-        // Public get access for specific budget metadata (needed for RSVP pages)
-        allow get: if true; 
-
-        // Subcollections (categories, items, mustDos, rsvps)
-        match /{allPaths=**} {
-          allow read, write: if isOwner(userId);
-        }
-        
-        match /rsvps/{rsvpId} {
-            // RSVPs can be submitted by anyone with the link
-            allow create: if true;
-        }
-      }
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }
