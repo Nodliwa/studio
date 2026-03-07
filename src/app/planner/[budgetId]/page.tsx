@@ -110,16 +110,6 @@ export default function PlannerPage({
   const uniqueId = useId();
   const isTemplateMode = budgetId === "template";
 
-  // We need to find the budget owner ID. If the current user is not the owner, we might be a collaborator.
-  // For this prototype, we'll try to find the budget document by searching across potential owners
-  // or assuming the budgetId path is correct if provided.
-  // Actually, since paths are /users/{userId}/budgets/{budgetId}, the collaborator needs to know the owner's userId.
-  // Let's assume for now the user is navigating from their "My Plans" or a shared link.
-
-  // To handle collaborators, we'd ideally have a top-level lookup, but based on current rules,
-  // we'll use the userId from the URL if available, or stick to the owner-based path.
-  // For now, let's stick to the current user's path and assume they are the owner for management.
-
   const budgetDocRef = useMemoFirebase(
     () =>
       user && budgetId && !isTemplateMode
@@ -219,10 +209,10 @@ export default function PlannerPage({
   }, [mustDos]);
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (!isUserLoading && !user && !isTemplateMode) {
       router.push("/login");
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, isTemplateMode]);
 
   useEffect(() => {
     const initializePlan = async () => {
@@ -358,8 +348,6 @@ export default function PlannerPage({
       );
     }
   }, [eventType]);
-
-  // Logged-in users can freely browse template mode — no redirect
 
   const updateStateAndTotals = (newBudgetData: BudgetCategory[]) => {
     const { categories, grandTotal } = calculateTotals(newBudgetData);

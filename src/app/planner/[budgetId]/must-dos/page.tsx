@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo } from 'react';
@@ -19,10 +18,11 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
+  const isTemplateMode = budgetId === 'template';
   
   const budgetDocRef = useMemoFirebase(() => (
-    user && budgetId ? doc(firestore, 'users', user.uid, 'budgets', budgetId) : null
-  ), [user, firestore, budgetId]);
+    user && budgetId && !isTemplateMode ? doc(firestore, 'users', user.uid, 'budgets', budgetId) : null
+  ), [user, firestore, budgetId, isTemplateMode]);
 
   const { data: budget, isLoading: budgetLoading } = useDoc<Budget>(budgetDocRef);
 
@@ -59,13 +59,13 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
           </div>
 
           <div className="mt-8">
-             {(budgetLoading || mustDosLoading) ? (
+             {(budgetLoading || mustDosLoading) && !isTemplateMode ? (
                  <Skeleton className="w-full h-[400px] rounded-lg" />
              ) : (
                 <MustDos 
                     budgetId={budgetId} 
                     budgetRef={budgetDocRef} 
-                    isTemplateMode={false} 
+                    isTemplateMode={isTemplateMode} 
                     mustDos={mustDos} 
                     eventType={budget?.eventType}
                 />
@@ -76,5 +76,3 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
     </div>
   );
 }
-
-    

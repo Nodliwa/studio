@@ -35,7 +35,7 @@ const eventCategories = [
     name: "uMgidi",
     image: "/images/umgidi1.jpg",
     eventType: "umgidi",
-    comingSoon: true,
+    comingSoon: false,
     backImage: "/images/boy.jpg",
   },
 ];
@@ -171,13 +171,13 @@ export default function Home() {
           </p>
           <div className="mt-8">
             <Button asChild size="lg" className="px-8">
-              <Link href="/register">Plan your Event</Link>
+              <Link href="#categories">Plan your Event</Link>
             </Button>
           </div>
         </section>
 
         {/* Event Category Cards */}
-        <section className="px-4 pb-16">
+        <section id="categories" className="px-4 pb-16">
           <div className="container mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl">
             {eventCategories.map((cat) => (
               <FlipCard key={cat.name} cat={cat} />
