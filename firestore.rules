@@ -37,20 +37,17 @@ service cloud.firestore {
       allow get, write: if isOwner(userId);
 
       match /budgets/{budgetId} {
-        // Creation is strictly for the path owner
-        allow create: if isOwner(userId);
-        
-        // Owners and collaborators can read/manage existing budgets
-        allow read, update, delete: if isOwner(userId) || isCollaborator(userId, budgetId);
+        // Owners have full control over their own budgets
+        allow read, write: if isOwner(userId);
         
         // Public read access for specific budget metadata (needed for RSVP pages)
         allow get: if true; 
 
-        match /categories/{categoryId} {
+        // Collaborators can view and update shared budgets
+        allow read, update: if isCollaborator(userId, budgetId);
+
+        match /categories/{allPaths=**} {
           allow read, write: if isOwner(userId) || isCollaborator(userId, budgetId);
-          match /items/{itemId} {
-             allow read, write: if isOwner(userId) || isCollaborator(userId, budgetId);
-          }
         }
         
         match /mustDos/{mustDoId} {
