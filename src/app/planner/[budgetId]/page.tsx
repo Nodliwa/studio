@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -11,7 +10,6 @@ import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
 import { RsvpManager } from "@/components/RsvpManager";
 import { MustDosSummary } from "@/components/must-dos-summary";
-import { CollaboratorManager } from "@/components/collaborator-manager";
 import {
   useUser,
   useFirestore,
@@ -195,7 +193,6 @@ export default function PlannerPage({
           grandTotal: initialTotal,
           userId: user.uid,
           eventType: eventTypeFromParams,
-          collaboratorIds: [],
           eventDate: "",
           eventLocation: "",
           expectedGuests: 0,
@@ -203,7 +200,6 @@ export default function PlannerPage({
 
         const budgetDocRef = doc(firestore, "users", user.uid, "budgets", budgetId);
         
-        // Save using non-blocking updates logic
         setDoc(budgetDocRef, newBudget, { merge: true }).catch(error => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: budgetDocRef.path,
@@ -301,8 +297,6 @@ export default function PlannerPage({
     );
   }
 
-  const showPreviewWarning = isTemplateMode && (!user || user.isAnonymous);
-
   return (
     <div className="min-h-screen w-full bg-secondary">
       <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
@@ -314,14 +308,6 @@ export default function PlannerPage({
             <BudgetSummary grandTotal={grandTotal} daysLeft={daysLeft} mustDosTotal={mustDos?.length || 0} mustDosCompleted={mustDos?.filter(m => m.status === 'done').length || 0} budgetId={isTemplateMode ? undefined : budgetId} isTemplateMode={isTemplateMode} />
           </div>
 
-          {showPreviewWarning && (
-            <Card className="mt-4 bg-yellow-100 border-yellow-300">
-              <CardContent className="p-2 text-center text-xs text-yellow-800">
-                You are in Preview Mode. <a href="/register" className="underline font-semibold">Register now</a> to save your plan!
-              </CardContent>
-            </Card>
-          )}
-
           <div className="mt-8">
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={budgetData} strategy={verticalListSortingStrategy}>
@@ -331,10 +317,9 @@ export default function PlannerPage({
           </div>
 
           {!isTemplateMode && (
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
               <RsvpManager budgetId={budgetId} rsvps={rsvps} />
               <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
-              {budget && budgetDocRef && <CollaboratorManager budget={budget} budgetRef={budgetDocRef} />}
             </div>
           )}
         </main>
