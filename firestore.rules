@@ -19,8 +19,8 @@ service cloud.firestore {
      * Checks if the user is a collaborator on the budget.
      */
     function isCollaborator(ownerId, budgetId) {
-      let budgetPath = /databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId);
-      return isSignedIn() && exists(budgetPath) && (request.auth.uid in get(budgetPath).data.get('collaboratorIds', []));
+      let path = /databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId);
+      return isSignedIn() && exists(path) && (request.auth.uid in get(path).data.get('collaboratorIds', []));
     }
 
     // -------------------------------------------------------------------------
@@ -35,8 +35,7 @@ service cloud.firestore {
 
       match /budgets/{budgetId} {
         // Owners have full control over their own budgets
-        // Simplified check to ensure creation/update is never blocked for the owner
-        allow read, write: if isSignedIn() && request.auth.uid == userId;
+        allow read, write: if isOwner(userId);
         
         // Public read access for specific budget metadata (needed for RSVP pages)
         allow get: if true; 
@@ -46,7 +45,7 @@ service cloud.firestore {
 
         // Subcollections (categories, items, mustDos, rsvps)
         match /{allPaths=**} {
-          allow read, write: if (isSignedIn() && request.auth.uid == userId) || isCollaborator(userId, budgetId);
+          allow read, write: if isOwner(userId) || isCollaborator(userId, budgetId);
         }
         
         match /rsvps/{rsvpId} {

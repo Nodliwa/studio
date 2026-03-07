@@ -27,7 +27,6 @@ import {
   query,
   orderBy,
   serverTimestamp,
-  setDoc,
 } from "firebase/firestore";
 import {
   DndContext,
@@ -48,25 +47,7 @@ import Greeter from "@/components/greeter";
 import { Card, CardContent } from "@/components/ui/card";
 import type { RSVP } from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
-import { errorEmitter } from "@/firebase/error-emitter";
-import { FirestorePermissionError } from "@/firebase/errors";
 import { RefreshCw } from "lucide-react";
-
-const funeralQuotes = [
-  '"Blessed are those who mourn, for they will be comforted." - Matthew 5:4',
-  '"The Lord is close to the brokenhearted and saves those who are crushed in spirit." - Psalm 34:18',
-  '"Grief is the price we pay for love." - Queen Elizabeth II',
-  '"What is lovely never dies, but passes into other loveliness." - Thomas Bailey Aldrich',
-  '"To live in hearts we leave behind is not to die." - Thomas Campbell',
-];
-
-const weddingQuotes = [
-  '"A successful marriage requires falling in love many times, always with the same person." - Mignon McLaughlin',
-  '"The best thing to hold onto in life is each other." - Audrey Hepburn',
-  '"Love doesnt make the world go round. Love is what makes the ride worthwhile." - Franklin P. Jones',
-  '"To love and be loved is to feel the sun from both sides." - David Viscott',
-  '"A great marriage is not when the perfect couple comes together. It is when an imperfect couple learns to enjoy their differences." - Dave Meurer',
-];
 
 function calculateTotals(categories: BudgetCategory[]): {
   categories: BudgetCategory[];
@@ -108,7 +89,6 @@ export default function PlannerPage({
   const router = useRouter();
   const [budgetData, setBudgetData] = useState<BudgetCategory[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
-  const [eventQuote, setEventQuote] = useState("");
   const isTemplateMode = budgetId === "template";
 
   // Redirect logged-in users from 'template' mode to a persistent new plan
@@ -292,13 +272,7 @@ export default function PlannerPage({
         );
         
         // Initialize the budget document
-        setDoc(budgetDocRef, newBudget, { merge: true }).catch(error => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: budgetDocRef.path,
-                operation: 'update',
-                requestResourceData: newBudget
-            }));
-        });
+        setDocumentNonBlocking(budgetDocRef, newBudget, { merge: true });
 
         // Batch set categories and sample must-dos
         const batch = writeBatch(firestore);
@@ -352,18 +326,6 @@ export default function PlannerPage({
     firestore,
     budgetId,
   ]);
-
-  useEffect(() => {
-    if (eventType === "funeral") {
-      setEventQuote(
-        funeralQuotes[Math.floor(Math.random() * funeralQuotes.length)],
-      );
-    } else if (eventType === "wedding") {
-      setEventQuote(
-        weddingQuotes[Math.floor(Math.random() * weddingQuotes.length)],
-      );
-    }
-  }, [eventType]);
 
   const updateStateAndTotals = (newBudgetData: BudgetCategory[]) => {
     const { categories, grandTotal } = calculateTotals(newBudgetData);
