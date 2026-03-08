@@ -15,25 +15,15 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * Checks collaboratorIds on the budget document via get().
-     * Safe: guards with 'is list' so a missing field returns false instead of error.
-     */
+    // For subcollections: reads the parent budget doc via get() to check collaboratorIds.
+    // Splits get() from .data access so a missing document returns false (not error).
     function isCollaborator(ownerId, budgetId) {
-      let budgetData = get(/databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId)).data;
+      let budgetDoc = get(/databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId));
       return isSignedIn()
-             && budgetData != null
-             && budgetData.collaboratorIds is list
-             && (request.auth.uid in budgetData.collaboratorIds);
-    }
-
-    /**
-     * Firestore rules DO evaluate both sides of ||.
-     * However, the isCollaborator function is now safe because it guards
-     * against missing data with 'budgetData != null' and 'is list' checks.
-     */
-    function hasAccess(userId, budgetId) {
-      return isOwner(userId) || isCollaborator(userId, budgetId);
+             && budgetDoc != null
+             && budgetDoc.data != null
+             && budgetDoc.data.collaboratorIds is list
+             && (request.auth.uid in budgetDoc.data.collaboratorIds);
     }
 
     function isValidRsvpDocument(budgetId) {
@@ -50,36 +40,48 @@ service cloud.firestore {
 
     // -------------------------------------------------------------------------
     // Collection Rules
+    //
+    // Owner and collaborator checks use SEPARATE allow statements so Firestore
+    // can grant access on the first matching rule without evaluating the rest.
+    // This avoids the non-short-circuiting || issue where a get() call in
+    // isCollaborator could interfere even when the owner check alone suffices.
     // -------------------------------------------------------------------------
 
     match /users/{userId} {
-      // Allow searching for users by email to add them as collaborators
       allow list: if isSignedIn();
       allow get, update, delete: if isOwner(userId);
       allow create: if isOwner(userId);
 
       match /budgets/{budgetId} {
-        // Public read for RSVP, owner/collaborator for others
         allow get: if true;
         allow list: if isOwner(userId);
         allow create, delete: if isOwner(userId);
-        allow update: if hasAccess(userId, budgetId);
+
+        // Owner can always update
+        allow update: if isOwner(userId);
+        // Collaborator can update – uses resource.data directly (no get() needed)
+        allow update: if isSignedIn()
+                      && resource.data.collaboratorIds is list
+                      && (request.auth.uid in resource.data.collaboratorIds);
 
         match /categories/{categoryId} {
-          allow get, list, create, update, delete: if hasAccess(userId, budgetId);
+          allow get, list, create, update, delete: if isOwner(userId);
+          allow get, list, create, update, delete: if isCollaborator(userId, budgetId);
           match /items/{itemId} {
-             allow get, list, create, update, delete: if hasAccess(userId, budgetId);
+            allow get, list, create, update, delete: if isOwner(userId);
+            allow get, list, create, update, delete: if isCollaborator(userId, budgetId);
           }
         }
         match /mustDos/{mustDoId} {
-          allow get, list, create, update, delete: if hasAccess(userId, budgetId);
+          allow get, list, create, update, delete: if isOwner(userId);
+          allow get, list, create, update, delete: if isCollaborator(userId, budgetId);
         }
         match /rsvps/{rsvpId} {
-            allow create: if isValidRsvpDocument(budgetId);
-            allow get, list, update, delete: if hasAccess(userId, budgetId);
+          allow create: if isValidRsvpDocument(budgetId);
+          allow get, list, update, delete: if isOwner(userId);
+          allow get, list, update, delete: if isCollaborator(userId, budgetId);
         }
       }
     }
   }
 }
-  
