@@ -1,3 +1,4 @@
+
 import type { LucideProps } from "lucide-react";
 import type { ForwardRefExoticComponent } from "react";
 
@@ -31,6 +32,7 @@ export interface Budget {
   eventDate?: string;
   grandTotal: number;
   userId: string;
+  collaboratorIds?: string[];
 }
 
 export interface User {

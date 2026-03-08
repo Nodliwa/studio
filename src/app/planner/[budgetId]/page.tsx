@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -10,6 +11,7 @@ import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
 import { RsvpManager } from "@/components/RsvpManager";
 import { MustDosSummary } from "@/components/must-dos-summary";
+import { CollaboratorManager } from "@/components/collaborator-manager";
 import {
   useUser,
   useFirestore,
@@ -196,6 +198,7 @@ export default function PlannerPage({
           eventDate: "",
           eventLocation: "",
           expectedGuests: 0,
+          collaboratorIds: [],
         };
 
         const budgetRef = doc(firestore, "users", user.uid, "budgets", budgetId);
@@ -329,6 +332,7 @@ export default function PlannerPage({
             <EventDetails 
                 budget={budget} 
                 budgetRef={budgetDocRef} 
+                isBudgetLoading={budgetLoading}
                 isTemplateMode={isTemplateMode} 
                 eventType={isTemplateMode ? (searchParams.get("eventType") || "other") : budget?.eventType} 
             />
@@ -351,9 +355,10 @@ export default function PlannerPage({
           </div>
 
           {!isTemplateMode && (
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <RsvpManager budgetId={budgetId} rsvps={rsvps} />
               <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
+              {budget && budgetDocRef && <CollaboratorManager budget={budget} budgetRef={budgetDocRef} />}
             </div>
           )}
         </main>

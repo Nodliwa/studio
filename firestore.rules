@@ -2,11 +2,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // -------------------------------------------------------------------------
     // Helper Functions
-    // -------------------------------------------------------------------------
-
     function isSignedIn() {
       return request.auth != null;
     }
@@ -15,71 +11,42 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // For subcollections: reads the parent budget doc via get() to check collaboratorIds.
-    // Splits get() from .data access so a missing document returns false (not error).
     function isCollaborator(ownerId, budgetId) {
       let budgetDoc = get(/databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId));
-      return isSignedIn()
-             && budgetDoc != null
-             && budgetDoc.data != null
-             && budgetDoc.data.collaboratorIds is list
+      return isSignedIn() 
+             && budgetDoc != null 
+             && budgetDoc.data != null 
+             && budgetDoc.data.collaboratorIds is list 
              && (request.auth.uid in budgetDoc.data.collaboratorIds);
     }
 
-    function isValidRsvpDocument(budgetId) {
-        let data = request.resource.data;
-        return data.guestName is string &&
-               data.guestName.size() > 0 &&
-               data.status is string &&
-               (data.status == 'attending' || data.status == 'not_attending') &&
-               data.additionalGuests is number &&
-               data.additionalGuests >= 0 &&
-               data.budgetId == budgetId &&
-               request.time == data.respondedAt;
-    }
-
-    // -------------------------------------------------------------------------
-    // Collection Rules
-    //
-    // Owner and collaborator checks use SEPARATE allow statements so Firestore
-    // can grant access on the first matching rule without evaluating the rest.
-    // This avoids the non-short-circuiting || issue where a get() call in
-    // isCollaborator could interfere even when the owner check alone suffices.
-    // -------------------------------------------------------------------------
-
+    // Rules
     match /users/{userId} {
       allow list: if isSignedIn();
-      allow get, update, delete: if isOwner(userId);
-      allow create: if isOwner(userId);
+      allow get, create, update, delete: if isOwner(userId);
 
       match /budgets/{budgetId} {
-        allow get: if true;
+        allow get: if true; // Public view for RSVP context
         allow list: if isOwner(userId);
         allow create, delete: if isOwner(userId);
-
-        // Owner can always update
-        allow update: if isOwner(userId);
-        // Collaborator can update – uses resource.data directly (no get() needed)
-        allow update: if isSignedIn()
-                      && resource.data.collaboratorIds is list
-                      && (request.auth.uid in resource.data.collaboratorIds);
+        
+        // Update if owner or listed collaborator
+        allow update: if isOwner(userId) || (isSignedIn() && resource.data.collaboratorIds is list && request.auth.uid in resource.data.collaboratorIds);
 
         match /categories/{categoryId} {
-          allow get, list, create, update, delete: if isOwner(userId);
-          allow get, list, create, update, delete: if isCollaborator(userId, budgetId);
+          allow get, list, create, update, delete: if isOwner(userId) || isCollaborator(userId, budgetId);
           match /items/{itemId} {
-            allow get, list, create, update, delete: if isOwner(userId);
-            allow get, list, create, update, delete: if isCollaborator(userId, budgetId);
+            allow get, list, create, update, delete: if isOwner(userId) || isCollaborator(userId, budgetId);
           }
         }
+
         match /mustDos/{mustDoId} {
-          allow get, list, create, update, delete: if isOwner(userId);
-          allow get, list, create, update, delete: if isCollaborator(userId, budgetId);
+          allow get, list, create, update, delete: if isOwner(userId) || isCollaborator(userId, budgetId);
         }
+
         match /rsvps/{rsvpId} {
-          allow create: if isValidRsvpDocument(budgetId);
-          allow get, list, update, delete: if isOwner(userId);
-          allow get, list, update, delete: if isCollaborator(userId, budgetId);
+          allow create: if true; // Public RSVP
+          allow get, list, update, delete: if isOwner(userId) || isCollaborator(userId, budgetId);
         }
       }
     }
