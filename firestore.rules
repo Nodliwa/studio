@@ -1,8 +1,84 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
+
+    // -------------------------------------------------------------------------
+    // Helper Functions
+    // -------------------------------------------------------------------------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if the user is a collaborator on the budget.
+     * Uses a recursive path check since subcollections need access too.
+     */
+    function isCollaborator(ownerId, budgetId) {
+      let budget = get(/databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId)).data;
+      return isSignedIn() && budget.collaboratorIds is list && (request.auth.uid in budget.collaboratorIds);
+    }
+
+    // Owner check first — only call isCollaborator (which does a get()) if not the owner.
+    // Firestore rules do NOT short-circuit ||, so we use nested ifs to avoid
+    // the get() call failing when the document has no collaboratorIds field.
+    function hasAccess(userId, budgetId) {
+      return isOwner(userId) || isCollaborator(userId, budgetId);
+    }
+
+    function isValidRsvpDocument(budgetId) {
+        let data = request.resource.data;
+        return data.guestName is string &&
+               data.guestName.size() > 0 &&
+               data.status is string &&
+               (data.status == 'attending' || data.status == 'not_attending') &&
+               data.additionalGuests is number &&
+               data.additionalGuests >= 0 &&
+               data.budgetId == budgetId &&
+               request.time == data.respondedAt;
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection Rules
+    // -------------------------------------------------------------------------
+
+    match /users/{userId} {
+      // Allow searching for users by email to add them as collaborators
+      allow list: if isSignedIn();
+      allow get, update, delete: if isOwner(userId);
+      allow create: if isOwner(userId);
+
+      match /budgets/{budgetId} {
+        // Public read for RSVP, owner/collaborator for others
+        allow get: if true;
+        allow list: if isOwner(userId);
+        allow create, delete: if isOwner(userId);
+        // Owner can always update. For collaborators, check the existing
+        // document's collaboratorIds using resource.data (no extra get() needed).
+        allow update: if isOwner(userId)
+                      || (isSignedIn()
+                          && resource.data.collaboratorIds is list
+                          && request.auth.uid in resource.data.collaboratorIds);
+
+        match /categories/{categoryId} {
+          allow get, list, create, update, delete: if hasAccess(userId, budgetId);
+          match /items/{itemId} {
+             allow get, list, create, update, delete: if hasAccess(userId, budgetId);
+          }
+        }
+        match /mustDos/{mustDoId} {
+          allow get, list, create, update, delete: if hasAccess(userId, budgetId);
+        }
+        match /rsvps/{rsvpId} {
+            allow create: if isValidRsvpDocument(budgetId);
+            allow get, list, update, delete: if hasAccess(userId, budgetId);
+        }
+      }
     }
   }
 }
