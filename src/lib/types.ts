@@ -32,7 +32,7 @@ export interface Budget {
   eventDate?: string;
   grandTotal: number;
   userId: string;
-  collaboratorIds?: string[];
+  collaboratorEmails?: string[];
 }
 
 export interface User {

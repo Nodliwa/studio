@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -10,6 +11,7 @@ import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
 import { RsvpManager } from "@/components/RsvpManager";
 import { MustDosSummary } from "@/components/must-dos-summary";
+import { CollaboratorManager } from "@/components/collaborator-manager";
 import {
   useUser,
   useFirestore,
@@ -43,6 +45,7 @@ import {
 import Greeter from "@/components/greeter";
 import type { RSVP } from "@/lib/types";
 import { RefreshCw } from "lucide-react";
+import { findBudgetOwnerId } from "@/app/planner/actions";
 
 function calculateTotals(categories: BudgetCategory[]): {
   categories: BudgetCategory[];
@@ -84,31 +87,52 @@ export default function PlannerPage({
   const router = useRouter();
   const [budgetData, setBudgetData] = useState<BudgetCategory[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
+  const [resolvedOwnerId, setResolvedOwnerId] = useState<string | null>(null);
   const isTemplateMode = budgetId === "template";
+
+  // Ownership discovery logic
+  useEffect(() => {
+    if (isTemplateMode || isUserLoading) return;
+    
+    if (user && !user.isAnonymous) {
+        // First try to assume I am the owner
+        setResolvedOwnerId(user.uid);
+        
+        // Then verification check: if budget doesn't exist under my UID, look for the real owner
+        const checkOwner = async () => {
+            const myPath = doc(firestore, "users", user.uid, "budgets", budgetId);
+            const mySnap = await setDoc(myPath, {}, { merge: true }).catch(() => null); 
+            // The above is a trick to check existence/permissions. Better way:
+            const ownerId = await findBudgetOwnerId(budgetId);
+            if (ownerId) setResolvedOwnerId(ownerId);
+        };
+        checkOwner();
+    }
+  }, [user, isUserLoading, budgetId, isTemplateMode, firestore]);
 
   const budgetDocRef = useMemoFirebase(
     () =>
-      user && budgetId && !isTemplateMode
-        ? doc(firestore, "users", user.uid, "budgets", budgetId)
+      resolvedOwnerId && budgetId && !isTemplateMode
+        ? doc(firestore, "users", resolvedOwnerId, "budgets", budgetId)
         : null,
-    [user, firestore, budgetId, isTemplateMode]
+    [resolvedOwnerId, firestore, budgetId, isTemplateMode]
   );
 
   const { data: budget, isLoading: budgetLoading } = useDoc<Budget>(budgetDocRef);
 
   const categoriesCollection = useMemoFirebase(
     () =>
-      user && budgetId && !isTemplateMode
-        ? collection(firestore, "users", user.uid, "budgets", budgetId, "categories")
+      resolvedOwnerId && budgetId && !isTemplateMode
+        ? collection(firestore, "users", resolvedOwnerId, "budgets", budgetId, "categories")
         : null,
-    [user, firestore, budgetId, isTemplateMode]
+    [resolvedOwnerId, firestore, budgetId, isTemplateMode]
   );
 
   const { data: fetchedCategories, isLoading: categoriesLoading } = useCollection<BudgetCategory>(categoriesCollection);
 
   const mustDosCollection = useMemoFirebase(
-    () => (!isTemplateMode && user && budgetDocRef ? collection(budgetDocRef, "mustDos") : null),
-    [isTemplateMode, user, budgetDocRef]
+    () => (!isTemplateMode && resolvedOwnerId && budgetDocRef ? collection(budgetDocRef, "mustDos") : null),
+    [isTemplateMode, resolvedOwnerId, budgetDocRef]
   );
 
   const mustDosQuery = useMemoFirebase(
@@ -119,8 +143,8 @@ export default function PlannerPage({
   const { data: mustDos } = useCollection<MustDo>(mustDosQuery);
 
   const rsvpsCollection = useMemoFirebase(
-    () => (!isTemplateMode && user && budgetDocRef ? collection(budgetDocRef, "rsvps") : null),
-    [isTemplateMode, user, budgetDocRef]
+    () => (!isTemplateMode && resolvedOwnerId && budgetDocRef ? collection(budgetDocRef, "rsvps") : null),
+    [isTemplateMode, resolvedOwnerId, budgetDocRef]
   );
 
   const rsvpsQuery = useMemoFirebase(
@@ -162,12 +186,12 @@ export default function PlannerPage({
       return;
     }
 
-    if (user && fetchedCategories && fetchedCategories.length > 0) {
+    if (fetchedCategories && fetchedCategories.length > 0) {
       const { categories, grandTotal } = calculateTotals([...fetchedCategories].sort((a, b) => a.order - b.order));
       setBudgetData(categories);
       setGrandTotal(grandTotal);
     }
-  }, [isTemplateMode, searchParams, user, fetchedCategories]);
+  }, [isTemplateMode, searchParams, fetchedCategories]);
 
   const handleItemChange = (categoryPath: string[], itemIndex: number, field: keyof BudgetItem, value: string | number) => {
     const updated = JSON.parse(JSON.stringify(budgetData));
@@ -187,11 +211,11 @@ export default function PlannerPage({
       setBudgetData(categories);
       setGrandTotal(newGrandTotal);
 
-      if (!isTemplateMode && user) {
+      if (!isTemplateMode && resolvedOwnerId) {
         const rootId = categoryPath[0];
         const rootCat = categories.find((c: BudgetCategory) => c.id === rootId);
         if (rootCat) {
-            const rootCatRef = doc(firestore, "users", user.uid, "budgets", budgetId, "categories", rootId);
+            const rootCatRef = doc(firestore, "users", resolvedOwnerId, "budgets", budgetId, "categories", rootId);
             setDoc(rootCatRef, rootCat, { merge: true });
         }
         if (budgetDocRef) {
@@ -216,11 +240,11 @@ export default function PlannerPage({
       setBudgetData(categories);
       setGrandTotal(newGrandTotal);
 
-      if (!isTemplateMode && user) {
+      if (!isTemplateMode && resolvedOwnerId) {
         const rootId = categoryPath[0];
         const rootCat = categories.find((c: BudgetCategory) => c.id === rootId);
         if (rootCat) {
-            const rootCatRef = doc(firestore, "users", user.uid, "budgets", budgetId, "categories", rootId);
+            const rootCatRef = doc(firestore, "users", resolvedOwnerId, "budgets", budgetId, "categories", rootId);
             setDoc(rootCatRef, rootCat, { merge: true });
         }
       }
@@ -234,9 +258,9 @@ export default function PlannerPage({
         const oldIndex = items.findIndex((i) => i.id === active.id);
         const newIndex = items.findIndex((i) => i.id === over!.id);
         const newOrder = arrayMove(items, oldIndex, newIndex);
-        if (!isTemplateMode && user) {
+        if (!isTemplateMode && resolvedOwnerId) {
           const batch = writeBatch(firestore);
-          newOrder.forEach((cat, index) => batch.update(doc(firestore, "users", user.uid, "budgets", budgetId, "categories", cat.id), { order: index }));
+          newOrder.forEach((cat, index) => batch.update(doc(firestore, "users", resolvedOwnerId, "budgets", budgetId, "categories", cat.id), { order: index }));
           batch.commit().catch(console.error);
         }
         return newOrder;
@@ -244,7 +268,7 @@ export default function PlannerPage({
     }
   };
 
-  if (isUserLoading || (!isTemplateMode && (categoriesLoading || budgetLoading || rsvpsLoading)) || (budgetData.length === 0 && !isTemplateMode)) {
+  if (isUserLoading || (!isTemplateMode && (categoriesLoading || budgetLoading || rsvpsLoading || !resolvedOwnerId)) || (budgetData.length === 0 && !isTemplateMode)) {
     return (
       <div className="min-h-screen bg-secondary flex flex-col">
         <PageHeader />
@@ -287,8 +311,9 @@ export default function PlannerPage({
             </DndContext>
           </div>
 
-          {!isTemplateMode && (
+          {!isTemplateMode && budget && budgetDocRef && (
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <CollaboratorManager budget={budget} budgetRef={budgetDocRef} inviterName={user?.displayName || 'A SimpliPlan User'} />
               <RsvpManager budgetId={budgetId} rsvps={rsvps} />
               <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
             </div>

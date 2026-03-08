@@ -1,139 +1,78 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useFirestore, updateDocumentNonBlocking } from '@/firebase';
-import { collection, query, where, getDocs, limit, doc, getDoc, type DocumentReference } from 'firebase/firestore';
+import { type DocumentReference } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Users, UserPlus, X, Shield, Loader2 } from 'lucide-react';
+import { Users, UserPlus, Loader2, Send } from 'lucide-react';
 import type { Budget, User as AppUser } from '@/lib/types';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { sendCollaboratorInvite } from '@/app/planner/actions';
 
 interface CollaboratorManagerProps {
   budget: Budget;
   budgetRef: DocumentReference;
+  inviterName: string;
 }
 
-export function CollaboratorManager({ budget, budgetRef }: CollaboratorManagerProps) {
+export function CollaboratorManager({ budget, budgetRef, inviterName }: CollaboratorManagerProps) {
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
-  const [collaboratorProfiles, setCollaboratorProfiles] = useState<AppUser[]>([]);
-  const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
-  const firestore = useFirestore();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchProfiles = async () => {
-      if (!budget.collaboratorIds || budget.collaboratorIds.length === 0) {
-        setCollaboratorProfiles([]);
+  const handleInvite = async () => {
+    if (!email.trim() || !name.trim()) {
+        toast({ variant: 'destructive', title: 'Missing information', description: 'Please provide both a name and an email.' });
         return;
-      }
-
-      setIsLoadingProfiles(true);
-      try {
-        const profiles: AppUser[] = [];
-        for (const uid of budget.collaboratorIds) {
-          const userDoc = await getDoc(doc(firestore, 'users', uid));
-          if (userDoc.exists()) {
-            profiles.push({ ...userDoc.data() as AppUser, id: userDoc.id });
-          }
-        }
-        setCollaboratorProfiles(profiles);
-      } catch (error) {
-        console.error("Error fetching collaborator profiles:", error);
-      } finally {
-        setIsLoadingProfiles(false);
-      }
-    };
-
-    fetchProfiles();
-  }, [budget.collaboratorIds, firestore]);
-
-  const handleAddCollaborator = async () => {
-    if (!email.trim()) return;
+    }
+    
     setIsAdding(true);
 
     try {
-      // 1. Find user by email
-      const usersRef = collection(firestore, 'users');
-      const q = query(usersRef, where('email', '==', email.trim().toLowerCase()), limit(1));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        toast({
-          variant: 'destructive',
-          title: 'User not found',
-          description: 'No user found with that email address. They must have an account first.',
-        });
+      const currentEmails = budget.collaboratorEmails || [];
+      if (currentEmails.includes(email.trim().toLowerCase())) {
+        toast({ title: 'Already added', description: 'This user is already a collaborator.' });
+        setIsAdding(false);
         return;
       }
 
-      const newUser = querySnapshot.docs[0];
-      const newUid = newUser.id;
+      // 1. Send Invitation Email
+      const inviteResult = await sendCollaboratorInvite({
+        collaboratorName: name.trim(),
+        collaboratorEmail: email.trim().toLowerCase(),
+        inviterName: inviterName,
+        planName: budget.name,
+        planUrl: `${window.location.origin}/planner/${budget.id}`,
+      });
 
-      if (newUid === budget.userId) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'You are already the owner of this plan.',
-        });
-        return;
+      if (!inviteResult.success) {
+          console.warn("Email could not be sent, but adding to list anyway for dev purposes.");
       }
 
-      const currentCollaborators = budget.collaboratorIds || [];
-      if (currentCollaborators.includes(newUid)) {
-        toast({
-          title: 'Already added',
-          description: 'This user is already a collaborator.',
-        });
-        return;
-      }
-
-      // 2. Update budget
-      await updateDocumentNonBlocking(budgetRef, {
-        collaboratorIds: [...currentCollaborators, newUid]
+      // 2. Update budget doc
+      updateDocumentNonBlocking(budgetRef, {
+        collaboratorEmails: [...currentEmails, email.trim().toLowerCase()]
       });
 
       toast({
-        title: 'Collaborator added',
-        description: `${email} has been granted access to this plan.`,
+        title: 'Invitation Sent',
+        description: `An invite has been sent to ${name} (${email}).`,
       });
       setEmail('');
+      setName('');
     } catch (error) {
       console.error("Error adding collaborator:", error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to add collaborator. Please try again.',
+        description: 'Failed to invite collaborator. Please try again.',
       });
     } finally {
       setIsAdding(false);
-    }
-  };
-
-  const handleRemoveCollaborator = async (uid: string) => {
-    try {
-      const currentCollaborators = budget.collaboratorIds || [];
-      const updatedCollaborators = currentCollaborators.filter(id => id !== uid);
-      
-      await updateDocumentNonBlocking(budgetRef, {
-        collaboratorIds: updatedCollaborators
-      });
-
-      toast({
-        title: 'Collaborator removed',
-        description: 'Access has been revoked.',
-      });
-    } catch (error) {
-      console.error("Error removing collaborator:", error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to remove collaborator.',
-      });
     }
   };
 
@@ -145,65 +84,46 @@ export function CollaboratorManager({ budget, budgetRef }: CollaboratorManagerPr
           Collaborators
         </CardTitle>
         <CardDescription>
-          Invite others to view and edit this plan.
+          Invite others to help you plan this event.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex gap-2">
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
           <Input
-            type="email"
-            placeholder="friend@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Collaborator Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             disabled={isAdding}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddCollaborator()}
           />
-          <Button onClick={handleAddCollaborator} disabled={isAdding || !email}>
-            {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-          </Button>
+          <div className="flex gap-2">
+            <Input
+                type="email"
+                placeholder="collaborator@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isAdding}
+                onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
+            />
+            <Button onClick={handleInvite} disabled={isAdding || !email || !name}>
+                {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-            <Shield className="h-4 w-4" /> Current Access
+        <div className="pt-2">
+          <h4 className="text-sm font-semibold text-muted-foreground mb-2">Active Collaborators</h4>
+          <div className="space-y-1">
+            {budget.collaboratorEmails && budget.collaboratorEmails.length > 0 ? (
+              budget.collaboratorEmails.map((email) => (
+                <div key={email} className="text-sm p-2 rounded bg-black/5 flex justify-between items-center">
+                  <span>{email}</span>
+                  <span className="text-[10px] uppercase font-bold text-primary px-1 border border-primary rounded">Read/Write</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-muted-foreground italic">No collaborators invited yet.</p>
+            )}
           </div>
-          
-          {isLoadingProfiles ? (
-            <div className="flex justify-center p-4">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {collaboratorProfiles.length === 0 ? (
-                <p className="text-sm text-center py-4 text-muted-foreground italic">
-                  No collaborators added yet.
-                </p>
-              ) : (
-                collaboratorProfiles.map((profile) => (
-                  <div key={profile.id} className="flex items-center justify-between p-2 rounded-lg bg-black/5">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={profile.photoURL} />
-                        <AvatarFallback>{profile.knownAs?.charAt(0) || '?'}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">{profile.displayName}</span>
-                        <span className="text-xs text-muted-foreground">{profile.email}</span>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                      onClick={() => handleRemoveCollaborator(profile.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>

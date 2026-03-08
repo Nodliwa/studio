@@ -40,10 +40,10 @@
           "type": "string",
           "description": "Reference to User. (Relationship: User 1:N Budget)"
         },
-        "collaboratorIds": {
+        "collaboratorEmails": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "Array of user IDs who have collaborator access to this budget."
+          "description": "Array of emails who have collaborator access to this budget."
         }
       },
       "required": [
@@ -287,6 +287,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. It leverages path-based ownership for user-specific data and avoids hierarchical authorization dependencies by denormalizing authorization context where necessary. The structure also supports secure list operations via structural segregation.\\n\\nBudgets, Categories and Items are nested under the `/users/{userId}` collection, ensuring that only the user has access to their own data (Path-Based Ownership).\\n\\nThis structure will need to be implemented with corresponding Firebase Security Rules."
+    "reasoning": "The Firestore structure allows owners and authorized collaborators to manage event plans. Security is enforced by checking either the owner's UID or the collaborator's email against the budget document."
   }
 }
