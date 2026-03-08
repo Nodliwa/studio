@@ -10,7 +10,6 @@ import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
 import { RsvpManager } from "@/components/RsvpManager";
 import { MustDosSummary } from "@/components/must-dos-summary";
-import { CollaboratorManager } from "@/components/collaborator-manager";
 import {
   useUser,
   useFirestore,
@@ -45,8 +44,6 @@ import Greeter from "@/components/greeter";
 import type { RSVP } from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
 import { RefreshCw } from "lucide-react";
-import { errorEmitter } from "@/firebase/error-emitter";
-import { FirestorePermissionError } from "@/firebase/errors";
 
 function calculateTotals(categories: BudgetCategory[]): {
   categories: BudgetCategory[];
@@ -159,7 +156,6 @@ export default function PlannerPage({
 
   useEffect(() => {
     const initializePlan = async () => {
-      // 1. Template Mode (Guests only)
       if (isTemplateMode) {
         const eventType = searchParams.get("eventType") || "other";
         const template = budgetTemplates[eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
@@ -169,7 +165,6 @@ export default function PlannerPage({
         return;
       }
 
-      // 2. Load Existing Member Plan
       if (user && !user.isAnonymous && fetchedCategories && fetchedCategories.length > 0) {
         const { categories, grandTotal } = calculateTotals([...fetchedCategories].sort((a, b) => a.order - b.order));
         setBudgetData(categories);
@@ -177,7 +172,6 @@ export default function PlannerPage({
         return;
       }
 
-      // 3. Initialize New Member Plan from Template
       if (user && !user.isAnonymous && !budgetLoading && !categoriesLoading && !isInitializing && (!fetchedCategories || fetchedCategories.length === 0)) {
         setIsInitializing(true);
         const eventTypeFromParams = searchParams.get("eventType") || budget?.eventType || "other";
@@ -186,23 +180,20 @@ export default function PlannerPage({
 
         const newBudget: Budget = {
           id: budgetId,
-          name: "",
+          name: budget?.name || "",
           grandTotal: initialTotal,
           userId: user.uid,
           eventType: eventTypeFromParams,
-          eventDate: "",
-          eventLocation: "",
-          expectedGuests: 0,
-          collaboratorIds: [],
+          eventDate: budget?.eventDate || "",
+          eventLocation: budget?.eventLocation || "",
+          expectedGuests: budget?.expectedGuests || 0,
         };
 
         const budgetRef = doc(firestore, "users", user.uid, "budgets", budgetId);
         
         try {
-          // Save initial budget doc
           await setDoc(budgetRef, newBudget, { merge: true });
 
-          // Save categories
           const batch = writeBatch(firestore);
           templateCategories.forEach((category, index) => {
             const catRef = doc(collection(budgetRef, "categories"));
@@ -212,6 +203,7 @@ export default function PlannerPage({
           
           setBudgetData(templateCategories);
           setGrandTotal(initialTotal);
+          setIsInitializing(false);
         } catch (error) {
           console.error("Initialization failed:", error);
           setIsInitializing(false);
@@ -343,7 +335,6 @@ export default function PlannerPage({
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <RsvpManager budgetId={budgetId} rsvps={rsvps} />
               <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
-              {budget && budgetDocRef && <CollaboratorManager budget={budget} budgetRef={budgetDocRef} />}
             </div>
           )}
         </main>

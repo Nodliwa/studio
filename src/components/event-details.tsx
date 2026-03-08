@@ -114,7 +114,6 @@ export function EventDetails({
       };
       reset(initialValues);
       
-      // If the plan doesn't have a name yet, start in editing mode
       if (!budget.name) {
         setIsEditing(true);
       }
@@ -131,6 +130,7 @@ export function EventDetails({
     const dataToSave = {
       ...data,
       eventDate: data.eventDate ? new Date(data.eventDate).toISOString() : "",
+      eventType: eventType || budget?.eventType || "", // Preserve or update eventType
     };
 
     setDocumentNonBlocking(budgetRef, dataToSave, { merge: true });

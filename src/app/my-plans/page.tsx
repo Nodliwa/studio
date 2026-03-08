@@ -5,7 +5,6 @@ import {
   useCollection,
   useMemoFirebase,
   useFirestore,
-  deleteDocument,
 } from "@/firebase";
 import {
   collection,
@@ -67,6 +66,7 @@ import { v4 as uuidv4 } from "uuid";
 const eventTypeImages: { [key: string]: string } = {
   wedding: "/images/wedding.jpg",
   funeral: "/images/funeral2.png",
+  umemulo: "/images/umemulo.jpg",
   umgidi: "/images/umgidi1.jpg",
 };
 
@@ -139,7 +139,7 @@ function PlanCard({
               currency: "ZAR",
               minimumFractionDigits: 0,
               maximumFractionDigits: 0,
-            }).format(budget.grandTotal)}
+            }).format(budget.grandTotal || 0)}
           </div>
         </div>
       </div>
@@ -228,7 +228,6 @@ export default function MyPlansPage() {
       toast({ title: "Plan deleted successfully" });
     } catch (e) {
       console.error("Error deleting plan:", e);
-      deleteDocument(budgetDocRef);
     }
   };
 
