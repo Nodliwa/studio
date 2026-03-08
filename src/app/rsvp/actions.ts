@@ -2,7 +2,7 @@
 'use server';
 
 import { initializeFirebase } from '@/firebase';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, limit, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, doc, updateDoc, collectionGroup, query, where, limit } from 'firebase/firestore';
 import { z } from 'zod';
 
 const rsvpSchema = z.object({
@@ -15,19 +15,21 @@ type RsvpData = z.infer<typeof rsvpSchema>;
 
 async function findBudgetOwnerId(budgetId: string): Promise<string | null> {
   const { firestore } = initializeFirebase();
-  const usersCollectionRef = collection(firestore, 'users');
-  const usersSnapshot = await getDocs(usersCollectionRef);
+  const budgetsQuery = query(
+    collectionGroup(firestore, 'budgets'),
+    where('id', '==', budgetId),
+    limit(1)
+  );
 
-  for (const userDoc of usersSnapshot.docs) {
-    const budgetDocRef = doc(firestore, 'users', userDoc.id, 'budgets', budgetId);
-    const budgetDocSnap = await getDoc(budgetDocRef);
-    
-    if (budgetDocSnap.exists()) {
-      return userDoc.id; // Found the owner
+  try {
+    const snapshot = await getDocs(budgetsQuery);
+    if (!snapshot.empty) {
+      return snapshot.docs[0].data().userId || null;
     }
+  } catch (error) {
+    console.error("Error finding budget owner for RSVP:", error);
   }
-
-  return null; // Budget not found
+  return null;
 }
 
 
@@ -59,7 +61,6 @@ export async function addRsvp(budgetId: string, data: RsvpData): Promise<{ succe
     const docRef = await addDoc(rsvpCollectionRef, newDoc);
 
     // This is important: We update the document with its own ID.
-    // While our rules don't strictly require this, it's good practice for data consistency.
     await updateDoc(docRef, { id: docRef.id });
 
     return { success: true, rsvpId: docRef.id };
@@ -68,5 +69,3 @@ export async function addRsvp(budgetId: string, data: RsvpData): Promise<{ succe
     throw new Error('Failed to save RSVP. Please try again later.');
   }
 }
-
-    

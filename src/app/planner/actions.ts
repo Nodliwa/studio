@@ -2,23 +2,31 @@
 'use server';
 
 import { initializeFirebase } from '@/firebase';
-import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore';
+import { collectionGroup, query, where, getDocs, limit } from 'firebase/firestore';
 import nodemailer from 'nodemailer';
 
 /**
- * Finds the UID of the user who owns a budget.
+ * Finds the UID of the user who owns a budget using a collection group query.
+ * This is much more efficient than scanning all users.
  */
 export async function findBudgetOwnerId(budgetId: string): Promise<string | null> {
   const { firestore } = initializeFirebase();
-  const usersCollectionRef = collection(firestore, 'users');
-  const usersSnapshot = await getDocs(usersCollectionRef);
+  
+  // Use a collection group query to find the budget document by its ID
+  // Note: This requires a Firestore index for 'budgets' collection group.
+  const budgetsQuery = query(
+    collectionGroup(firestore, 'budgets'),
+    where('id', '==', budgetId),
+    limit(1)
+  );
 
-  for (const userDoc of usersSnapshot.docs) {
-    const budgetDocRef = doc(firestore, 'users', userDoc.id, 'budgets', budgetId);
-    const budgetDocSnap = await getDoc(budgetDocRef);
-    if (budgetDocSnap.exists()) {
-      return userDoc.id;
+  try {
+    const snapshot = await getDocs(budgetsQuery);
+    if (!snapshot.empty) {
+      return snapshot.docs[0].data().userId || null;
     }
+  } catch (error) {
+    console.error("Error finding budget owner:", error);
   }
   return null;
 }

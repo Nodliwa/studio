@@ -13,8 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useFirebase } from '@/firebase';
-import { doc, getDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
-import { CalendarDays, MapPin, Users, PartyPopper } from 'lucide-react';
+import { collectionGroup, query, where, getDocs, limit } from 'firebase/firestore';
+import { CalendarDays, MapPin, PartyPopper } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 
 const rsvpSchema = z.object({
@@ -28,15 +28,15 @@ const rsvpSchema = z.object({
 type RsvpFormValues = z.infer<typeof rsvpSchema>;
 
 async function findBudget(firestore: any, budgetId: string): Promise<Budget | null> {
-    const usersCollectionRef = collection(firestore, 'users');
-    const usersSnapshot = await getDocs(usersCollectionRef);
+    const budgetsQuery = query(
+        collectionGroup(firestore, 'budgets'),
+        where('id', '==', budgetId),
+        limit(1)
+    );
 
-    for (const userDoc of usersSnapshot.docs) {
-        const budgetDocRef = doc(firestore, 'users', userDoc.id, 'budgets', budgetId);
-        const budgetDocSnap = await getDoc(budgetDocRef);
-        if (budgetDocSnap.exists()) {
-            return budgetDocSnap.data() as Budget;
-        }
+    const snapshot = await getDocs(budgetsQuery);
+    if (!snapshot.empty) {
+        return snapshot.docs[0].data() as Budget;
     }
     return null;
 }
@@ -202,5 +202,3 @@ export default function RsvpPage({ params }: { params: { budgetId: string } }) {
     </div>
   );
 }
-
-    
