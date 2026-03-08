@@ -36,8 +36,6 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-const DEFAULT_BUDGET_NAME = "";
-
 export function EventDetails({
   budget,
   budgetRef,
@@ -69,7 +67,7 @@ export function EventDetails({
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: DEFAULT_BUDGET_NAME,
+      name: "",
       eventLocation: "",
       eventDate: "",
       expectedGuests: 0,
@@ -105,7 +103,7 @@ export function EventDetails({
   useEffect(() => {
     if (budget) {
       const initialValues = {
-        name: budget.name || DEFAULT_BUDGET_NAME,
+        name: budget.name || "",
         eventLocation: budget.eventLocation || "",
         eventDate: budget.eventDate
           ? new Date(budget.eventDate).toISOString().split("T")[0]
@@ -113,10 +111,6 @@ export function EventDetails({
         expectedGuests: budget.expectedGuests || 0,
       };
       reset(initialValues);
-      
-      if (!budget.name) {
-        setIsEditing(true);
-      }
     }
   }, [budget, reset]);
 
@@ -130,7 +124,7 @@ export function EventDetails({
     const dataToSave = {
       ...data,
       eventDate: data.eventDate ? new Date(data.eventDate).toISOString() : "",
-      eventType: eventType || budget?.eventType || "", // Preserve or update eventType
+      eventType: eventType || budget?.eventType || "",
     };
 
     setDocumentNonBlocking(budgetRef, dataToSave, { merge: true });
@@ -166,7 +160,7 @@ export function EventDetails({
                 onClick={() => {
                   if (budget) {
                     reset({
-                      name: budget.name || DEFAULT_BUDGET_NAME,
+                      name: budget.name || "",
                       eventLocation: budget.eventLocation || "",
                       eventDate: budget.eventDate ? new Date(budget.eventDate).toISOString().split("T")[0] : "",
                       expectedGuests: budget.expectedGuests || 0,
@@ -179,7 +173,7 @@ export function EventDetails({
                 Cancel
               </Button>
               <Button type="submit" size="sm" disabled={isSubmitting}>
-                {budget?.name ? "Save Changes" : "Add New Plan"}
+                Save Changes
               </Button>
             </div>
           ) : (
@@ -188,7 +182,7 @@ export function EventDetails({
               size="sm"
               onClick={() => setIsEditing(true)}
             >
-              Edit
+              Edit Details
             </Button>
           )}
         </CardHeader>

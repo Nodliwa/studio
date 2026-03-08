@@ -11,10 +11,11 @@ import {
   doc,
   writeBatch,
   getDocs,
+  setDoc,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import type { Budget } from "@/lib/types";
+import { useEffect, useState } from "react";
+import type { Budget, BudgetCategory } from "@/lib/types";
 import PageHeader from "@/components/page-header";
 import {
   Card,
@@ -47,6 +48,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   ListChecks,
@@ -62,6 +64,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { budgetTemplates } from "@/lib/data";
 
 const eventTypeImages: { [key: string]: string } = {
   wedding: "/images/wedding.jpg",
@@ -73,8 +82,34 @@ const eventTypeImages: { [key: string]: string } = {
 const creationCategories = [
   { name: "Wedding", type: "wedding", image: "/images/wedding.jpg" },
   { name: "Funeral", type: "funeral", image: "/images/funeral2.png" },
+  { name: "uMemulo", type: "umemulo", image: "/images/umemulo.jpg" },
   { name: "uMgidi", type: "umgidi", image: "/images/umgidi1.jpg" },
 ];
+
+const planSchema = z.object({
+  name: z.string().min(1, "Celebration name is required"),
+  eventType: z.string().min(1, "Event type is required"),
+  eventDate: z.string().min(1, "Event date is required"),
+  eventLocation: z.string().min(1, "Event location is required"),
+  expectedGuests: z.coerce.number().int().min(1, "At least 1 guest expected"),
+});
+
+type PlanFormValues = z.infer<typeof planSchema>;
+
+function calculateInitialTotal(categories: BudgetCategory[]): number {
+  let total = 0;
+  categories.forEach(cat => {
+    let catTotal = 0;
+    cat.items?.forEach(item => {
+      catTotal += (item.quantity || 0) * (item.unitPrice || 0);
+    });
+    if (cat.subCategories) {
+      catTotal += calculateInitialTotal(cat.subCategories);
+    }
+    total += catTotal;
+  });
+  return total;
+}
 
 function PlanCard({
   budget,
@@ -104,7 +139,7 @@ function PlanCard({
           <>
             <Image
               src={imageUrl}
-              alt={budget.name || "Event image"}
+              alt={budget.name}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
@@ -117,7 +152,7 @@ function PlanCard({
         <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
           <div className="space-y-2">
             <h3 className="text-xl font-bold truncate text-shadow" title={budget.name}>
-              {budget.name || "Unnamed Celebration"}
+              {budget.name}
             </h3>
             <div className="space-y-1 text-sm text-white/90 text-shadow-sm">
               <p className="flex items-center gap-2">
@@ -153,7 +188,7 @@ function PlanCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => router.push(`/planner/${budget.id}`)}>Edit Budget</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push(`/planner/${budget.id}`)}>Edit Plan</DropdownMenuItem>
               <AlertDialogTrigger asChild>
                 <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
               </AlertDialogTrigger>
@@ -198,6 +233,7 @@ export default function MyPlansPage() {
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const budgetsCollection = useMemoFirebase(
     () => (user && !user.isAnonymous ? collection(firestore, "users", user.uid, "budgets") : null),
@@ -205,6 +241,17 @@ export default function MyPlansPage() {
   );
 
   const { data: budgets, isLoading: budgetsLoading } = useCollection<Budget>(budgetsCollection);
+
+  const { control, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<PlanFormValues>({
+    resolver: zodResolver(planSchema),
+    defaultValues: {
+      name: "",
+      eventType: "",
+      eventDate: "",
+      eventLocation: "",
+      expectedGuests: 50,
+    }
+  });
 
   useEffect(() => {
     if (!isUserLoading && (!user || user.isAnonymous)) {
@@ -231,9 +278,45 @@ export default function MyPlansPage() {
     }
   };
 
-  const handleCreateNewPlan = (eventType: string) => {
+  const handleCreateNewPlan = async (data: PlanFormValues) => {
+    if (!user || !firestore) return;
+
     const newId = uuidv4();
-    router.push(`/planner/${newId}?eventType=${eventType}`);
+    const budgetRef = doc(firestore, "users", user.uid, "budgets", newId);
+    
+    // Get template categories
+    const template = budgetTemplates[data.eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
+    const initialTotal = calculateInitialTotal(template);
+
+    const newBudget: Budget = {
+      id: newId,
+      name: data.name,
+      grandTotal: initialTotal,
+      userId: user.uid,
+      eventType: data.eventType,
+      eventDate: new Date(data.eventDate).toISOString(),
+      eventLocation: data.eventLocation,
+      expectedGuests: data.expectedGuests,
+    };
+
+    try {
+      const batch = writeBatch(firestore);
+      batch.set(budgetRef, newBudget);
+
+      template.forEach((category, index) => {
+        const catRef = doc(collection(budgetRef, "categories"));
+        batch.set(catRef, { ...category, id: catRef.id, order: index, budgetId: newId });
+      });
+
+      await batch.commit();
+      toast({ title: "Plan created successfully!" });
+      setIsDialogOpen(false);
+      reset();
+      router.push(`/planner/${newId}`);
+    } catch (error) {
+      console.error("Creation failed:", error);
+      toast({ variant: "destructive", title: "Failed to create plan" });
+    }
   };
 
   return (
@@ -246,42 +329,92 @@ export default function MyPlansPage() {
           <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="space-y-1 text-center md:text-left flex-1">
               <h3 className="text-xl font-bold font-headline">
-                {budgets ? (budgets.length > 0 ? `You have ${budgets.length} active celebration plan(s).` : "You have no active plans yet.") : "Loading plans..."}
+                {budgets ? (budgets.length > 0 ? `You have ${budgets.length} active celebration plan(s).` : "You have no active plans yet.") : "Updating plans..."}
               </h3>
               <p className="text-muted-foreground">Manage your celebrations or start a new one.</p>
             </div>
 
-            <Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="lg" className="font-bold">
                   <Plus className="mr-2 h-5 w-5" />
                   Add New Plan
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle>Start a New Celebration</DialogTitle>
-                  <DialogDescription>Choose a template to begin planning your event.</DialogDescription>
+                  <DialogDescription>Every great event starts with a solid plan. Tell us what you're celebrating.</DialogDescription>
                 </DialogHeader>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
-                  {creationCategories.map((cat) => (
-                    <Card
-                      key={cat.type}
-                      className="overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all"
-                      onClick={() => handleCreateNewPlan(cat.type)}
-                    >
-                      <div className="relative h-32 w-full">
-                        <Image src={cat.image} alt={cat.name} fill className="object-cover" />
-                      </div>
-                      <CardContent className="p-4 text-center">
-                        <h4 className="font-bold">{cat.name}</h4>
-                        <Button variant="link" className="mt-2 h-auto p-0">
-                          Select <ArrowRight className="ml-1 h-3 w-3" />
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                <form onSubmit={handleSubmit(handleCreateNewPlan)} className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Plan Name (e.g., Mom's 60th)</Label>
+                    <Controller
+                      name="name"
+                      control={control}
+                      render={({ field }) => <Input id="name" {...field} placeholder="Life you are celebrating..." />}
+                    />
+                    {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="eventType">Celebration Type</Label>
+                    <Controller
+                      name="eventType"
+                      control={control}
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="wedding">Wedding</SelectItem>
+                            <SelectItem value="funeral">Funeral</SelectItem>
+                            <SelectItem value="umemulo">uMemulo</SelectItem>
+                            <SelectItem value="umgidi">uMgidi</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.eventType && <p className="text-xs text-destructive">{errors.eventType.message}</p>}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="eventDate">Date</Label>
+                      <Controller
+                        name="eventDate"
+                        control={control}
+                        render={({ field }) => <Input id="eventDate" type="date" {...field} />}
+                      />
+                      {errors.eventDate && <p className="text-xs text-destructive">{errors.eventDate.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="expectedGuests">Guests</Label>
+                      <Controller
+                        name="expectedGuests"
+                        control={control}
+                        render={({ field }) => <Input id="expectedGuests" type="number" {...field} />}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="eventLocation">Location</Label>
+                    <Controller
+                      name="eventLocation"
+                      control={control}
+                      render={({ field }) => <Input id="eventLocation" {...field} placeholder="City, Venue, or Address" />}
+                    />
+                    {errors.eventLocation && <p className="text-xs text-destructive">{errors.eventLocation.message}</p>}
+                  </div>
+
+                  <DialogFooter className="pt-4">
+                    <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>
+                      {isSubmitting ? "Creating Plan..." : "Create and Start Planning"}
+                    </Button>
+                  </DialogFooter>
+                </form>
               </DialogContent>
             </Dialog>
           </div>
