@@ -16,17 +16,22 @@ service cloud.firestore {
     }
 
     /**
-     * Checks if the user is a collaborator on the budget.
-     * Uses a recursive path check since subcollections need access too.
+     * Checks collaboratorIds on the budget document via get().
+     * Safe: guards with 'is list' so a missing field returns false instead of error.
      */
     function isCollaborator(ownerId, budgetId) {
-      let budget = get(/databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId)).data;
-      return isSignedIn() && budget.collaboratorIds is list && (request.auth.uid in budget.collaboratorIds);
+      let budgetData = get(/databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId)).data;
+      return isSignedIn()
+             && budgetData != null
+             && budgetData.collaboratorIds is list
+             && (request.auth.uid in budgetData.collaboratorIds);
     }
 
-    // Owner check first — only call isCollaborator (which does a get()) if not the owner.
-    // Firestore rules do NOT short-circuit ||, so we use nested ifs to avoid
-    // the get() call failing when the document has no collaboratorIds field.
+    /**
+     * Firestore rules DO evaluate both sides of ||.
+     * However, the isCollaborator function is now safe because it guards
+     * against missing data with 'budgetData != null' and 'is list' checks.
+     */
     function hasAccess(userId, budgetId) {
       return isOwner(userId) || isCollaborator(userId, budgetId);
     }
@@ -58,12 +63,7 @@ service cloud.firestore {
         allow get: if true;
         allow list: if isOwner(userId);
         allow create, delete: if isOwner(userId);
-        // Owner can always update. For collaborators, check the existing
-        // document's collaboratorIds using resource.data (no extra get() needed).
-        allow update: if isOwner(userId)
-                      || (isSignedIn()
-                          && resource.data.collaboratorIds is list
-                          && request.auth.uid in resource.data.collaboratorIds);
+        allow update: if hasAccess(userId, budgetId);
 
         match /categories/{categoryId} {
           allow get, list, create, update, delete: if hasAccess(userId, budgetId);
@@ -82,3 +82,4 @@ service cloud.firestore {
     }
   }
 }
+  
