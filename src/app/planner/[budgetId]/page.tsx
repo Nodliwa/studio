@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { BudgetItem, BudgetCategory, Budget, MustDo } from "@/lib/types";
 import { budgetTemplates } from "@/lib/data";
@@ -62,15 +61,18 @@ function calculateTotals(categories: BudgetCategory[]): {
       categoryTotal += itemTotal;
       return { ...item, total: itemTotal };
     });
+    
+    category.items = itemsWithTotals;
+    
     const subCategories = category.subCategories
       ? calculateTotals(category.subCategories).categories
       : [];
     const subCategoriesTotal = subCategories.reduce((acc, sub) => acc + sub.total, 0);
 
-    category.items = itemsWithTotals;
     category.total = categoryTotal + subCategoriesTotal;
+    category.subCategories = subCategories;
     newGrandTotal += category.total;
-    return { ...category, subCategories };
+    return { ...category };
   });
   return { categories: categoriesWithTotals, grandTotal: newGrandTotal };
 }
@@ -86,16 +88,8 @@ export default function PlannerPage({
   const router = useRouter();
   const [budgetData, setBudgetData] = useState<BudgetCategory[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
+  const [isInitializing, setIsInitializing] = useState(false);
   const isTemplateMode = budgetId === "template";
-
-  // Redirect members away from generic 'template' ID to a persistent unique ID
-  useEffect(() => {
-    if (isTemplateMode && !isUserLoading && user && !user.isAnonymous) {
-      const newId = uuidv4();
-      const eventTypeParam = searchParams.get("eventType") || "other";
-      router.replace(`/planner/${newId}?eventType=${eventTypeParam}`);
-    }
-  }, [isTemplateMode, isUserLoading, user, router, searchParams]);
 
   const budgetDocRef = useMemoFirebase(
     () =>
@@ -184,7 +178,8 @@ export default function PlannerPage({
       }
 
       // 3. Initialize New Member Plan from Template
-      if (user && !user.isAnonymous && !budgetLoading && !categoriesLoading && (!fetchedCategories || fetchedCategories.length === 0)) {
+      if (user && !user.isAnonymous && !budgetLoading && !categoriesLoading && !isInitializing && (!fetchedCategories || fetchedCategories.length === 0)) {
+        setIsInitializing(true);
         const eventTypeFromParams = searchParams.get("eventType") || budget?.eventType || "other";
         const template = budgetTemplates[eventTypeFromParams as keyof typeof budgetTemplates] || budgetTemplates.other;
         const { categories: templateCategories, grandTotal: initialTotal } = calculateTotals(JSON.parse(JSON.stringify(template)));
@@ -203,29 +198,28 @@ export default function PlannerPage({
 
         const budgetRef = doc(firestore, "users", user.uid, "budgets", budgetId);
         
-        // Save initial budget doc
-        setDoc(budgetRef, newBudget, { merge: true }).catch(error => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: budgetRef.path,
-                operation: 'update',
-                requestResourceData: newBudget
-            }));
-        });
+        try {
+          // Save initial budget doc
+          await setDoc(budgetRef, newBudget, { merge: true });
 
-        // Save categories
-        const batch = writeBatch(firestore);
-        templateCategories.forEach((category, index) => {
-          const catRef = doc(collection(budgetRef, "categories"));
-          batch.set(catRef, { ...category, id: catRef.id, order: index, budgetId });
-        });
-        await batch.commit().catch(console.error);
-        
-        setBudgetData(templateCategories);
-        setGrandTotal(initialTotal);
+          // Save categories
+          const batch = writeBatch(firestore);
+          templateCategories.forEach((category, index) => {
+            const catRef = doc(collection(budgetRef, "categories"));
+            batch.set(catRef, { ...category, id: catRef.id, order: index, budgetId });
+          });
+          await batch.commit();
+          
+          setBudgetData(templateCategories);
+          setGrandTotal(initialTotal);
+        } catch (error) {
+          console.error("Initialization failed:", error);
+          setIsInitializing(false);
+        }
       }
     };
     initializePlan();
-  }, [isTemplateMode, searchParams, user, isUserLoading, budget, budgetLoading, fetchedCategories, categoriesLoading, firestore, budgetId]);
+  }, [isTemplateMode, searchParams, user, isUserLoading, budget, budgetLoading, fetchedCategories, categoriesLoading, firestore, budgetId, isInitializing]);
 
   const handleItemChange = (categoryPath: string[], itemIndex: number, field: keyof BudgetItem, value: string | number) => {
     const updated = JSON.parse(JSON.stringify(budgetData));
@@ -241,31 +235,20 @@ export default function PlannerPage({
       else (item[field] as any) = value;
       target.items[itemIndex] = item;
 
-      if (!isTemplateMode && user && !user.isAnonymous) {
-        const rootId = categoryPath[0];
-        const rootCat = updated.find((c: BudgetCategory) => c.id === rootId);
-        if (rootCat) {
-            const rootCatRef = doc(firestore, "users", user.uid, "budgets", budgetId, "categories", rootId);
-            setDoc(rootCatRef, rootCat, { merge: true }).catch(err => {
-                errorEmitter.emit('permission-error', new FirestorePermissionError({
-                    path: rootCatRef.path,
-                    operation: 'update',
-                    requestResourceData: rootCat
-                }));
-            });
-        }
-      }
       const { categories, grandTotal } = calculateTotals(updated);
       setBudgetData(categories);
       setGrandTotal(grandTotal);
-      if (budgetDocRef) {
-          setDoc(budgetDocRef, { grandTotal }, { merge: true }).catch(err => {
-              errorEmitter.emit('permission-error', new FirestorePermissionError({
-                  path: budgetDocRef.path,
-                  operation: 'update',
-                  requestResourceData: { grandTotal }
-              }));
-          });
+
+      if (!isTemplateMode && user && !user.isAnonymous) {
+        const rootId = categoryPath[0];
+        const rootCat = categories.find((c: BudgetCategory) => c.id === rootId);
+        if (rootCat) {
+            const rootCatRef = doc(firestore, "users", user.uid, "budgets", budgetId, "categories", rootId);
+            setDoc(rootCatRef, rootCat, { merge: true });
+        }
+        if (budgetDocRef) {
+            setDoc(budgetDocRef, { grandTotal }, { merge: true });
+        }
       }
     }
   };
@@ -280,17 +263,19 @@ export default function PlannerPage({
     }
     if (target) {
       target.items = [...(target.items || []), { id: `${Date.now()}`, name: "", metric: "", quantity: 0, unitPrice: 0, total: 0, comment: "" }];
+      
+      const { categories, grandTotal } = calculateTotals(updated);
+      setBudgetData(categories);
+      setGrandTotal(grandTotal);
+
       if (!isTemplateMode && user && !user.isAnonymous) {
         const rootId = categoryPath[0];
-        const rootCat = updated.find((c: BudgetCategory) => c.id === rootId);
+        const rootCat = categories.find((c: BudgetCategory) => c.id === rootId);
         if (rootCat) {
             const rootCatRef = doc(firestore, "users", user.uid, "budgets", budgetId, "categories", rootId);
             setDoc(rootCatRef, rootCat, { merge: true });
         }
       }
-      const { categories, grandTotal } = calculateTotals(updated);
-      setBudgetData(categories);
-      setGrandTotal(grandTotal);
     }
   };
 

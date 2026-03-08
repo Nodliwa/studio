@@ -1,54 +1,8 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper Functions
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    function isCollaborator(ownerId, budgetId) {
-      let budgetDoc = get(/databases/$(database)/documents/users/$(ownerId)/budgets/$(budgetId));
-      return isSignedIn() 
-             && budgetDoc != null 
-             && budgetDoc.data != null 
-             && budgetDoc.data.collaboratorIds is list 
-             && (request.auth.uid in budgetDoc.data.collaboratorIds);
-    }
-
-    // Rules
-    match /users/{userId} {
-      allow list: if isSignedIn();
-      allow get, create, update, delete: if isOwner(userId);
-
-      match /budgets/{budgetId} {
-        allow get: if true; // Public view for RSVP context
-        allow list: if isOwner(userId);
-        allow create, delete: if isOwner(userId);
-        
-        // Update if owner or listed collaborator
-        allow update: if isOwner(userId) || (isSignedIn() && resource.data.collaboratorIds is list && request.auth.uid in resource.data.collaboratorIds);
-
-        match /categories/{categoryId} {
-          allow get, list, create, update, delete: if isOwner(userId) || isCollaborator(userId, budgetId);
-          match /items/{itemId} {
-            allow get, list, create, update, delete: if isOwner(userId) || isCollaborator(userId, budgetId);
-          }
-        }
-
-        match /mustDos/{mustDoId} {
-          allow get, list, create, update, delete: if isOwner(userId) || isCollaborator(userId, budgetId);
-        }
-
-        match /rsvps/{rsvpId} {
-          allow create: if true; // Public RSVP
-          allow get, list, update, delete: if isOwner(userId) || isCollaborator(userId, budgetId);
-        }
-      }
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }

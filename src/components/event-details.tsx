@@ -11,11 +11,7 @@ import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { DocumentReference } from "firebase/firestore";
-import usePlacesAutocomplete, {
-  getGeocode,
-  getLatLng,
-} from "use-places-autocomplete";
-import { useLoadScript } from "@react-google-maps/api";
+import usePlacesAutocomplete from "use-places-autocomplete";
 import {
   Popover,
   PopoverContent,
@@ -51,7 +47,7 @@ export function EventDetails({
 }: EventDetailsProps) {
   const { user } = useUser();
   const router = useRouter();
-  const [isEditing, setIsEditing] = useState(isTemplateMode);
+  const [isEditing, setIsEditing] = useState(false);
 
   const {
     ready,
@@ -60,9 +56,6 @@ export function EventDetails({
     setValue: setAutocompleteValue,
     clearSuggestions,
   } = usePlacesAutocomplete({
-    requestOptions: {
-      /* Define search scope here */
-    },
     debounce: 300,
   });
 
@@ -89,7 +82,7 @@ export function EventDetails({
     if (!budget?.eventDate) return null;
     const eventDate = new Date(budget.eventDate);
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize today's date
+    today.setHours(0, 0, 0, 0); 
     const diffTime = eventDate.getTime() - today.getTime();
     if (diffTime < 0) return "The event has passed.";
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -110,9 +103,7 @@ export function EventDetails({
   }, [eventLocationValue, setAutocompleteValue]);
 
   useEffect(() => {
-    if (isTemplateMode) {
-      setIsEditing(true);
-    } else if (budget) {
+    if (budget) {
       const initialValues = {
         name: budget.name || DEFAULT_BUDGET_NAME,
         eventLocation: budget.eventLocation || "",
@@ -122,24 +113,13 @@ export function EventDetails({
         expectedGuests: budget.expectedGuests || 0,
       };
       reset(initialValues);
-      setIsEditing(
-        !budget.name ||
-          (budget.name === DEFAULT_BUDGET_NAME && !budget.eventLocation),
-      );
-    } else if (user && budgetRef && !budget && !isBudgetLoading) {
-      const initialBudget: Omit<Budget, "id"> = {
-        name: DEFAULT_BUDGET_NAME,
-        grandTotal: 0,
-        userId: user.uid,
-        eventLocation: "",
-        eventDate: "",
-        expectedGuests: 0,
-        eventType: "",
-      };
-      setDocumentNonBlocking(budgetRef, initialBudget, {});
-      setIsEditing(true);
+      
+      // If the plan doesn't have a name yet, start in editing mode
+      if (!budget.name) {
+        setIsEditing(true);
+      }
     }
-  }, [budget, reset, user, budgetRef, isTemplateMode, setAutocompleteValue]);
+  }, [budget, reset]);
 
   const onSubmit = (data: FormData) => {
     if (isTemplateMode) {
@@ -185,15 +165,12 @@ export function EventDetails({
                 size="sm"
                 onClick={() => {
                   if (budget) {
-                    const initialValues = {
+                    reset({
                       name: budget.name || DEFAULT_BUDGET_NAME,
                       eventLocation: budget.eventLocation || "",
-                      eventDate: budget.eventDate
-                        ? new Date(budget.eventDate).toISOString().split("T")[0]
-                        : "",
+                      eventDate: budget.eventDate ? new Date(budget.eventDate).toISOString().split("T")[0] : "",
                       expectedGuests: budget.expectedGuests || 0,
-                    };
-                    reset(initialValues);
+                    });
                   }
                   setIsEditing(false);
                   clearSuggestions();
@@ -202,7 +179,7 @@ export function EventDetails({
                 Cancel
               </Button>
               <Button type="submit" size="sm" disabled={isSubmitting}>
-                Save
+                {budget?.name ? "Save Changes" : "Add New Plan"}
               </Button>
             </div>
           ) : (
