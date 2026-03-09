@@ -59,12 +59,16 @@ export function CollaboratorManager({ budget, budgetRef, inviterName }: Collabor
         collaboratorName: name.trim(),
         collaboratorEmail: email.trim().toLowerCase(),
         inviterName: inviterName,
-        planName: budget.name,
+        planName: budget.name || 'a Celebration Plan',
         planUrl: `${window.location.origin}/planner/${budget.id}`,
       });
 
       if (!inviteResult.success) {
-          console.warn("Email notification could not be sent, adding to list locally.");
+          toast({
+            variant: 'destructive',
+            title: 'Email Failed',
+            description: inviteResult.message || 'The invitation email could not be sent, but access was granted.',
+          });
       }
 
       // 2. Update budget doc with new collaborator object
@@ -76,14 +80,17 @@ export function CollaboratorManager({ budget, budgetRef, inviterName }: Collabor
 
       updateDocumentNonBlocking(budgetRef, {
         collaborators: [...currentCollaborators, newCollaborator],
-        // Also update the legacy array if rules still rely on it
+        // Maintain a list of emails for easier querying/rules if needed
         collaboratorEmails: [...(budget.collaboratorEmails || []), newCollaborator.email]
       });
 
-      toast({
-        title: 'Invitation Sent',
-        description: `An invite has been sent to ${name} (${email}) with ${rights} rights.`,
-      });
+      if (inviteResult.success) {
+        toast({
+          title: 'Invitation Sent',
+          description: `An invite has been sent to ${name} (${email}) with ${rights} rights.`,
+        });
+      }
+      
       setEmail('');
       setName('');
       setRights('read/write');
@@ -92,7 +99,7 @@ export function CollaboratorManager({ budget, budgetRef, inviterName }: Collabor
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to invite collaborator. Please try again.',
+        description: 'An unexpected error occurred. Please try again.',
       });
     } finally {
       setIsAdding(false);
@@ -127,7 +134,7 @@ export function CollaboratorManager({ budget, budgetRef, inviterName }: Collabor
           Collaborators
         </CardTitle>
         <CardDescription>
-          Manage who can view or edit this celebration plan.
+          Invite others to help manage this celebration.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
