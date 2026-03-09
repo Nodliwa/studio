@@ -2,7 +2,9 @@
 'use server';
 
 import { z } from 'zod';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY || 're_RPtpMhT1_HiiCL3NCwpn1GrGL7GLvHpEF');
 
 const contactSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -26,59 +28,34 @@ export async function submitContactForm(formData: FormData) {
   }
 
   const { name, email, message } = parsed.data;
-  
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM_EMAIL, SMTP_TO_EMAIL } = process.env;
-
-  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !SMTP_FROM_EMAIL || !SMTP_TO_EMAIL) {
-    console.error('--- SMTP settings are missing in environment variables ---');
-    console.log('--- New Contact Form Submission ---');
-    console.log(`From: ${name} <${email}>`);
-    console.log(`Message: ${message}`);
-    console.log('------------------------------------');
-    return {
-      success: false,
-      message: 'The server is not configured to send emails. Please contact the administrator.',
-    };
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: parseInt(SMTP_PORT, 10),
-    secure: parseInt(SMTP_PORT, 10) === 465, // true for 465, false for other ports
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
+  const fromEmail = 'hello@simpliplan.co.za';
+  const toEmail = process.env.SMTP_TO_EMAIL || 'hello@simpliplan.africa';
 
   try {
-    await transporter.verify();
-  } catch (error) {
-    console.error('SMTP configuration error:', error);
-    return {
-      success: false,
-      message: 'There was an error connecting to the email server. Please try again later.',
-    };
-  }
-
-  try {
-    await transporter.sendMail({
-      from: `"${name}" <${SMTP_FROM_EMAIL}>`,
-      to: SMTP_TO_EMAIL,
+    const { error } = await resend.emails.send({
+      from: `SimpliPlan Contact <${fromEmail}>`,
+      to: [toEmail],
       replyTo: email,
       subject: `New message from ${name} via SimpliPlan`,
       html: `
-        <h1>New Contact Form Submission</h1>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <hr />
-        <p><strong>Message:</strong></p>
-        <p>${message.replace(/\n/g, '<br>')}</p>
+        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <h1 style="color: #00A693;">New Contact Form Submission</h1>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+          <p><strong>Message:</strong></p>
+          <p style="white-space: pre-wrap; background: #f9f9f9; padding: 15px; border-radius: 5px;">${message}</p>
+        </div>
       `,
     });
+
+    if (error) {
+      console.error('Resend contact error:', error);
+      return {
+        success: false,
+        message: 'Could not send your message. Please try again later or contact us directly.',
+      };
+    }
 
     return {
       success: true,
@@ -86,12 +63,10 @@ export async function submitContactForm(formData: FormData) {
     };
 
   } catch (error) {
-    console.error('Failed to send email:', error);
+    console.error('Failed to process contact form:', error);
     return {
       success: false,
       message: 'There was an error sending your message. Please try again later.',
     };
   }
 }
-
-    
