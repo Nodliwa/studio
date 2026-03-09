@@ -6,6 +6,7 @@ import {
   useCollection,
   useMemoFirebase,
   useFirestore,
+  updateDocumentNonBlocking,
 } from "@/firebase";
 import {
   collection,
@@ -15,7 +16,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import type { Budget, BudgetCategory } from "@/lib/types";
 import PageHeader from "@/components/page-header";
 import {
@@ -60,6 +61,8 @@ import {
   MapPin,
   Users,
   Plus,
+  Camera,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -71,6 +74,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { budgetTemplates } from "@/lib/data";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { Progress } from "@/components/ui/progress";
 
 const eventTypeImages: { [key: string]: string } = {
   wedding: "/images/wedding.jpg",
@@ -112,6 +117,12 @@ function PlanCard({
   onDelete: (id: string) => void;
 }) {
   const router = useRouter();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+
   const imageUrl = budget.backgroundImageUrl || (budget.eventType ? eventTypeImages[budget.eventType.toLowerCase()] : undefined);
 
   const formattedDate = budget.eventDate
@@ -121,6 +132,37 @@ function PlanCard({
         day: "numeric",
       })
     : null;
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !firestore || !budget.userId) return;
+
+    setIsUploading(true);
+    const storage = getStorage();
+    const storageRef = ref(storage, `budgets/${budget.id}/background`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on('state_changed', 
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      }, 
+      (error) => {
+        console.error("Upload failed:", error);
+        setUploadProgress(null);
+        setIsUploading(false);
+        toast({ variant: 'destructive', title: 'Upload Failed', description: 'Could not upload your image.' });
+      }, 
+      async () => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        const budgetRef = doc(firestore, "users", budget.userId, "budgets", budget.id);
+        updateDocumentNonBlocking(budgetRef, { backgroundImageUrl: downloadURL });
+        setUploadProgress(null);
+        setIsUploading(false);
+        toast({ title: 'Image Updated', description: 'Your celebration photo has been updated.' });
+      }
+    );
+  };
 
   return (
     <Card
@@ -140,6 +182,15 @@ function PlanCard({
           </>
         ) : (
           <div className="h-full w-full bg-gradient-to-t from-primary/80 to-primary/40" />
+        )}
+
+        {isUploading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-20">
+            <Loader2 className="h-8 w-8 animate-spin text-white mb-2" />
+            <div className="w-2/3 px-4">
+              <Progress value={uploadProgress || 0} className="h-1 bg-white/20" />
+            </div>
+          </div>
         )}
 
         <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
@@ -182,11 +233,21 @@ function PlanCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => router.push(`/planner/${budget.id}`)}>Edit Plan</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-2">
+                <Camera className="h-4 w-4" /> Change Photo
+              </DropdownMenuItem>
               <AlertDialogTrigger asChild>
                 <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
               </AlertDialogTrigger>
             </DropdownMenuContent>
           </DropdownMenu>
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/png, image/jpeg"
+            onChange={handleImageUpload}
+          />
         </div>
         <AlertDialogContent onClick={(e) => e.stopPropagation()}>
           <AlertDialogHeader>
