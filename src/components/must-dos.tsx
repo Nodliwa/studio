@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect, ComponentType } from 'react';
@@ -11,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, Trash2, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp, Mail, MessageSquare, Sparkles } from 'lucide-react';
+import { PlusCircle, Trash2, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp, Mail, MessageSquare, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentReference } from 'firebase/firestore';
 import { Calendar } from "@/components/ui/calendar"
@@ -22,7 +21,7 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
-import { suggestMustDos, type SuggestMustDosOutput } from '@/ai/flows/suggest-must-dos-flow';
+import { suggestMustDos } from '@/ai/flows/suggest-must-dos-flow';
 import { useToast } from '@/hooks/use-toast';
 import { scoreSuggestions, type ScoredSuggestion } from '@/ai/flows/score-suggestions-flow';
 
@@ -375,14 +374,13 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
         const titles = result.suggestions.map(s => s.title);
         const context = `Event type: ${eventType}`;
         
-        // Step 2: Score the suggestions for relevance
+        // Step 2: Score the suggestions for relevance using the refactored Genkit flow
         const scored = await scoreSuggestions(titles, context);
   
         // Step 3: Sort by score, descending
         const sorted = scored.sort((a, b) => b.score - a.score);
   
         setSuggestions(sorted);
-        // Start with no suggestions selected
         setSelectedSuggestions({});
       } else {
         toast({
@@ -423,9 +421,9 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
         budgetId,
         userId: user.uid,
         title: title,
-        note: '', // Note and priority are not available from the scoring function, so we use defaults.
+        note: '',
         status: 'todo',
-        priority: 'medium', // Default priority
+        priority: 'medium',
         createdAt: serverTimestamp(),
         reminderType: 'none',
         reminderDaysBefore: 1,
@@ -491,8 +489,8 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
                   Add a Must-Do
               </Button>
               {!isTemplateMode && (
-                  <Button variant="outline" onClick={handleGetSuggestions} disabled={isSuggesting} className="bg-white/10 hover:bg-white/20 border-white/30">
-                      <Sparkles className="mr-2 h-4 w-4" />
+                  <Button variant="outline" onClick={handleGetSuggestions} disabled={isSuggesting} className="bg-white/10 hover:bg-white/20 border-white/30 min-w-[160px]">
+                      {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                       {isSuggesting ? 'Thinking...' : 'Suggest with AI'}
                   </Button>
               )}
@@ -502,16 +500,16 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
       </Card>
 
       <Dialog open={!!suggestions} onOpenChange={(open) => !open && setSuggestions(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Ranked AI Suggestions</DialogTitle>
             <DialogDescription>
-              Here are ranked suggestions for your event. Select the ones you want to add.
+              Here are ranked suggestions for your {eventType?.toLowerCase()}. Select the ones you want to add.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-2">
+          <div className="py-4 space-y-2 max-h-[400px] overflow-y-auto pr-2">
             {suggestions?.map((suggestion, index) => (
-              <div key={index} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/50">
+              <div key={index} className="flex items-start space-x-3 p-3 rounded-md hover:bg-muted/50 border border-transparent hover:border-border transition-colors">
                 <Checkbox
                   id={`suggestion-${index}`}
                   checked={!!selectedSuggestions[suggestion.title]}
@@ -521,18 +519,19 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
                 <div className="grid gap-1.5 leading-none">
                   <label
                     htmlFor={`suggestion-${index}`}
-                    className="text-sm font-medium leading-none flex items-center"
+                    className="text-sm font-medium leading-none flex items-center cursor-pointer"
                   >
                     {suggestion.title}
-                    {suggestion.score > 0.8 && <span className="ml-2 text-xs">🔥 Recommended</span>}
+                    {suggestion.score > 0.8 && <span className="ml-2 text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full uppercase font-bold">🔥 Recommended</span>}
                   </label>
+                  <p className="text-xs text-muted-foreground">Relevance: {Math.round(suggestion.score * 100)}%</p>
                 </div>
               </div>
             ))}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setSuggestions(null)}>Cancel</Button>
-            <Button onClick={handleAddSuggestions}>
+            <Button onClick={handleAddSuggestions} className="font-bold">
               Add Selected ({Object.values(selectedSuggestions).filter(Boolean).length})
             </Button>
           </DialogFooter>
@@ -541,5 +540,3 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
     </>
   );
 }
-
-    

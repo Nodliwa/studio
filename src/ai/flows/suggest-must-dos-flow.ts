@@ -1,8 +1,7 @@
-
 'use server';
 /**
  * @fileOverview Robust AI flow for suggesting "must-do" tasks for event planning.
- * Includes strict JSON enforcement, detailed priority guidance, and safe parsing.
+ * Optimized for South African event contexts and Genkit 1.x.
  */
 
 import { ai } from '@/ai/genkit';
@@ -10,44 +9,45 @@ import { z } from 'zod';
 
 // ✅ Input Schema
 export const SuggestMustDosInputSchema = z.object({
-  eventType: z.string().describe('The type of event, e.g., "Wedding", "Funeral".'),
+  eventType: z.string().describe('The type of event, e.g., "Wedding", "Funeral", "uMemulo", "uMgidi".'),
   existingTitles: z.array(z.string()).describe('Titles of tasks that already exist, to avoid duplicates.'),
 });
 export type SuggestMustDosInput = z.infer<typeof SuggestMustDosInputSchema>;
 
-// ✅ Suggestion Schema - This is what the LLM will generate
+// ✅ Suggestion Schema
 const SuggestionSchema = z.object({
   title: z.string().describe('Short, actionable title (e.g., "Book photographer").'),
   note: z.string().describe('Brief helpful note (e.g., "Get quotes from 3 vendors.").'),
   priority: z.enum(['low', 'medium', 'high']).describe('Suggested priority.'),
 });
 
-// ✅ Output Schema - The final, typed output of the flow
+// ✅ Output Schema
 export const SuggestMustDosOutputSchema = z.object({
   suggestions: z.array(SuggestionSchema).describe('Array of 5 suggested must-do items.'),
 });
 export type SuggestMustDosOutput = z.infer<typeof SuggestMustDosOutputSchema>;
 
-// ✅ Improved and Strict Prompt
+// ✅ Refined Prompt
 const suggestMustDosPrompt = ai.definePrompt({
   name: 'suggestMustDosPrompt',
   input: { schema: SuggestMustDosInputSchema },
   output: { schema: SuggestMustDosOutputSchema },
   prompt: `
-You are an expert event planner. For a {{eventType}}, suggest exactly 5 critical, non-budgetary tasks.
+You are an expert event planner specializing in South African celebrations. 
+For a {{eventType}}, suggest exactly 5 critical, non-budgetary tasks that are essential for success.
 
 Follow these rules strictly:
-1.  Do NOT suggest any tasks from this list of existing tasks: {{#each existingTitles}}- {{this}} {{/each}}.
-2.  If no new, relevant tasks come to mind, return an empty array for "suggestions".
-3.  Assign priority based on these guidelines:
-    - "high": For tasks that must be done early or are critical to the event's success.
-    - "medium": For important but less time-sensitive tasks.
-    - "low": For "nice-to-have" tasks or final touches.
-4.  Your response MUST be a valid JSON object that strictly adheres to the provided output schema. Do not add any extra text, explanations, or markdown formatting.
+1. Do NOT suggest tasks that are already in this list: {{#each existingTitles}}- {{this}} {{/each}}.
+2. If the event is traditional (like uMemulo or uMgidi), suggest tasks related to cultural protocols, attire, or community announcements.
+3. Assign priority:
+   - "high": Critical early-stage tasks.
+   - "medium": Important logistics.
+   - "low": Final touches.
+4. Your response MUST be valid JSON matching the schema.
 `,
 });
 
-// ✅ Main Flow with Safe Parsing & Fallback
+// ✅ Main Flow
 const suggestMustDosFlow = ai.defineFlow(
   {
     name: 'suggestMustDosFlow',
@@ -55,42 +55,17 @@ const suggestMustDosFlow = ai.defineFlow(
     outputSchema: SuggestMustDosOutputSchema,
   },
   async (input) => {
-    const llmResponse = await suggestMustDosPrompt(input);
-    const output = llmResponse.output; // ✅ Corrected: .output is a property
-
-    if (!output) {
-      console.warn('AI returned a null or undefined output, using fallback.');
+    try {
+      const { output } = await suggestMustDosPrompt(input);
+      if (!output) return { suggestions: [] };
+      return output;
+    } catch (error) {
+      console.error('SuggestMustDosFlow Error:', error);
       return { suggestions: [] };
     }
-
-    // Validate output using Zod safeParse
-    const parsed = SuggestMustDosOutputSchema.safeParse(output);
-    if (!parsed.success) {
-      console.error('Validation error:', parsed.error);
-      // Log raw response for debugging
-      console.error('Raw AI response:', llmResponse.raw());
-      // ✅ Graceful fallback instead of throwing an error
-      return { suggestions: [] };
-    }
-
-    // Fallback if no suggestions
-    if (!parsed.data.suggestions) {
-      return { suggestions: [] };
-    }
-
-    return parsed.data;
   }
 );
 
-// ✅ Wrapper Function with Error Handling
 export async function suggestMustDos(input: SuggestMustDosInput): Promise<SuggestMustDosOutput> {
-  console.log('SuggestMustDos called with:', input);
-  try {
-    return await suggestMustDosFlow(input);
-  } catch (err) {
-    console.error('Flow execution failed:', err);
-    return { suggestions: [] }; // ✅ Graceful fallback
-  }
+  return await suggestMustDosFlow(input);
 }
-
-    
