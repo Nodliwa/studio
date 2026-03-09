@@ -26,6 +26,17 @@ const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.6-4.12-1.4-.13-.08-.25-.17-.38-.25v7.07c0 1.57-.31 3.14-1.02 4.52-.71 1.38-1.81 2.56-3.2 3.27-1.38.71-3.14 1.02-4.52 1.02-1.57 0-3.14-.31-4.52-1.02-1.38-.71-2.56-1.81-3.27-3.2-.71-1.38-1.02-3.14-1.02-4.52 0-1.57.31-3.14 1.02-4.52.71-1.38 1.81-2.56 3.2-3.27 1.38-.71 3.14-1.02 4.52-1.02.16 0 .33 0 .49.01v4.03c-.16-.01-.33-.01-.49-.01-1.57 0-3.14.31-4.52 1.02-1.38.71-2.56 1.81-3.27 3.2-.71 1.38-1.02 3.14-1.02 4.52 0 1.57.31 3.14 1.02 4.52.71 1.38 1.81 2.56 3.2 3.27 1.38.71 3.14 1.02 4.52 1.02 1.57 0 3.14-.31 4.52-1.02 1.38-.71 2.56-1.81 3.27-3.2.71-1.38 1.02-3.14 1.02-4.52V0h.01z" />
+  </svg>
+);
+
 // This component will only render on the client side
 function ClientOnlyForm() {
   const [isPending, startTransition] = useTransition();
@@ -147,22 +158,30 @@ export default function LandingFooter() {
             <h3 className="text-2xl font-headline font-bold">
               Connect with Us
             </h3>
-            <div className="flex justify-center items-center gap-4 mt-4">
+            <div className="flex justify-center items-center gap-6 mt-4">
               <Link
                 href="https://www.facebook.com/SimpliPlanApp"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary"
+                className="text-muted-foreground hover:text-primary transition-colors"
               >
-                <Facebook className="h-6 w-6" />
+                <Facebook className="h-7 w-7" />
               </Link>
               <Link
                 href="https://x.com/PlanSimpli21515"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary"
+                className="text-muted-foreground hover:text-primary transition-colors"
               >
-                <XIcon className="h-6 w-6" />
+                <XIcon className="h-7 w-7" />
+              </Link>
+              <Link
+                href="https://www.tiktok.com/@simpli_plan"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+              >
+                <TikTokIcon className="h-7 w-7" />
               </Link>
             </div>
           </div>
