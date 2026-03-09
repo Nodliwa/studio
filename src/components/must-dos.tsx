@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, ComponentType } from 'react';
-import { useUser, useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocument } from '@/firebase';
+import { useUser, useFirestore, addMustDo, addMustDosBatch, updateDocumentNonBlocking, deleteDocument } from '@/firebase';
 import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import type { MustDo } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -298,9 +298,7 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
   const progress = items.length > 0 ? (completedCount / items.length) * 100 : 0;
 
   const handleAddItem = () => {
-    const mustDosCollection = budgetRef ? collection(budgetRef, 'mustDos') : null;
-
-    if (isTemplateMode || !user || !mustDosCollection) {
+    if (isTemplateMode || !user || !firestore) {
         const newItem: MustDo = {
             id: `local-${Date.now()}`,
             budgetId,
@@ -317,37 +315,31 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
         return;
     };
     
-    const newItem: Omit<MustDo, 'id' > & { deadline?: string } = {
-      budgetId,
-      userId: user.uid,
-      title: '',
-      status: 'todo',
-      priority: 'medium',
-      createdAt: serverTimestamp(),
-      reminderType: 'none',
-      reminderDaysBefore: 1,
-    };
-    addDocumentNonBlocking(mustDosCollection, newItem);
+    // Get owner ID from budgetRef path if possible, or fallback to user.uid
+    const ownerId = budgetRef?.path.split('/')[1] || user.uid;
+    addMustDo(firestore, ownerId, budgetId, '');
   };
 
   const handleUpdateItem = (id: string, data: Partial<MustDo>) => {
-     const mustDosCollection = budgetRef ? collection(budgetRef, 'mustDos') : null;
     if (isTemplateMode) {
       setLocalMustDos(prev => prev.map(item => item.id === id ? { ...item, ...data } : item));
       return;
     }
-    if (!user || !mustDosCollection) return;
+    if (!user || !budgetRef || !firestore) return;
+    
+    const mustDosCollection = collection(budgetRef, 'mustDos');
     const docRef = doc(mustDosCollection, id);
     updateDocumentNonBlocking(docRef, data);
   };
 
   const handleDeleteItem = (id: string) => {
-    const mustDosCollection = budgetRef ? collection(budgetRef, 'mustDos') : null;
     if (isTemplateMode) {
       setLocalMustDos(prev => prev.filter(item => item.id !== id));
       return;
     }
-    if (!user || !mustDosCollection) return;
+    if (!user || !budgetRef || !firestore) return;
+    
+    const mustDosCollection = collection(budgetRef, 'mustDos');
     const docRef = doc(mustDosCollection, id);
     deleteDocument(docRef);
   };
@@ -400,7 +392,7 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
     }
   };
 
-  const handleAddSuggestions = async () => {
+  const handleAddSuggestions = () => {
     if (!suggestions || isTemplateMode || !user || !budgetRef || !firestore) {
       setSuggestions(null);
       return;
@@ -412,28 +404,11 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
       return;
     }
   
-    const batch = writeBatch(firestore);
-    const mustDosCollection = collection(budgetRef, 'mustDos');
-  
-    selectedTitles.forEach(title => {
-      const newDocRef = doc(mustDosCollection);
-      const newItem: Omit<MustDo, 'id'> = {
-        budgetId,
-        userId: user.uid,
-        title: title,
-        note: '',
-        status: 'todo',
-        priority: 'medium',
-        createdAt: serverTimestamp(),
-        reminderType: 'none',
-        reminderDaysBefore: 1,
-        deadline: '',
-      };
-      batch.set(newDocRef, newItem);
-    });
-  
+    // Get owner ID from budgetRef path if possible, or fallback to user.uid
+    const ownerId = budgetRef?.path.split('/')[1] || user.uid;
+    
     try {
-      await batch.commit();
+      addMustDosBatch(firestore, ownerId, budgetId, selectedTitles);
       toast({
         title: "Suggestions Added",
         description: `${selectedTitles.length} new Must-Do item(s) have been added.`,

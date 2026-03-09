@@ -1,4 +1,3 @@
-
 import { firebaseConfig } from "@/firebase/config";
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import {
@@ -84,5 +83,6 @@ export * from "./provider";
 export * from "./client-provider";
 export * from "./firestore/use-collection";
 export * from "./firestore/use-doc";
+export * from "./firestore/must-dos";
 export * from "./auth-operations";
 export * from "./non-blocking-updates";
