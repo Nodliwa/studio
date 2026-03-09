@@ -157,7 +157,9 @@ export default function LandingFooter() {
                 <Facebook className="h-6 w-6" />
               </Link>
               <Link
-                href="#"
+                href="https://x.com/PlanSimpli21515"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary"
               >
                 <XIcon className="h-6 w-6" />
