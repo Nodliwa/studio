@@ -149,7 +149,9 @@ export default function LandingFooter() {
             </h3>
             <div className="flex justify-center items-center gap-4 mt-4">
               <Link
-                href="#"
+                href="https://www.facebook.com/simpliplan1"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary"
               >
                 <Facebook className="h-6 w-6" />
