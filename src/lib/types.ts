@@ -23,6 +23,12 @@ export interface BudgetCategory {
   budgetId?: string;
 }
 
+export interface Collaborator {
+  email: string;
+  name: string;
+  rights: 'read' | 'read/write';
+}
+
 export interface Budget {
   id:string;
   name: string;
@@ -32,7 +38,8 @@ export interface Budget {
   eventDate?: string;
   grandTotal: number;
   userId: string;
-  collaboratorEmails?: string[];
+  collaborators?: Collaborator[];
+  collaboratorEmails?: string[]; // Kept for backward compatibility if needed by rules
 }
 
 export interface User {

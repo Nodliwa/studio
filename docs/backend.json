@@ -40,10 +40,17 @@
           "type": "string",
           "description": "Reference to User. (Relationship: User 1:N Budget)"
         },
-        "collaboratorEmails": {
+        "collaborators": {
           "type": "array",
-          "items": { "type": "string" },
-          "description": "Array of emails who have collaborator access to this budget."
+          "items": {
+            "type": "object",
+            "properties": {
+              "email": { "type": "string" },
+              "name": { "type": "string" },
+              "rights": { "type": "string", "enum": ["read", "read/write"] }
+            }
+          },
+          "description": "Array of collaborator objects with their email, name, and access rights."
         }
       },
       "required": [
@@ -287,6 +294,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure allows owners and authorized collaborators to manage event plans. Security is enforced by checking either the owner's UID or the collaborator's email against the budget document."
+    "reasoning": "The Firestore structure allows owners and authorized collaborators to manage event plans. Permissions are checked based on user ID or collaborator metadata."
   }
 }
