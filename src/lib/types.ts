@@ -38,8 +38,9 @@ export interface Budget {
   eventDate?: string;
   grandTotal: number;
   userId: string;
+  backgroundImageUrl?: string;
   collaborators?: Collaborator[];
-  collaboratorEmails?: string[]; // Kept for backward compatibility if needed by rules
+  collaboratorEmails?: string[];
 }
 
 export interface User {

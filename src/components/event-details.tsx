@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import type { Budget } from "@/lib/types";
 import { setDocumentNonBlocking, useUser } from "@/firebase";
@@ -18,6 +19,10 @@ import {
   PopoverAnchor,
 } from "@/components/ui/popover";
 import { useRouter } from "next/navigation";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { Progress } from "@/components/ui/progress";
+import { Camera, Image as ImageIcon, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface EventDetailsProps {
   budget: Budget | null;
@@ -45,11 +50,13 @@ export function EventDetails({
 }: EventDetailsProps) {
   const { user } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     ready,
-    value,
     suggestions: { status, data: autocompleteData },
     setValue: setAutocompleteValue,
     clearSuggestions,
@@ -63,7 +70,7 @@ export function EventDetails({
     reset,
     setValue: setFormValue,
     watch,
-    formState: { isDirty, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -137,6 +144,33 @@ export function EventDetails({
     clearSuggestions();
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !budgetRef || !user || !budget) return;
+
+    const storage = getStorage();
+    const storageRef = ref(storage, `budgets/${budget.id}/background`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on('state_changed', 
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      }, 
+      (error) => {
+        console.error("Upload failed:", error);
+        setUploadProgress(null);
+        toast({ variant: 'destructive', title: 'Upload Failed', description: 'Could not upload your image.' });
+      }, 
+      async () => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        setDocumentNonBlocking(budgetRef, { backgroundImageUrl: downloadURL }, { merge: true });
+        setUploadProgress(null);
+        toast({ title: 'Image Uploaded', description: 'Your plan background has been updated.' });
+      }
+    );
+  };
+
   return (
     <Card className="shadow-lg h-full card-glass">
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -151,42 +185,77 @@ export function EventDetails({
             <Button onClick={() => router.push("/register")} size="sm">
               Sign Up to Save
             </Button>
-          ) : isEditing ? (
+          ) : (
             <div className="flex items-center gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/png, image/jpeg"
+                onChange={handleImageUpload}
+              />
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                onClick={() => {
-                  if (budget) {
-                    reset({
-                      name: budget.name || "",
-                      eventLocation: budget.eventLocation || "",
-                      eventDate: budget.eventDate ? new Date(budget.eventDate).toISOString().split("T")[0] : "",
-                      expectedGuests: budget.expectedGuests || 0,
-                    });
-                  }
-                  setIsEditing(false);
-                  clearSuggestions();
-                }}
+                className="gap-2"
+                disabled={uploadProgress !== null}
+                onClick={() => fileInputRef.current?.click()}
               >
-                Cancel
+                {uploadProgress !== null ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Camera className="h-4 w-4" />
+                )}
+                {uploadProgress !== null ? `${Math.round(uploadProgress)}%` : "Background"}
               </Button>
-              <Button type="submit" size="sm" disabled={isSubmitting}>
-                Save Changes
-              </Button>
+              {isEditing ? (
+                <>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (budget) {
+                        reset({
+                          name: budget.name || "",
+                          eventLocation: budget.eventLocation || "",
+                          eventDate: budget.eventDate ? new Date(budget.eventDate).toISOString().split("T")[0] : "",
+                          expectedGuests: budget.expectedGuests || 0,
+                        });
+                      }
+                      setIsEditing(false);
+                      clearSuggestions();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" size="sm" disabled={isSubmitting}>
+                    Save
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                >
+                  Edit
+                </Button>
+              )}
             </div>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditing(true)}
-            >
-              Edit Details
-            </Button>
           )}
         </CardHeader>
         <CardContent className="p-4 pt-4">
+          {uploadProgress !== null && (
+            <div className="mb-4 space-y-1">
+              <div className="flex justify-between text-xs font-medium">
+                <span>Uploading background...</span>
+                <span>{Math.round(uploadProgress)}%</span>
+              </div>
+              <Progress value={uploadProgress} className="h-1" />
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label htmlFor="name">My-Plan Name</Label>

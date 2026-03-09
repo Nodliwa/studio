@@ -40,6 +40,10 @@
           "type": "string",
           "description": "Reference to User. (Relationship: User 1:N Budget)"
         },
+        "backgroundImageUrl": {
+          "type": "string",
+          "description": "URL of the custom background image for the plan."
+        },
         "collaborators": {
           "type": "array",
           "items": {

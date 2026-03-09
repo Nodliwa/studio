@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Robust AI flow for suggesting "must-do" tasks for event planning.
@@ -30,6 +31,7 @@ export type SuggestMustDosOutput = z.infer<typeof SuggestMustDosOutputSchema>;
 // ✅ Refined Prompt
 const suggestMustDosPrompt = ai.definePrompt({
   name: 'suggestMustDosPrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: SuggestMustDosInputSchema },
   output: { schema: SuggestMustDosOutputSchema },
   prompt: `

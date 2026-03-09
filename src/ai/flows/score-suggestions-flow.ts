@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Refactored scoring flow using Genkit and Google AI.
@@ -24,6 +25,7 @@ const ScoreSuggestionsOutputSchema = z.object({
 
 const scoreSuggestionsPrompt = ai.definePrompt({
   name: 'scoreSuggestionsPrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: ScoreSuggestionsInputSchema },
   output: { schema: ScoreSuggestionsOutputSchema },
   prompt: `

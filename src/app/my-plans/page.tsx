@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -59,7 +60,6 @@ import {
   MapPin,
   Users,
   Plus,
-  ArrowRight,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -78,13 +78,6 @@ const eventTypeImages: { [key: string]: string } = {
   umemulo: "/images/umemulo.jpg",
   umgidi: "/images/umgidi1.jpg",
 };
-
-const creationCategories = [
-  { name: "Wedding", type: "wedding", image: "/images/wedding.jpg" },
-  { name: "Funeral", type: "funeral", image: "/images/funeral2.png" },
-  { name: "uMemulo", type: "umemulo", image: "/images/umemulo.jpg" },
-  { name: "uMgidi", type: "umgidi", image: "/images/umgidi1.jpg" },
-];
 
 const planSchema = z.object({
   name: z.string().min(1, "Celebration name is required"),
@@ -119,7 +112,7 @@ function PlanCard({
   onDelete: (id: string) => void;
 }) {
   const router = useRouter();
-  const imageUrl = budget.eventType ? eventTypeImages[budget.eventType.toLowerCase()] : undefined;
+  const imageUrl = budget.backgroundImageUrl || (budget.eventType ? eventTypeImages[budget.eventType.toLowerCase()] : undefined);
 
   const formattedDate = budget.eventDate
     ? new Date(budget.eventDate).toLocaleDateString("en-ZA", {
@@ -284,7 +277,6 @@ export default function MyPlansPage() {
     const newId = uuidv4();
     const budgetRef = doc(firestore, "users", user.uid, "budgets", newId);
     
-    // Get template categories
     const template = budgetTemplates[data.eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
     const initialTotal = calculateInitialTotal(template);
 
