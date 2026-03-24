@@ -7,18 +7,25 @@ service cloud.firestore {
       let budget = get(/databases/$(database)/documents/users/$(userId)/budgets/$(budgetId)).data;
       return request.auth != null && (
         request.auth.uid == userId || 
-        request.auth.token.email in budget.collaboratorEmails
+        (budget.collaboratorEmails != null && request.auth.token.email in budget.collaboratorEmails)
       );
+    }
+
+    // Collection Group rule for budgets (allows guests/collaborators to find budgets)
+    match /{path=**}/budgets/{budgetId} {
+      allow read: if true; // Allow guests to see event details for RSVP
     }
 
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
       
       match /budgets/{budgetId} {
-        allow read, write: if request.auth != null && (
+        // Owner and collaborator rules
+        allow read: if true; // Guests need to read event info to RSVP
+        allow write: if request.auth != null && (
           request.auth.uid == userId || 
-          request.auth.token.email in resource.data.collaboratorEmails ||
-          request.auth.token.email in request.resource.data.collaboratorEmails
+          (resource != null && resource.data.collaboratorEmails != null && request.auth.token.email in resource.data.collaboratorEmails) ||
+          (request.resource != null && request.resource.data.collaboratorEmails != null && request.auth.token.email in request.resource.data.collaboratorEmails)
         );
 
         match /categories/{categoryId} {

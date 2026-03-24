@@ -21,19 +21,20 @@ import { cn } from '@/lib/utils';
 
 interface RsvpManagerProps {
   budgetId: string;
+  ownerId: string;
   rsvps: RSVP[] | null;
 }
 
-export function RsvpManager({ budgetId, rsvps }: RsvpManagerProps) {
+export function RsvpManager({ budgetId, ownerId, rsvps }: RsvpManagerProps) {
   const [origin, setOrigin] = useState('');
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    // This ensures window is defined, as it's only available on the client.
     setOrigin(window.location.origin);
   }, []);
 
-  const rsvpLink = origin ? `${origin}/rsvp/${budgetId}` : 'Loading...';
+  // Use a direct path link including the ownerId to avoid index requirements for guests
+  const rsvpLink = origin ? `${origin}/rsvp/${ownerId}/${budgetId}` : 'Loading...';
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(rsvpLink).then(() => {
@@ -131,5 +132,3 @@ export function RsvpManager({ budgetId, rsvps }: RsvpManagerProps) {
     </Card>
   );
 }
-
-    

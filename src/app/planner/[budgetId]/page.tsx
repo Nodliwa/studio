@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -89,15 +90,11 @@ export default function PlannerPage({
   const [resolvedOwnerId, setResolvedOwnerId] = useState<string | null>(null);
   const isTemplateMode = budgetId === "template";
 
-  // Ownership discovery logic
   useEffect(() => {
     if (isTemplateMode || isUserLoading) return;
     
     if (user && !user.isAnonymous) {
-        // First try to assume I am the owner
         setResolvedOwnerId(user.uid);
-        
-        // Then verification check: if budget doesn't exist under my UID, look for the real owner
         const checkOwner = async () => {
             const ownerId = await findBudgetOwnerId(budgetId);
             if (ownerId) setResolvedOwnerId(ownerId);
@@ -294,7 +291,6 @@ export default function PlannerPage({
         batch.commit().catch(console.error);
       }
     } else {
-      // Deleting a subcategory
       let current = updated;
       let parent;
       const targetId = categoryPath[categoryPath.length - 1];
@@ -392,10 +388,10 @@ export default function PlannerPage({
             </DndContext>
           </div>
 
-          {!isTemplateMode && budget && budgetDocRef && (
+          {!isTemplateMode && budget && budgetDocRef && resolvedOwnerId && (
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <CollaboratorManager budget={budget} budgetRef={budgetDocRef} inviterName={user?.displayName || 'A SimpliPlan User'} />
-              <RsvpManager budgetId={budgetId} rsvps={rsvps} />
+              <RsvpManager budgetId={budgetId} ownerId={resolvedOwnerId} rsvps={rsvps} />
               <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
             </div>
           )}

@@ -13,10 +13,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useFirebase } from '@/firebase';
-import { collectionGroup, query, where, getDocs, limit } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { CalendarDays, MapPin, PartyPopper } from 'lucide-react';
 import PageHeader from '@/components/page-header';
-import { findBudgetOwnerId } from '@/app/planner/actions';
 
 const rsvpSchema = z.object({
   guestName: z.string().min(1, 'Please enter your name'),
@@ -28,26 +27,10 @@ const rsvpSchema = z.object({
 
 type RsvpFormValues = z.infer<typeof rsvpSchema>;
 
-async function findBudget(firestore: any, budgetId: string): Promise<Budget | null> {
-    const budgetsQuery = query(
-        collectionGroup(firestore, 'budgets'),
-        where('id', '==', budgetId),
-        limit(1)
-    );
-
-    const snapshot = await getDocs(budgetsQuery);
-    if (!snapshot.empty) {
-        return snapshot.docs[0].data() as Budget;
-    }
-    return null;
-}
-
-
-export default function RsvpPage({ params }: { params: { budgetId: string } }) {
-  const { budgetId } = params;
+export default function RsvpPage({ params }: { params: { userId: string, budgetId: string } }) {
+  const { userId, budgetId } = params;
   const { firestore } = useFirebase();
   const [budget, setBudget] = useState<Budget | null>(null);
-  const [ownerId, setOwnerId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -69,22 +52,20 @@ export default function RsvpPage({ params }: { params: { budgetId: string } }) {
 
   useEffect(() => {
     const fetchBudget = async () => {
-      if (!firestore || !budgetId) return;
+      if (!firestore || !userId || !budgetId) return;
       setIsLoading(true);
       
       try {
-        const foundBudget = await findBudget(firestore, budgetId);
-        if (foundBudget) {
-            setBudget(foundBudget);
-            // Also resolve the ownerId for submission
-            const resolvedOwnerId = await findBudgetOwnerId(budgetId);
-            setOwnerId(resolvedOwnerId);
+        const budgetRef = doc(firestore, 'users', userId, 'budgets', budgetId);
+        const snap = await getDoc(budgetRef);
+        
+        if (snap.exists()) {
+            setBudget(snap.data() as Budget);
         } else {
-            setError('Could not find the event. The link may be incorrect or the event may have been removed.');
+            setError('Could not find the event details. The link may be invalid.');
         }
-
       } catch (e) {
-        setError('Could not find the event. Please check the link.');
+        setError('Could not access event details. Please try again later.');
         console.error(e);
       } finally {
         setIsLoading(false);
@@ -92,16 +73,12 @@ export default function RsvpPage({ params }: { params: { budgetId: string } }) {
     };
 
     fetchBudget();
-  }, [budgetId, firestore]);
+  }, [userId, budgetId, firestore]);
 
   const onSubmit = async (data: RsvpFormValues) => {
     setError(null);
-    if (!ownerId) {
-        setError('Could not identify the event owner. Please try again.');
-        return;
-    }
     try {
-      await addRsvp(ownerId, budgetId, data);
+      await addRsvp(userId, budgetId, data);
       setIsSubmitted(true);
     } catch (e: any) {
       setError(e.message || 'There was an error submitting your RSVP. Please try again.');
@@ -111,7 +88,7 @@ export default function RsvpPage({ params }: { params: { budgetId: string } }) {
   if (isLoading) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-        <p>Loading event details...</p>
+        <p>Loading invitation...</p>
       </div>
     );
   }
@@ -119,7 +96,10 @@ export default function RsvpPage({ params }: { params: { budgetId: string } }) {
   if (error && !budget) {
      return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center text-center p-4">
-        <p className="text-destructive">{error}</p>
+        <div className="space-y-4">
+            <p className="text-destructive font-bold">{error}</p>
+            <Button variant="outline" onClick={() => window.location.reload()}>Try Again</Button>
+        </div>
       </div>
     );
   }
@@ -133,7 +113,6 @@ export default function RsvpPage({ params }: { params: { budgetId: string } }) {
       })
     : "Date to be confirmed";
 
-
   return (
      <div className="min-h-screen bg-secondary">
       <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
@@ -145,30 +124,30 @@ export default function RsvpPage({ params }: { params: { budgetId: string } }) {
                     <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
                         <PartyPopper className="h-12 w-12 text-primary" />
                     </div>
-                    <CardTitle className="pt-4">Thank You!</CardTitle>
-                    <CardDescription>Your response has been recorded. We look forward to celebrating with you.</CardDescription>
+                    <CardTitle className="pt-4 font-headline text-2xl">Response Recorded!</CardTitle>
+                    <CardDescription>Thank you, {watch('guestName')}. We've updated the guest list.</CardDescription>
                 </CardHeader>
             </Card>
           ) : (
             <Card className="w-full max-w-lg">
               <CardHeader className="text-center">
                 <CardTitle className="font-headline text-3xl">{budget?.name || 'You are Invited!'}</CardTitle>
-                <CardDescription>You're invited to celebrate with us. Please let us know if you'll be there.</CardDescription>
+                <CardDescription>We'd love to have you celebrate with us. Please let us know if you'll be there.</CardDescription>
                  <div className="pt-4 space-y-2 text-muted-foreground">
                     <p className="flex items-center justify-center gap-2"><CalendarDays className="h-4 w-4" /> {formattedDate}</p>
-                    <p className="flex items-center justify-center gap-2"><MapPin className="h-4 w-4" /> {budget?.eventLocation || "Location to be announced"}</p>
+                    <p className="flex items-center justify-center gap-2"><MapPin className="h-4 w-4" /> {budget?.eventLocation || "Location to be confirmed"}</p>
                 </div>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="guestName">Your Full Name</Label>
-                    <Input id="guestName" {...register('guestName')} />
+                    <Input id="guestName" {...register('guestName')} placeholder="Enter your name" />
                     {errors.guestName && <p className="text-destructive text-sm">{errors.guestName.message}</p>}
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Will you be attending?</Label>
+                    <Label>Are you attending?</Label>
                     <Controller
                         name="status"
                         control={control}
@@ -180,11 +159,11 @@ export default function RsvpPage({ params }: { params: { budgetId: string } }) {
                             >
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="attending" id="attending" />
-                                    <Label htmlFor="attending">Yes, I'll be there!</Label>
+                                    <Label htmlFor="attending" className="cursor-pointer">Yes, I'll be there</Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="not_attending" id="not_attending" />
-                                    <Label htmlFor="not_attending">Sorry, I can't make it</Label>
+                                    <Label htmlFor="not_attending" className="cursor-pointer">I can't make it</Label>
                                 </div>
                             </RadioGroup>
                         )}
@@ -200,10 +179,10 @@ export default function RsvpPage({ params }: { params: { budgetId: string } }) {
                     </div>
                   )}
 
-                  {error && <p className="text-destructive text-sm">{error}</p>}
+                  {error && <p className="text-destructive text-sm font-bold bg-destructive/10 p-3 rounded">{error}</p>}
                   
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
+                  <Button type="submit" className="w-full font-bold h-12 text-lg" disabled={isSubmitting}>
+                    {isSubmitting ? 'Sending...' : 'Submit Response'}
                   </Button>
                 </form>
               </CardContent>
