@@ -2130,11 +2130,223 @@ const umGidiBudgetData: BudgetCategory[] = [
   },
 ];
 
+const umemuloBudgetData: BudgetCategory[] = [
+  {
+    id: "meat-m",
+    name: "Livestock / Meat",
+    total: 0,
+    order: 1,
+    items: [
+      { id: "m-1", name: "Cow", metric: "per cow", quantity: 1, unitPrice: 15000, total: 0, comment: "" },
+      { id: "m-2", name: "Chicken", metric: "5 kg", quantity: 5, unitPrice: 350, total: 0, comment: "" },
+      { id: "m-3", name: "Lamb", metric: "per kg", quantity: 100, unitPrice: 75, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "starch-m",
+    name: "Starch",
+    total: 0,
+    order: 2,
+    items: [
+      { id: "s-1", name: "Bread", metric: "per loaf", quantity: 40, unitPrice: 20, total: 0, comment: "" },
+      { id: "s-2", name: "Samp (Umngqusho)", metric: "10kg", quantity: 5, unitPrice: 150, total: 0, comment: "" },
+      { id: "s-3", name: "Beans", metric: "10kg", quantity: 3, unitPrice: 350, total: 0, comment: "" },
+      { id: "s-4", name: "Rice", metric: "10 kg", quantity: 5, unitPrice: 175, total: 0, comment: "" },
+      { id: "s-5", name: "Mealie Meal", metric: "10 kg", quantity: 4, unitPrice: 140, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "veg-m",
+    name: "Vegetables",
+    total: 0,
+    order: 3,
+    items: [
+      { id: "v-1", name: "Cabbage", metric: "8 heads", quantity: 4, unitPrice: 200, total: 0, comment: "" },
+      { id: "v-2", name: "Potatoes", metric: "10kg", quantity: 5, unitPrice: 45, total: 0, comment: "" },
+      { id: "v-3", name: "Carrot", metric: "10kg", quantity: 4, unitPrice: 85, total: 0, comment: "" },
+      { id: "v-4", name: "Onion", metric: "10kg", quantity: 4, unitPrice: 175, total: 0, comment: "" },
+      { id: "v-5", name: "Potatoes", metric: "10kg", quantity: 4, unitPrice: 200, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "fruit-m",
+    name: "Fruit",
+    total: 0,
+    order: 4,
+    items: [
+      { id: "f-1", name: "Apples", metric: "per box", quantity: 2, unitPrice: 225, total: 0, comment: "" },
+      { id: "f-2", name: "Banana", metric: "per box", quantity: 3, unitPrice: 150, total: 0, comment: "" },
+      { id: "f-3", name: "Oranges", metric: "10 kg", quantity: 5, unitPrice: 30, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "ref-m",
+    name: "Refreshments",
+    total: 0,
+    order: 5,
+    items: [
+      { id: "r-1", name: "Coffee", metric: "750g", quantity: 3, unitPrice: 120, total: 0, comment: "" },
+      { id: "r-2", name: "Teabag", metric: "100s", quantity: 3, unitPrice: 50, total: 0, comment: "" },
+      { id: "r-3", name: "Milk", metric: "6x1L", quantity: 10, unitPrice: 125, total: 0, comment: "" },
+      { id: "r-4", name: "Sugar", metric: "10kg", quantity: 4, unitPrice: 260, total: 0, comment: "" },
+      { id: "r-5", name: "Bottled Water", metric: "24 of 300ml", quantity: 5, unitPrice: 125, total: 0, comment: "" },
+      { id: "r-6", name: "Juice", metric: "25 of 300ml", quantity: 4, unitPrice: 200, total: 0, comment: "" },
+      { id: "r-7", name: "Carbonated Drink", metric: "6 of 2L", quantity: 10, unitPrice: 140, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "imp-m",
+    name: "Implements",
+    total: 0,
+    order: 6,
+    items: [
+      { id: "i-1", name: "Tent", metric: "per item", quantity: 1, unitPrice: 1000, total: 0, comment: "" },
+      { id: "i-2", name: "Tables", metric: "per item", quantity: 4, unitPrice: 150, total: 0, comment: "" },
+      { id: "i-3", name: "Chairs", metric: "per item", quantity: 50, unitPrice: 15, total: 0, comment: "" },
+      { id: "i-4", name: "Mobile Fridge", metric: "per item", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
+      { id: "i-5", name: "Mobile Toilet", metric: "per item", quantity: 3, unitPrice: 1000, total: 0, comment: "" },
+      { id: "i-6", name: "Gas Stove / Burner", metric: "per item", quantity: 1, unitPrice: 500, total: 0, comment: "" },
+      { id: "i-7", name: "Imbiza / Pots", metric: "per item", quantity: 6, unitPrice: 100, total: 0, comment: "" },
+      { id: "i-8", name: "Plates", metric: "per item", quantity: 40, unitPrice: 10, total: 0, comment: "" },
+      { id: "i-9", name: "Takeaway plate", metric: "75 pcs", quantity: 1, unitPrice: 100, total: 0, comment: "" },
+      { id: "i-10", name: "Spoons", metric: "10 pkt", quantity: 10, unitPrice: 20, total: 0, comment: "" },
+      { id: "i-11", name: "Coffee Mugs", metric: "12 pack", quantity: 5, unitPrice: 200, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "attire-m",
+    name: "Traditional attire",
+    total: 0,
+    order: 7,
+    items: [],
+    subCategories: [
+      {
+        id: "intombi",
+        name: "iNtombi",
+        total: 0,
+        order: 1,
+        items: [
+          { id: "nt-1", name: "Isidwaba / Isigcege", metric: "each", quantity: 1, unitPrice: 1500, total: 0, comment: "(Short Traditional skirt)" },
+          { id: "nt-2", name: "Ibheshu", metric: "each", quantity: 1, unitPrice: 1800, total: 0, comment: "(Rear covering)" },
+          { id: "nt-3", name: "Beaded Bra", metric: "each", quantity: 1, unitPrice: 950, total: 0, comment: "" },
+          { id: "nt-4", name: "Imiqhele", metric: "each", quantity: 1, unitPrice: 350, total: 0, comment: "(Headband / Crown)" },
+          { id: "nt-5", name: "Izinjoloba", metric: "each", quantity: 1, unitPrice: 350, total: 0, comment: "(Ankle rattles)" },
+          { id: "nt-6", name: "Imigoxo", metric: "each", quantity: 1, unitPrice: 400, total: 0, comment: "(Beaded Necklace)" },
+          { id: "nt-7", name: "Vincu", metric: "each", quantity: 1, unitPrice: 350, total: 0, comment: "(Arm bands)" },
+          { id: "nt-8", name: "Ubuhlalu", metric: "each", quantity: 1, unitPrice: 500, total: 0, comment: "(Waist beads)" },
+          { id: "nt-9", name: "Umkhonto", metric: "each", quantity: 1, unitPrice: 1000, total: 0, comment: "(Spear)" },
+        ]
+      },
+      {
+        id: "umama",
+        name: "uMama weNtombi",
+        total: 0,
+        order: 2,
+        items: [
+          { id: "um-1", name: "Isidwaba", metric: "each", quantity: 1, unitPrice: 3000, total: 0, comment: "(Long leather skirt)" },
+          { id: "um-2", name: "Isicholo", metric: "each", quantity: 1, unitPrice: 600, total: 0, comment: "(Traditional hat)" },
+          { id: "um-3", name: "iBhayi", metric: "each", quantity: 1, unitPrice: 400, total: 0, comment: "(Shawl)" },
+          { id: "um-4", name: "Imigoxo", metric: "each", quantity: 1, unitPrice: 700, total: 0, comment: "(Beaded Necklace)" },
+          { id: "um-5", name: "iDuku", metric: "each", quantity: 1, unitPrice: 450, total: 0, comment: "(Headscarf)" },
+        ]
+      },
+      {
+        id: "ubaba",
+        name: "uBaba weNtombi",
+        total: 0,
+        order: 3,
+        items: [
+          { id: "ub-1", name: "Ibheshu", metric: "each", quantity: 1, unitPrice: 1800, total: 0, comment: "(Rear Apron)" },
+          { id: "ub-2", name: "uMqhele", metric: "each", quantity: 1, unitPrice: 650, total: 0, comment: "(Headband)" },
+          { id: "ub-3", name: "Isinene", metric: "each", quantity: 1, unitPrice: 950, total: 0, comment: "(Front covering)" },
+          { id: "ub-4", name: "Animal skin vest", metric: "each", quantity: 1, unitPrice: 1650, total: 0, comment: "or chest band" },
+          { id: "ub-5", name: "Isihlangu", metric: "each", quantity: 1, unitPrice: 2200, total: 0, comment: "(Shield)" },
+          { id: "ub-6", name: "IWisa", metric: "each", quantity: 1, unitPrice: 1000, total: 0, comment: "(Spear or Knobkerrie)" },
+        ]
+      },
+      {
+        id: "abadala",
+        name: "Abadala (uGogo, uMkhulu, etc.)",
+        total: 0,
+        order: 4,
+        items: [],
+        subCategories: [
+          {
+            id: "abesimame",
+            name: "AbesiMame",
+            total: 0,
+            order: 1,
+            items: [
+              { id: "asm-1", name: "Isidwaba", metric: "per person", quantity: 4, unitPrice: 1350, total: 0, comment: "(Long full skirt)" },
+              { id: "asm-2", name: "iBhayi", metric: "per person", quantity: 4, unitPrice: 500, total: 0, comment: "(Shawl/Blanket)" },
+              { id: "asm-3", name: "iDuku", metric: "per person", quantity: 4, unitPrice: 350, total: 0, comment: "(Headscarf)" },
+              { id: "asm-4", name: "Imigoxo", metric: "per person", quantity: 4, unitPrice: 500, total: 0, comment: "(Beaded Necklace)" },
+            ]
+          },
+          {
+            id: "abesilisa",
+            name: "AbeSilisa",
+            total: 0,
+            order: 2,
+            items: [
+              { id: "asl-1", name: "Ibheshu", metric: "per person", quantity: 4, unitPrice: 1500, total: 0, comment: "(Rear Apron)" },
+              { id: "asl-2", name: "uMqhele", metric: "per person", quantity: 4, unitPrice: 400, total: 0, comment: "(Headband)" },
+              { id: "asl-3", name: "IWisa", metric: "per person", quantity: 4, unitPrice: 550, total: 0, comment: "(Knobkerrie)" },
+            ]
+          }
+        ]
+      },
+      {
+        id: "amantombazane",
+        name: "AmaNtombazane",
+        total: 0,
+        order: 5,
+        items: [
+          { id: "amn-1", name: "Short Beaded Skirts", metric: "per person", quantity: 3, unitPrice: 650, total: 0, comment: "" },
+          { id: "amn-2", name: "Colorful beadwork", metric: "per person", quantity: 3, unitPrice: 650, total: 0, comment: "" },
+          { id: "amn-3", name: "Beaded tops", metric: "per person", quantity: 3, unitPrice: 700, total: 0, comment: "" },
+          { id: "amn-4", name: "Ankle bands", metric: "per person", quantity: 3, unitPrice: 250, total: 0, comment: "" },
+          { id: "amn-5", name: "Bracelets", metric: "per person", quantity: 3, unitPrice: 250, total: 0, comment: "" },
+          { id: "amn-6", name: "Headbands", metric: "per person", quantity: 3, unitPrice: 300, total: 0, comment: "" },
+        ]
+      },
+      {
+        id: "abafana",
+        name: "AbaFana",
+        total: 0,
+        order: 6,
+        items: [
+          { id: "abf-1", name: "Ibheshu", metric: "per person", quantity: 3, unitPrice: 1200, total: 0, comment: "(Rear Apron)" },
+          { id: "abf-2", name: "uMqhele", metric: "per person", quantity: 3, unitPrice: 350, total: 0, comment: "(Headband)" },
+          { id: "abf-3", name: "Chest bands", metric: "per person", quantity: 3, unitPrice: 300, total: 0, comment: "" },
+          { id: "abf-4", name: "Ankle bands", metric: "per person", quantity: 3, unitPrice: 200, total: 0, comment: "" },
+          { id: "abf-5", name: "Sticks", metric: "per person", quantity: 3, unitPrice: 350, total: 0, comment: "" },
+          { id: "abf-6", name: "Shields", metric: "per person", quantity: 3, unitPrice: 750, total: 0, comment: "" },
+        ]
+      }
+    ]
+  },
+  {
+    id: "exe-m",
+    name: "Event Execution",
+    total: 0,
+    order: 8,
+    items: [
+      { id: "ex-1", name: "Slaughters", metric: "per day", quantity: 5, unitPrice: 100, total: 0, comment: "" },
+      { id: "ex-2", name: "Cookers", metric: "per day", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
+      { id: "ex-3", name: "Bakers", metric: "per day", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
+      { id: "ex-4", name: "Bakkie Hire", metric: "per day", quantity: 1, unitPrice: 650, total: 0, comment: "" },
+      { id: "ex-5", name: "Videographer", metric: "per day", quantity: 1, unitPrice: 2500, total: 0, comment: "" },
+    ],
+  },
+];
+
 const otherBudgetData: BudgetCategory[] = [];
 
 export const budgetTemplates = {
   funeral: funeralBudgetData,
   wedding: weddingBudgetData,
   umgidi: umGidiBudgetData,
+  umemulo: umemuloBudgetData,
   other: otherBudgetData,
 };

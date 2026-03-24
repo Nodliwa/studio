@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { BudgetItem, BudgetCategory } from "@/lib/types";
@@ -21,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "./ui/button";
-import { PlusCircle, GripVertical, UtensilsCrossed, Wheat, Carrot, Apple, Coffee, Handshake, Truck, Gem, Cake, Shirt, Drama, Hammer, Zap, CrossIcon } from "lucide-react";
+import { PlusCircle, GripVertical, UtensilsCrossed, Wheat, Carrot, Apple, Coffee, Handshake, Truck, Gem, Cake, Shirt, Drama, Hammer, Zap, CrossIcon, User, Users, Heart } from "lucide-react";
 import React from "react";
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -36,13 +35,22 @@ interface BudgetAccordionProps {
 const iconMap: { [key: string]: React.ElementType } = {
   // Common
   'refreshments': Coffee,
+  'ref-m': Coffee,
   'meat': UtensilsCrossed,
+  'meat-m': UtensilsCrossed,
   'starch': Wheat,
+  'starch-m': Wheat,
   'vegetables': Carrot,
+  'veg-m': Carrot,
   'fruit': Apple,
+  'fruit-m': Apple,
   'catering': UtensilsCrossed,
   'service': Handshake,
   'logistics': Truck,
+  'implements': Hammer,
+  'imp-m': Hammer,
+  'clothing': Shirt,
+  'attire-m': Shirt,
   // Funeral specific
   'cat-1': UtensilsCrossed, 
   'cat-2': Wheat, 
@@ -59,14 +67,21 @@ const iconMap: { [key: string]: React.ElementType } = {
   'groom': Shirt,
   'bridesmaids': Drama,
   'desserts': Cake,
-  // Umgidi specific
-  'implements': Hammer,
-  'clothing': Shirt,
-  'umkhwetha': Gem,
+  // Umgidi / Umemulo specific
+  'umkhwetha': User,
+  'intombi': Heart,
   'ikrwala': Shirt,
-  'izibanzana': Drama,
+  'umama': User,
+  'ubaba': User,
+  'izibanzana': Users,
+  'abadala': Users,
+  'abesimame': Users,
+  'abesilisa': Users,
+  'amantombazane': Users,
+  'abafana': Users,
   'utata': Handshake,
   'event-execution': Zap,
+  'exe-m': Zap,
 };
 
 

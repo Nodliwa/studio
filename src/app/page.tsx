@@ -28,7 +28,7 @@ const eventCategories = [
     name: "uMemulo",
     image: "/images/umemulo.jpg",
     eventType: "umemulo",
-    comingSoon: true,
+    comingSoon: false,
     backImage: "/images/girl.jpg",
   },
   {
