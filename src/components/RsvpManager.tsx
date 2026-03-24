@@ -59,7 +59,7 @@ export function RsvpManager({ budgetId, ownerId, rsvps }: RsvpManagerProps) {
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-baseline gap-2">
           Invites & Guest List
-          <span className="text-sm font-normal text-muted-foreground">(Coming soon)</span>
+          <span className="text-sm font-bold text-muted-foreground">(Coming soon)</span>
         </CardTitle>
         <CardDescription className="text-foreground/80">Share the link below and watch your guest list grow.</CardDescription>
       </CardHeader>
