@@ -6,7 +6,7 @@ import type { RSVP } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Clipboard, Check, Users, UserCheck, UserX } from 'lucide-react';
+import { Clipboard, Check, Users, UserCheck, UserX, Loader2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -21,22 +21,19 @@ import { cn } from '@/lib/utils';
 
 interface RsvpManagerProps {
   budgetId: string;
-  ownerId: string;
+  ownerId: string | null;
   rsvps: RSVP[] | null;
 }
 
 export function RsvpManager({ budgetId, ownerId, rsvps }: RsvpManagerProps) {
-  const [origin, setOrigin] = useState('');
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
-
-  // Use a direct path link including the ownerId to avoid index requirements for guests
-  const rsvpLink = origin ? `${origin}/rsvp/${ownerId}/${budgetId}` : 'Loading...';
+  // Using the official production domain for sharing
+  const baseUrl = 'https://www.simpliplan.co.za';
+  const rsvpLink = ownerId ? `${baseUrl}/rsvp/${ownerId}/${budgetId}` : '';
 
   const copyToClipboard = () => {
+    if (!rsvpLink) return;
     navigator.clipboard.writeText(rsvpLink).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -68,11 +65,25 @@ export function RsvpManager({ budgetId, ownerId, rsvps }: RsvpManagerProps) {
         <div>
           <label className="text-sm font-medium text-foreground/90">Your Sharable RSVP Link</label>
           <div className="flex gap-2 mt-1">
-            <Input value={rsvpLink} readOnly className="bg-white/10" />
-            <Button variant="outline" size="icon" onClick={copyToClipboard} className="bg-white/10 hover:bg-white/20 border-white/30 shrink-0">
+            <div className="relative flex-grow">
+                <Input 
+                    value={ownerId ? rsvpLink : 'Generating link...'} 
+                    readOnly 
+                    className={cn("bg-white/10 pr-10", !ownerId && "text-muted-foreground italic")} 
+                />
+                {!ownerId && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+            </div>
+            <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={copyToClipboard} 
+                disabled={!ownerId}
+                className="bg-white/10 hover:bg-white/20 border-white/30 shrink-0"
+            >
               {copied ? <Check className="h-4 w-4 text-green-500" /> : <Clipboard className="h-4 w-4" />}
             </Button>
           </div>
+          <p className="text-[10px] text-muted-foreground mt-1 text-center">Guests will use this link to respond to your invitation.</p>
         </div>
 
         <div className="grid grid-cols-3 gap-4 text-center">

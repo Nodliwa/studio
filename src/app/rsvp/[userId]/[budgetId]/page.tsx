@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useFirebase } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { CalendarDays, MapPin, PartyPopper } from 'lucide-react';
+import { CalendarDays, MapPin, PartyPopper, AlertTriangle } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 
 const rsvpSchema = z.object({
@@ -52,7 +52,14 @@ export default function RsvpPage({ params }: { params: { userId: string, budgetI
 
   useEffect(() => {
     const fetchBudget = async () => {
-      if (!firestore || !userId || !budgetId) return;
+      // Basic sanity check for params
+      if (!userId || !budgetId || userId === 'undefined' || budgetId === 'undefined') {
+          setError('Invalid invitation link. Please request a new link from the host.');
+          setIsLoading(false);
+          return;
+      }
+
+      if (!firestore) return;
       setIsLoading(true);
       
       try {
@@ -62,10 +69,10 @@ export default function RsvpPage({ params }: { params: { userId: string, budgetI
         if (snap.exists()) {
             setBudget(snap.data() as Budget);
         } else {
-            setError('Could not find the event details. The link may be invalid.');
+            setError('Could not find the event details. The link may be invalid or the event might have been removed.');
         }
       } catch (e) {
-        setError('Could not access event details. Please try again later.');
+        setError('Could not access event details. This might be a temporary connection issue.');
         console.error(e);
       } finally {
         setIsLoading(false);
@@ -88,18 +95,32 @@ export default function RsvpPage({ params }: { params: { userId: string, budgetI
   if (isLoading) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-        <p>Loading invitation...</p>
+        <p className="flex items-center gap-2">
+            <span className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></span>
+            Loading invitation...
+        </p>
       </div>
     );
   }
 
   if (error && !budget) {
      return (
-      <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center text-center p-4">
-        <div className="space-y-4">
-            <p className="text-destructive font-bold">{error}</p>
-            <Button variant="outline" onClick={() => window.location.reload()}>Try Again</Button>
-        </div>
+      <div className="min-h-screen w-full bg-secondary">
+        <PageHeader />
+        <main className="container mx-auto flex items-center justify-center px-4 py-20">
+            <Card className="w-full max-w-md border-destructive/20 shadow-xl">
+                <CardHeader className="text-center">
+                    <div className="mx-auto bg-destructive/10 p-4 rounded-full w-fit">
+                        <AlertTriangle className="h-12 w-12 text-destructive" />
+                    </div>
+                    <CardTitle className="pt-4 text-destructive">Page Error</CardTitle>
+                    <CardDescription>{error}</CardDescription>
+                </CardHeader>
+                <CardContent className="text-center">
+                    <Button variant="outline" onClick={() => window.location.href = '/'}>Go to Home</Button>
+                </CardContent>
+            </Card>
+        </main>
       </div>
     );
   }
@@ -119,17 +140,20 @@ export default function RsvpPage({ params }: { params: { userId: string, budgetI
         <PageHeader />
         <main className="container mx-auto flex items-center justify-center px-4 flex-grow my-16">
           {isSubmitted ? (
-            <Card className="w-full max-w-lg text-center">
+            <Card className="w-full max-w-lg text-center shadow-2xl border-primary/20">
                  <CardHeader>
                     <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
                         <PartyPopper className="h-12 w-12 text-primary" />
                     </div>
                     <CardTitle className="pt-4 font-headline text-2xl">Response Recorded!</CardTitle>
-                    <CardDescription>Thank you, {watch('guestName')}. We've updated the guest list.</CardDescription>
+                    <CardDescription>Thank you, {watch('guestName')}. We've updated the guest list for the host.</CardDescription>
                 </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground">You can close this window now.</p>
+                </CardContent>
             </Card>
           ) : (
-            <Card className="w-full max-w-lg">
+            <Card className="w-full max-w-lg shadow-2xl">
               <CardHeader className="text-center">
                 <CardTitle className="font-headline text-3xl">{budget?.name || 'You are Invited!'}</CardTitle>
                 <CardDescription>We'd love to have you celebrate with us. Please let us know if you'll be there.</CardDescription>
@@ -182,7 +206,7 @@ export default function RsvpPage({ params }: { params: { userId: string, budgetI
                   {error && <p className="text-destructive text-sm font-bold bg-destructive/10 p-3 rounded">{error}</p>}
                   
                   <Button type="submit" className="w-full font-bold h-12 text-lg" disabled={isSubmitting}>
-                    {isSubmitting ? 'Sending...' : 'Submit Response'}
+                    {isSubmitting ? 'Sending Response...' : 'Submit Response'}
                   </Button>
                 </form>
               </CardContent>
