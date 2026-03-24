@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { RSVP } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 
 interface RsvpManagerProps {
   budgetId: string;
-  ownerId: string | null;
+  ownerId: string | null | undefined;
   rsvps: RSVP[] | null;
 }
 
@@ -30,7 +30,7 @@ export function RsvpManager({ budgetId, ownerId, rsvps }: RsvpManagerProps) {
 
   // Using the official production domain for sharing
   const baseUrl = 'https://www.simpliplan.co.za';
-  const rsvpLink = ownerId ? `${baseUrl}/rsvp/${ownerId}/${budgetId}` : '';
+  const rsvpLink = (ownerId && ownerId !== 'undefined') ? `${baseUrl}/rsvp/${ownerId}/${budgetId}` : '';
 
   const copyToClipboard = () => {
     if (!rsvpLink) return;
@@ -67,17 +67,17 @@ export function RsvpManager({ budgetId, ownerId, rsvps }: RsvpManagerProps) {
           <div className="flex gap-2 mt-1">
             <div className="relative flex-grow">
                 <Input 
-                    value={ownerId ? rsvpLink : 'Generating link...'} 
+                    value={rsvpLink || 'Generating link...'} 
                     readOnly 
-                    className={cn("bg-white/10 pr-10", !ownerId && "text-muted-foreground italic")} 
+                    className={cn("bg-white/10 pr-10", !rsvpLink && "text-muted-foreground italic")} 
                 />
-                {!ownerId && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+                {!rsvpLink && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
             </div>
             <Button 
                 variant="outline" 
                 size="icon" 
                 onClick={copyToClipboard} 
-                disabled={!ownerId}
+                disabled={!rsvpLink}
                 className="bg-white/10 hover:bg-white/20 border-white/30 shrink-0"
             >
               {copied ? <Check className="h-4 w-4 text-green-500" /> : <Clipboard className="h-4 w-4" />}

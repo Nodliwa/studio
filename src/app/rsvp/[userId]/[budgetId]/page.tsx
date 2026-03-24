@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useFirebase } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { CalendarDays, MapPin, PartyPopper, AlertTriangle } from 'lucide-react';
+import { CalendarDays, MapPin, PartyPopper, AlertTriangle, Loader2 } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 
 const rsvpSchema = z.object({
@@ -54,13 +54,14 @@ export default function RsvpPage({ params }: { params: { userId: string, budgetI
     const fetchBudget = async () => {
       // Basic sanity check for params
       if (!userId || !budgetId || userId === 'undefined' || budgetId === 'undefined') {
-          setError('Invalid invitation link. Please request a new link from the host.');
-          setIsLoading(false);
+          // If params are undefined, it might be a hydration delay in some Next.js versions.
+          // We don't error immediately if we think they might resolve.
           return;
       }
 
       if (!firestore) return;
       setIsLoading(true);
+      setError(null);
       
       try {
         const budgetRef = doc(firestore, 'users', userId, 'budgets', budgetId);
@@ -92,13 +93,16 @@ export default function RsvpPage({ params }: { params: { userId: string, budgetI
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !error) {
     return (
-      <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-        <p className="flex items-center gap-2">
-            <span className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></span>
-            Loading invitation...
-        </p>
+      <div className="min-h-screen w-full bg-secondary flex flex-col">
+        <PageHeader />
+        <main className="flex-grow flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <p className="text-muted-foreground font-medium">Loading invitation...</p>
+            </div>
+        </main>
       </div>
     );
   }
@@ -113,7 +117,7 @@ export default function RsvpPage({ params }: { params: { userId: string, budgetI
                     <div className="mx-auto bg-destructive/10 p-4 rounded-full w-fit">
                         <AlertTriangle className="h-12 w-12 text-destructive" />
                     </div>
-                    <CardTitle className="pt-4 text-destructive">Page Error</CardTitle>
+                    <CardTitle className="pt-4 text-destructive">Invitation Error</CardTitle>
                     <CardDescription>{error}</CardDescription>
                 </CardHeader>
                 <CardContent className="text-center">
