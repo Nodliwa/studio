@@ -1,6 +1,9 @@
 
 import { notFound } from 'next/navigation';
 
-export default function RSVPPage() {
+/**
+ * RSVP feature removed.
+ */
+export default function Page() {
   notFound();
 }

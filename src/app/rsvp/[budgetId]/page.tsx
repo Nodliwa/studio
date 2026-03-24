@@ -1,7 +1,10 @@
 
 import { notFound } from 'next/navigation';
 
-// Renamed internally to userId param to fix Next.js build conflict
-export default function RSVPPage({ params: { userId } }: { params: { userId: string } }) {
+/**
+ * RSVP feature removed. 
+ * Standardizing param name to 'userId' to resolve Next.js build conflict at the /rsvp path level.
+ */
+export default function Page({ params }: { params: { userId: string } }) {
   notFound();
 }
