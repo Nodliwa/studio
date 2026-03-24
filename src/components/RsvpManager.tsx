@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -58,7 +57,10 @@ export function RsvpManager({ budgetId, ownerId, rsvps }: RsvpManagerProps) {
   return (
     <Card className="h-full bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">Invites & Guest List</CardTitle>
+        <CardTitle className="font-headline text-2xl flex items-baseline gap-2">
+          Invites & Guest List
+          <span className="text-sm font-normal text-muted-foreground">(Coming soon)</span>
+        </CardTitle>
         <CardDescription className="text-foreground/80">Share the link below and watch your guest list grow.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
