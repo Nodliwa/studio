@@ -33,7 +33,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "./ui/button";
 import { 
   PlusCircle, 
-  GripVertical, 
   UtensilsCrossed, 
   Wheat, 
   Carrot, 
@@ -51,7 +50,8 @@ import {
   User, 
   Users, 
   Heart,
-  X
+  X,
+  ChevronRight
 } from "lucide-react";
 import React from "react";
 import { useSortable } from '@dnd-kit/sortable';
@@ -128,8 +128,6 @@ const SortableCategory = ({
   categoryPath = [] 
 }: { category: BudgetCategory } & Omit<BudgetAccordionProps, 'categories'>) => {
   const {
-    attributes,
-    listeners,
     setNodeRef,
     transform,
     transition,
@@ -146,41 +144,48 @@ const SortableCategory = ({
   return (
     <div ref={setNodeRef} style={style}>
       <AccordionItem value={category.id} key={category.id} className="mb-4 rounded-lg border-b-0 bg-card shadow-sm overflow-hidden">
-        <AccordionTrigger className="px-6 py-2 text-lg hover:no-underline [&[data-state=open]>svg]:text-primary">
-          <div className="flex items-center gap-2 w-full mr-4">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Category?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently remove the category "{category.name}" and all of its items. This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDeleteCategory(currentPath)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-
-            <div {...attributes} {...listeners} className="cursor-grab p-2">
-              <GripVertical className="h-6 w-6 text-muted-foreground" />
+        <AccordionTrigger className="px-6 py-2 text-lg hover:no-underline [&[data-state=open]>div>svg.dropdown-arrow]:rotate-90">
+          <div className="flex items-center w-full mr-4">
+            {/* Cancel Button */}
+            <div onClick={(e) => e.stopPropagation()} className="mr-6">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Category?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently remove the category "{category.name}" and all of its items. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => onDeleteCategory(currentPath)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
-            {Icon && <Icon className="h-6 w-6 text-primary" />}
-            <span className="font-headline font-semibold">{category.name}</span>
-            <Badge variant="secondary" className="font-mono ml-auto">{formatCurrency(category.total)}</Badge>
+
+            {/* Prominent Dropdown Arrow */}
+            <ChevronRight className="dropdown-arrow h-6 w-6 text-primary transition-transform duration-200 mr-4 shrink-0" />
+
+            {/* Category Icon & Name */}
+            <div className="flex items-center gap-2">
+              {Icon && <Icon className="h-6 w-6 text-primary/70 shrink-0" />}
+              <span className="font-headline font-semibold text-left">{category.name}</span>
+            </div>
+
+            {/* Category Total Badge */}
+            <Badge variant="secondary" className="font-mono ml-auto shrink-0">{formatCurrency(category.total)}</Badge>
           </div>
         </AccordionTrigger>
         <AccordionContent className="bg-card">
@@ -318,7 +323,7 @@ export function BudgetAccordion({
           key={category.id} 
           category={category} 
           onItemChange={onItemChange} 
-          onAddItem={onAddItem}
+          onAddItem={onAddItem} 
           onDeleteItem={onDeleteItem}
           onDeleteCategory={onDeleteCategory}
           categoryPath={categoryPath}
