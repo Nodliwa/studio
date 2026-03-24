@@ -27,9 +27,9 @@ interface RsvpManagerProps {
 export function RsvpManager({ budgetId, ownerId, rsvps }: RsvpManagerProps) {
   const [copied, setCopied] = useState(false);
 
-  // Using the official production domain for sharing
+  // Using a static placeholder link for demonstration as requested
   const baseUrl = 'https://www.simpliplan.co.za';
-  const rsvpLink = (ownerId && ownerId !== 'undefined') ? `${baseUrl}/rsvp/${ownerId}/${budgetId}` : '';
+  const rsvpLink = `${baseUrl}/rsvp/invite-link-demonstration`;
 
   const copyToClipboard = () => {
     if (!rsvpLink) return;
@@ -69,17 +69,15 @@ export function RsvpManager({ budgetId, ownerId, rsvps }: RsvpManagerProps) {
           <div className="flex gap-2 mt-1">
             <div className="relative flex-grow">
                 <Input 
-                    value={rsvpLink || 'Generating link...'} 
+                    value={rsvpLink} 
                     readOnly 
-                    className={cn("bg-white/10 pr-10", !rsvpLink && "text-muted-foreground italic")} 
+                    className="bg-white/10 pr-10" 
                 />
-                {!rsvpLink && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
             </div>
             <Button 
                 variant="outline" 
                 size="icon" 
                 onClick={copyToClipboard} 
-                disabled={!rsvpLink}
                 className="bg-white/10 hover:bg-white/20 border-white/30 shrink-0"
             >
               {copied ? <Check className="h-4 w-4 text-green-500" /> : <Clipboard className="h-4 w-4" />}
