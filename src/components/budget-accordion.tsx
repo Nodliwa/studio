@@ -16,11 +16,43 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "./ui/button";
-import { PlusCircle, GripVertical, UtensilsCrossed, Wheat, Carrot, Apple, Coffee, Handshake, Truck, Gem, Cake, Shirt, Drama, Hammer, Zap, CrossIcon, User, Users, Heart } from "lucide-react";
+import { 
+  PlusCircle, 
+  GripVertical, 
+  UtensilsCrossed, 
+  Wheat, 
+  Carrot, 
+  Apple, 
+  Coffee, 
+  Handshake, 
+  Truck, 
+  Gem, 
+  Cake, 
+  Shirt, 
+  Drama, 
+  Hammer, 
+  Zap, 
+  CrossIcon, 
+  User, 
+  Users, 
+  Heart,
+  X
+} from "lucide-react";
 import React from "react";
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -29,6 +61,8 @@ interface BudgetAccordionProps {
   categories: BudgetCategory[];
   onItemChange: (categoryPath: string[], itemIndex: number, field: keyof BudgetItem, value: string | number) => void;
   onAddItem: (categoryPath: string[]) => void;
+  onDeleteItem: (categoryPath: string[], itemIndex: number) => void;
+  onDeleteCategory: (categoryPath: string[]) => void;
   categoryPath?: string[];
 }
 
@@ -85,7 +119,14 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 
-const SortableCategory = ({ category, onItemChange, onAddItem, categoryPath = [] }: { category: BudgetCategory } & Omit<BudgetAccordionProps, 'categories'>) => {
+const SortableCategory = ({ 
+  category, 
+  onItemChange, 
+  onAddItem, 
+  onDeleteItem,
+  onDeleteCategory,
+  categoryPath = [] 
+}: { category: BudgetCategory } & Omit<BudgetAccordionProps, 'categories'>) => {
   const {
     attributes,
     listeners,
@@ -106,7 +147,34 @@ const SortableCategory = ({ category, onItemChange, onAddItem, categoryPath = []
     <div ref={setNodeRef} style={style}>
       <AccordionItem value={category.id} key={category.id} className="mb-4 rounded-lg border-b-0 bg-card shadow-sm overflow-hidden">
         <AccordionTrigger className="px-6 py-2 text-lg hover:no-underline [&[data-state=open]>svg]:text-primary">
-          <div className="flex items-center gap-4 w-full">
+          <div className="flex items-center gap-2 w-full mr-4">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Category?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently remove the category "{category.name}" and all of its items. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onDeleteCategory(currentPath)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
             <div {...attributes} {...listeners} className="cursor-grab p-2">
               <GripVertical className="h-6 w-6 text-muted-foreground" />
             </div>
@@ -121,6 +189,7 @@ const SortableCategory = ({ category, onItemChange, onAddItem, categoryPath = []
                 <Table>
                     <TableHeader>
                         <TableRow>
+                        <TableHead className="w-10"></TableHead>
                         <TableHead className="min-w-[150px]">Item</TableHead>
                         <TableHead>Metric</TableHead>
                         <TableHead>Quantity</TableHead>
@@ -132,6 +201,29 @@ const SortableCategory = ({ category, onItemChange, onAddItem, categoryPath = []
                     <TableBody>
                         {category.items.map((item, itemIndex) => (
                         <TableRow key={item.id}>
+                            <TableCell>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Item?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to remove "{item.name || 'this item'}" from your plan?
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => onDeleteItem(currentPath, itemIndex)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </TableCell>
                             <TableCell className="font-medium">
                               <Input
                                   type="text"
@@ -182,7 +274,7 @@ const SortableCategory = ({ category, onItemChange, onAddItem, categoryPath = []
                 </Table>
             </div>
           )}
-           {(!category.items || category.items.length === 0) && (!category.subCategories) && (
+           {(!category.items || category.items.length === 0) && (!category.subCategories || category.subCategories.length === 0) && (
              <p className="px-6 pb-4 text-muted-foreground">No items in this category.</p>
            )}
 
@@ -199,6 +291,8 @@ const SortableCategory = ({ category, onItemChange, onAddItem, categoryPath = []
                 categories={category.subCategories}
                 onItemChange={onItemChange}
                 onAddItem={onAddItem}
+                onDeleteItem={onDeleteItem}
+                onDeleteCategory={onDeleteCategory}
                 categoryPath={currentPath}
               />
             </div>
@@ -209,7 +303,14 @@ const SortableCategory = ({ category, onItemChange, onAddItem, categoryPath = []
   );
 };
 
-export function BudgetAccordion({ categories, onItemChange, onAddItem, categoryPath = [] }: BudgetAccordionProps) {
+export function BudgetAccordion({ 
+  categories, 
+  onItemChange, 
+  onAddItem, 
+  onDeleteItem,
+  onDeleteCategory,
+  categoryPath = [] 
+}: BudgetAccordionProps) {
   return (
     <Accordion type="multiple" className="w-full space-y-4">
       {categories.map((category) => (
@@ -218,6 +319,8 @@ export function BudgetAccordion({ categories, onItemChange, onAddItem, categoryP
           category={category} 
           onItemChange={onItemChange} 
           onAddItem={onAddItem}
+          onDeleteItem={onDeleteItem}
+          onDeleteCategory={onDeleteCategory}
           categoryPath={categoryPath}
         />
       ))}

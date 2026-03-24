@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -66,7 +65,7 @@ function calculateTotals(categories: BudgetCategory[]): {
     const subCategories = category.subCategories
       ? calculateTotals(category.subCategories).categories
       : [];
-    const subCategoriesTotal = subCategories.reduce((acc, sub) => acc + sub.total, 0);
+    const subCategoriesTotal = subCategories.reduce((acc, sub) => acc + (sub.total || 0), 0);
 
     category.total = categoryTotal + subCategoriesTotal;
     category.subCategories = subCategories;
@@ -100,9 +99,6 @@ export default function PlannerPage({
         
         // Then verification check: if budget doesn't exist under my UID, look for the real owner
         const checkOwner = async () => {
-            const myPath = doc(firestore, "users", user.uid, "budgets", budgetId);
-            const mySnap = await setDoc(myPath, {}, { merge: true }).catch(() => null); 
-            // The above is a trick to check existence/permissions. Better way:
             const ownerId = await findBudgetOwnerId(budgetId);
             if (ownerId) setResolvedOwnerId(ownerId);
         };
@@ -187,7 +183,7 @@ export default function PlannerPage({
     }
 
     if (fetchedCategories && fetchedCategories.length > 0) {
-      const { categories, grandTotal } = calculateTotals([...fetchedCategories].sort((a, b) => a.order - b.order));
+      const { categories, grandTotal } = calculateTotals([...fetchedCategories].sort((a, b) => (a.order || 0) - (b.order || 0)));
       setBudgetData(categories);
       setGrandTotal(grandTotal);
     }
@@ -251,6 +247,85 @@ export default function PlannerPage({
     }
   };
 
+  const handleDeleteItem = (categoryPath: string[], itemIndex: number) => {
+    const updated = JSON.parse(JSON.stringify(budgetData));
+    let current = updated;
+    let target;
+    for (const id of categoryPath) {
+      target = current.find((c: BudgetCategory) => c.id === id);
+      if (target) current = target.subCategories || [];
+    }
+    if (target) {
+      target.items.splice(itemIndex, 1);
+      const { categories, grandTotal: newGrandTotal } = calculateTotals(updated);
+      setBudgetData(categories);
+      setGrandTotal(newGrandTotal);
+
+      if (!isTemplateMode && resolvedOwnerId) {
+        const rootId = categoryPath[0];
+        const rootCat = categories.find((c: BudgetCategory) => c.id === rootId);
+        if (rootCat) {
+            const rootCatRef = doc(firestore, "users", resolvedOwnerId, "budgets", budgetId, "categories", rootId);
+            setDoc(rootCatRef, rootCat, { merge: true });
+        }
+        if (budgetDocRef) {
+            setDoc(budgetDocRef, { grandTotal: newGrandTotal }, { merge: true });
+        }
+      }
+    }
+  };
+
+  const handleDeleteCategory = (categoryPath: string[]) => {
+    const updated = JSON.parse(JSON.stringify(budgetData));
+    if (categoryPath.length === 1) {
+      const catId = categoryPath[0];
+      const filtered = updated.filter((c: BudgetCategory) => c.id !== catId);
+      const { categories, grandTotal: newGrandTotal } = calculateTotals(filtered);
+      setBudgetData(categories);
+      setGrandTotal(newGrandTotal);
+
+      if (!isTemplateMode && resolvedOwnerId) {
+        const batch = writeBatch(firestore);
+        const catRef = doc(firestore, "users", resolvedOwnerId, "budgets", budgetId, "categories", catId);
+        batch.delete(catRef);
+        if (budgetDocRef) {
+          batch.update(budgetDocRef, { grandTotal: newGrandTotal });
+        }
+        batch.commit().catch(console.error);
+      }
+    } else {
+      // Deleting a subcategory
+      let current = updated;
+      let parent;
+      const targetId = categoryPath[categoryPath.length - 1];
+      const parentPath = categoryPath.slice(0, -1);
+      
+      for (const id of parentPath) {
+        parent = current.find((c: BudgetCategory) => c.id === id);
+        if (parent) current = parent.subCategories || [];
+      }
+
+      if (parent && parent.subCategories) {
+        parent.subCategories = parent.subCategories.filter((c: BudgetCategory) => c.id !== targetId);
+        const { categories, grandTotal: newGrandTotal } = calculateTotals(updated);
+        setBudgetData(categories);
+        setGrandTotal(newGrandTotal);
+
+        if (!isTemplateMode && resolvedOwnerId) {
+          const rootId = categoryPath[0];
+          const rootCat = categories.find((c: BudgetCategory) => c.id === rootId);
+          if (rootCat) {
+              const rootCatRef = doc(firestore, "users", resolvedOwnerId, "budgets", budgetId, "categories", rootId);
+              setDoc(rootCatRef, rootCat, { merge: true });
+          }
+          if (budgetDocRef) {
+              setDoc(budgetDocRef, { grandTotal: newGrandTotal }, { merge: true });
+          }
+        }
+      }
+    }
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
@@ -306,7 +381,13 @@ export default function PlannerPage({
           <div className="mt-8">
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={budgetData} strategy={verticalListSortingStrategy}>
-                <BudgetAccordion categories={budgetData} onItemChange={handleItemChange} onAddItem={handleAddItem} />
+                <BudgetAccordion 
+                  categories={budgetData} 
+                  onItemChange={handleItemChange} 
+                  onAddItem={handleAddItem} 
+                  onDeleteItem={handleDeleteItem}
+                  onDeleteCategory={handleDeleteCategory}
+                />
               </SortableContext>
             </DndContext>
           </div>
