@@ -38,11 +38,6 @@ service cloud.firestore {
         match /mustDos/{mustDoId} {
           allow read, write: if canAccessBudget(userId, budgetId);
         }
-
-        match /rsvps/{rsvpId} {
-          allow read, update, delete: if canAccessBudget(userId, budgetId);
-          allow create: if true; // Guests can RSVP
-        }
       }
     }
   }

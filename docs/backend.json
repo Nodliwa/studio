@@ -195,22 +195,7 @@
         "reminderDaysBefore": { "type": "number", "description": "How many days before the deadline to send the reminder." }
       },
       "required": ["id", "budgetId", "userId", "title", "status", "priority", "createdAt", "reminderType", "reminderDaysBefore"]
-    },
-    "RSVP": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "RSVP",
-        "type": "object",
-        "description": "Represents a single RSVP response from a guest for a specific event.",
-        "properties": {
-          "id": { "type": "string", "description": "Unique identifier for the RSVP record." },
-          "budgetId": { "type": "string", "description": "The ID of the budget this RSVP belongs to." },
-          "guestName": { "type": "string", "description": "The name of the guest responding." },
-          "status": { "type": "string", "enum": ["attending", "not_attending"], "description": "The guest's attendance status." },
-          "additionalGuests": { "type": "number", "description": "The number of additional guests the person is bringing (+1s)." },
-          "respondedAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the RSVP was submitted." }
-        },
-        "required": ["id", "budgetId", "guestName", "status", "additionalGuests", "respondedAt"]
-      }
+    }
   },
   "auth": {
     "providers": [
@@ -281,19 +266,6 @@
             { "name": "userId", "description": "The unique identifier of the user." },
             { "name": "budgetId", "description": "The unique identifier of the budget." },
             { "name": "mustDoId", "description": "The unique identifier of the must-do item." }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/budgets/{budgetId}/rsvps/{rsvpId}",
-        "definition": {
-          "entityName": "RSVP",
-          "schema": { "$ref": "#/backend/entities/RSVP" },
-          "description": "Collection for storing RSVP responses for a specific budget/event.",
-          "params": [
-            { "name": "userId", "description": "The unique identifier of the user who owns the budget." },
-            { "name": "budgetId", "description": "The unique identifier of the budget." },
-            { "name": "rsvpId", "description": "The unique identifier of the RSVP response." }
           ]
         }
       }
