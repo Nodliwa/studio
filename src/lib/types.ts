@@ -64,12 +64,3 @@ export interface MustDo {
   reminderType: 'none' | 'email' | 'sms' | 'whatsapp';
   reminderDaysBefore: number;
 }
-
-export interface RSVP {
-    id: string;
-    budgetId: string;
-    guestName: string;
-    status: 'attending' | 'not_attending';
-    additionalGuests: number;
-    respondedAt: any; // Firestore Timestamp
-}

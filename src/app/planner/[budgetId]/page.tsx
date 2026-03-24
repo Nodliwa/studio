@@ -9,7 +9,6 @@ import PageHeader from "@/components/page-header";
 import { BudgetAccordion } from "@/components/budget-accordion";
 import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
-import { RsvpManager } from "@/components/RsvpManager";
 import { MustDosSummary } from "@/components/must-dos-summary";
 import { CollaboratorManager } from "@/components/collaborator-manager";
 import {
@@ -43,7 +42,6 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import Greeter from "@/components/greeter";
-import type { RSVP } from "@/lib/types";
 import { RefreshCw } from "lucide-react";
 
 function calculateTotals(categories: BudgetCategory[]): {
@@ -88,15 +86,6 @@ export default function PlannerPage({
   const [grandTotal, setGrandTotal] = useState(0);
   const isTemplateMode = budgetId === "template";
 
-  // In Next.js 14, params are accessed directly from the props.
-  // We use the budgetId to find the plan.
-  // We try to load the budget using the current user's ID as a starting point,
-  // but for guests/collaborators, the path might be different.
-  // Since we don't know the owner ID upfront if we aren't the owner,
-  // we rely on the parent document path or user metadata.
-  
-  // For the initial load, we assume the current user might be the owner.
-  // If not, the 'useDoc' will return null or an error, and we'll need to resolve it.
   const budgetDocRef = useMemoFirebase(
     () =>
       user && budgetId && !isTemplateMode
@@ -106,11 +95,6 @@ export default function PlannerPage({
   );
 
   const { data: budget, isLoading: budgetLoading } = useDoc<Budget>(budgetDocRef);
-
-  // If we are a collaborator, the path above fails.
-  // The actual path is stored in the invitation link or we can find it.
-  // For MVP, we assume if the first attempt fails but the user has access,
-  // they might be a collaborator.
 
   const categoriesCollection = useMemoFirebase(
     () =>
@@ -133,18 +117,6 @@ export default function PlannerPage({
   );
 
   const { data: mustDos } = useCollection<MustDo>(mustDosQuery);
-
-  const rsvpsCollection = useMemoFirebase(
-    () => (!isTemplateMode && budget?.userId && budgetId ? collection(firestore, "users", budget.userId, "budgets", budgetId, "rsvps") : null),
-    [isTemplateMode, budget?.userId, budgetId, firestore]
-  );
-
-  const rsvpsQuery = useMemoFirebase(
-    () => (rsvpsCollection ? query(rsvpsCollection, orderBy("respondedAt", "desc")) : null),
-    [rsvpsCollection]
-  );
-
-  const { data: rsvps, isLoading: rsvpsLoading } = useCollection<RSVP>(rsvpsQuery);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -338,7 +310,7 @@ export default function PlannerPage({
     }
   };
 
-  if (isUserLoading || (!isTemplateMode && (categoriesLoading || budgetLoading || rsvpsLoading)) || (budgetData.length === 0 && !isTemplateMode)) {
+  if (isUserLoading || (!isTemplateMode && (categoriesLoading || budgetLoading)) || (budgetData.length === 0 && !isTemplateMode)) {
     return (
       <div className="min-h-screen bg-secondary flex flex-col">
         <PageHeader />
@@ -388,9 +360,8 @@ export default function PlannerPage({
           </div>
 
           {!isTemplateMode && budget && budgetDocRef && (
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
               <CollaboratorManager budget={budget} budgetRef={budgetDocRef} inviterName={user?.displayName || 'A SimpliPlan User'} />
-              <RsvpManager budgetId={budgetId} ownerId={budget.userId} rsvps={rsvps} />
               <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
             </div>
           )}
