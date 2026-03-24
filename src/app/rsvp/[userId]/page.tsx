@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -28,27 +27,12 @@ const rsvpSchema = z.object({
 
 type RsvpFormValues = z.infer<typeof rsvpSchema>;
 
-async function findBudget(firestore: any, budgetId: string): Promise<Budget | null> {
-    if (!budgetId) return null;
-    const budgetsQuery = query(
-        collectionGroup(firestore, 'budgets'),
-        where('id', '==', budgetId),
-        limit(1)
-    );
-
-    const snapshot = await getDocs(budgetsQuery);
-    if (!snapshot.empty) {
-        return snapshot.docs[0].data() as Budget;
-    }
-    return null;
-}
-
 /**
- * This page handles legacy RSVP links that only have a single ID in the path.
- * We treat the 'userId' param as the budgetId and try to resolve the owner.
+ * Handles single-segment RSVP links.
+ * It first tries to find the budget by ID (treating userId param as budgetId).
  */
-export default function LegacyRsvpPage({ params }: { params: { userId: string } }) {
-  const budgetIdFromParam = params.userId; 
+export default function UnifiedRsvpPage({ params }: { params: { userId: string } }) {
+  const incomingId = params.userId; 
   const { firestore } = useFirebase();
   const [budget, setBudget] = useState<Budget | null>(null);
   const [ownerId, setOwnerId] = useState<string | null>(null);
@@ -73,22 +57,30 @@ export default function LegacyRsvpPage({ params }: { params: { userId: string } 
 
   useEffect(() => {
     const fetchBudget = async () => {
-      if (!firestore || !budgetIdFromParam || budgetIdFromParam === 'undefined') return;
+      if (!firestore || !incomingId || incomingId === 'undefined') return;
       setIsLoading(true);
       setError(null);
       
       try {
-        const foundBudget = await findBudget(firestore, budgetIdFromParam);
-        if (foundBudget) {
+        // Find budget by its 'id' field using collection group
+        const budgetsQuery = query(
+            collectionGroup(firestore, 'budgets'),
+            where('id', '==', incomingId),
+            limit(1)
+        );
+
+        const snapshot = await getDocs(budgetsQuery);
+        
+        if (!snapshot.empty) {
+            const foundBudget = snapshot.docs[0].data() as Budget;
             setBudget(foundBudget);
-            const resolvedOwnerId = await findBudgetOwnerId(budgetIdFromParam);
-            setOwnerId(resolvedOwnerId);
+            setOwnerId(foundBudget.userId);
         } else {
             setError('Could not find the event. The link may be incorrect or the event may have been removed.');
         }
 
       } catch (e) {
-        setError('Could not find the event. Please check the link.');
+        setError('Could not access event details. Please check your connection.');
         console.error(e);
       } finally {
         setIsLoading(false);
@@ -96,16 +88,16 @@ export default function LegacyRsvpPage({ params }: { params: { userId: string } 
     };
 
     fetchBudget();
-  }, [budgetIdFromParam, firestore]);
+  }, [incomingId, firestore]);
 
   const onSubmit = async (data: RsvpFormValues) => {
     setError(null);
-    if (!ownerId || !budgetIdFromParam) {
+    if (!ownerId || !budget?.id) {
         setError('Could not identify the event details for submission.');
         return;
     }
     try {
-      await addRsvp(ownerId, budgetIdFromParam, data);
+      await addRsvp(ownerId, budget.id, data);
       setIsSubmitted(true);
     } catch (e: any) {
       setError(e.message || 'There was an error submitting your RSVP. Please try again.');

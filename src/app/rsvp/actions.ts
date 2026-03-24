@@ -1,4 +1,3 @@
-
 'use server';
 
 import { initializeFirebase } from '@/firebase';
@@ -15,7 +14,6 @@ type RsvpData = z.infer<typeof rsvpSchema>;
 
 /**
  * Adds a new RSVP response to a specific budget.
- * Now takes userId directly to avoid unauthenticated collection group queries.
  */
 export async function addRsvp(userId: string, budgetId: string, data: RsvpData): Promise<{ success: boolean; rsvpId?: string }> {
   const validation = rsvpSchema.safeParse(data);
@@ -27,7 +25,6 @@ export async function addRsvp(userId: string, budgetId: string, data: RsvpData):
   const { guestName, status, additionalGuests } = validation.data;
   const { firestore } = initializeFirebase();
 
-  // Construct path directly: users/{userId}/budgets/{budgetId}/rsvps
   const rsvpCollectionRef = collection(firestore, 'users', userId, 'budgets', budgetId, 'rsvps');
 
   try {
@@ -40,7 +37,6 @@ export async function addRsvp(userId: string, budgetId: string, data: RsvpData):
     };
     const docRef = await addDoc(rsvpCollectionRef, newDoc);
 
-    // Update with ID for client-side use
     await updateDoc(docRef, { id: docRef.id });
 
     return { success: true, rsvpId: docRef.id };
