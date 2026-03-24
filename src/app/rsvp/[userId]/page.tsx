@@ -43,10 +43,11 @@ async function findBudget(firestore: any, budgetId: string): Promise<Budget | nu
     return null;
 }
 
-
+/**
+ * This page handles legacy RSVP links that only have a single ID in the path.
+ * We treat the 'userId' param as the budgetId and try to resolve the owner.
+ */
 export default function LegacyRsvpPage({ params }: { params: { userId: string } }) {
-  // In this legacy mode, the first dynamic segment is named 'userId' to match folder hierarchy
-  // but it actually contains the budgetId for legacy links.
   const budgetIdFromParam = params.userId; 
   const { firestore } = useFirebase();
   const [budget, setBudget] = useState<Budget | null>(null);
@@ -152,7 +153,6 @@ export default function LegacyRsvpPage({ params }: { params: { userId: string } 
         weekday: 'long'
       })
     : "Date to be confirmed";
-
 
   return (
      <div className="min-h-screen bg-secondary">

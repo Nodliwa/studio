@@ -27,6 +27,7 @@ export async function addRsvp(userId: string, budgetId: string, data: RsvpData):
   const { guestName, status, additionalGuests } = validation.data;
   const { firestore } = initializeFirebase();
 
+  // Construct path directly: users/{userId}/budgets/{budgetId}/rsvps
   const rsvpCollectionRef = collection(firestore, 'users', userId, 'budgets', budgetId, 'rsvps');
 
   try {

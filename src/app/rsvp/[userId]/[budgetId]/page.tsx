@@ -27,7 +27,7 @@ const rsvpSchema = z.object({
 
 type RsvpFormValues = z.infer<typeof rsvpSchema>;
 
-export default function RsvpPage({ params }: { params: { userId: string, budgetId: string } }) {
+export default function DirectRsvpPage({ params }: { params: { userId: string, budgetId: string } }) {
   const { userId, budgetId } = params;
   const { firestore } = useFirebase();
   const [budget, setBudget] = useState<Budget | null>(null);
@@ -52,10 +52,7 @@ export default function RsvpPage({ params }: { params: { userId: string, budgetI
 
   useEffect(() => {
     const fetchBudget = async () => {
-      // Basic sanity check for params
       if (!userId || !budgetId || userId === 'undefined' || budgetId === 'undefined') {
-          // If params are undefined, it might be a hydration delay in some Next.js versions.
-          // We don't error immediately if we think they might resolve.
           return;
       }
 
