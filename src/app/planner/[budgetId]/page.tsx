@@ -43,6 +43,7 @@ import {
 } from "@dnd-kit/sortable";
 import Greeter from "@/components/greeter";
 import { RefreshCw } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 function calculateTotals(categories: BudgetCategory[]): {
   categories: BudgetCategory[];
@@ -360,10 +361,25 @@ export default function PlannerPage({
           </div>
 
           {!isTemplateMode && budget && budgetDocRef && (
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-              <CollaboratorManager budget={budget} budgetRef={budgetDocRef} inviterName={user?.displayName || 'A SimpliPlan User'} />
-              <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
-            </div>
+            <>
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <CollaboratorManager budget={budget} budgetRef={budgetDocRef} inviterName={user?.displayName || 'A SimpliPlan User'} />
+                <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
+              </div>
+              
+              <div className="mt-8">
+                <Card className="bg-muted/30 border-dashed border-2">
+                  <CardHeader>
+                    <CardTitle className="font-headline text-2xl flex items-center gap-2">
+                      Invites & Guest List <span className="font-bold">(Coming soon)</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Digital invitations and automated guest list management are on their way.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
+            </>
           )}
         </main>
       </div>
