@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import type { BudgetItem, BudgetCategory, Budget, MustDo } from "@/lib/types";
+import type { BudgetItem, BudgetCategory, Budget, MustDo, RSVP } from "@/lib/types";
 import { budgetTemplates } from "@/lib/data";
 import PageHeader from "@/components/page-header";
 import { BudgetAccordion } from "@/components/budget-accordion";
@@ -11,6 +11,7 @@ import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
 import { MustDosSummary } from "@/components/must-dos-summary";
 import { CollaboratorManager } from "@/components/collaborator-manager";
+import { RsvpManager } from "@/components/RsvpManager";
 import {
   useUser,
   useFirestore,
@@ -43,7 +44,6 @@ import {
 } from "@dnd-kit/sortable";
 import Greeter from "@/components/greeter";
 import { RefreshCw } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 function calculateTotals(categories: BudgetCategory[]): {
   categories: BudgetCategory[];
@@ -118,6 +118,18 @@ export default function PlannerPage({
   );
 
   const { data: mustDos } = useCollection<MustDo>(mustDosQuery);
+
+  const rsvpsCollection = useMemoFirebase(
+    () => (!isTemplateMode && budget?.userId && budgetId ? collection(firestore, "users", budget.userId, "budgets", budgetId, "rsvps") : null),
+    [isTemplateMode, budget?.userId, budgetId, firestore]
+  );
+
+  const rsvpsQuery = useMemoFirebase(
+    () => (rsvpsCollection ? query(rsvpsCollection, orderBy("createdAt", "desc")) : null),
+    [rsvpsCollection]
+  );
+
+  const { data: rsvps } = useCollection<RSVP>(rsvpsQuery);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -361,25 +373,13 @@ export default function PlannerPage({
           </div>
 
           {!isTemplateMode && budget && budgetDocRef && (
-            <>
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                <CollaboratorManager budget={budget} budgetRef={budgetDocRef} inviterName={user?.displayName || 'A SimpliPlan User'} />
-                <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+              <CollaboratorManager budget={budget} budgetRef={budgetDocRef} inviterName={user?.displayName || 'A SimpliPlan User'} />
+              <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
+              <div className="md:col-span-2">
+                <RsvpManager budget={budget} rsvps={rsvps} />
               </div>
-              
-              <div className="mt-8">
-                <Card className="bg-muted/30 border-dashed border-2">
-                  <CardHeader>
-                    <CardTitle className="font-headline text-2xl flex items-center gap-2">
-                      Invites & Guest List <span className="font-bold">(Coming soon)</span>
-                    </CardTitle>
-                    <CardDescription>
-                      Digital invitations and automated guest list management are on their way.
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </div>
-            </>
+            </div>
           )}
         </main>
       </div>
