@@ -1,5 +1,5 @@
 
-
+'use server';
 /**
  * @fileoverview This file initializes the Genkit AI instance with necessary plugins.
  * It is configured to use Google's Generative AI models. The `ai` object exported
