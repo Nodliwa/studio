@@ -25,7 +25,7 @@ const tiers = [
   },
   {
     name: 'Basic',
-    price: 'R9',
+    price: 'R99',
     priceSuffix: '/ plan',
     description: '1 plan • Finalize & lock • Export/share • Tasks & attendance “official”.',
     features: [
