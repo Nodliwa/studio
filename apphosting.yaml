@@ -3,6 +3,9 @@
 location: us-central1
 runConfig:
   maxInstances: 1
+env:
+  - variable: GEMINI_API_KEY
+    value: AIzaSyBkc8FvMb1knt_kOdNCTEON8RSg7OieNGw
 headers:
 - headers:
   - key: Cache-Control
