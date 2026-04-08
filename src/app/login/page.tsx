@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -27,7 +28,7 @@ import {
 import { doc, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { initiateGoogleSignIn, initiateFacebookSignIn } from "@/firebase/auth-operations";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Script from "next/script";
 import { verifyRecaptcha } from "@/app/actions";
 
@@ -83,9 +84,8 @@ export default function LoginPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
-  // Start false — only set true while actively processing a redirect result
-  const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] =
-    useState(false);
+  const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
@@ -114,7 +114,6 @@ export default function LoginPage() {
     }
   };
 
-  // Redirect already-logged-in users
   useEffect(() => {
     if (!isUserLoading && user && !user.isAnonymous) {
       router.push("/my-plans");
@@ -137,10 +136,9 @@ export default function LoginPage() {
     });
   };
 
-  // Handles SPA navigation case where script is already loaded
   useEffect(() => {
     renderEnterpriseRecaptcha();
-  }, []); // valid: all deps are stable refs/setters/constants
+  }, []);
 
   const onEmailSubmit = async (data: LoginFormValues) => {
     if (!auth) return;
@@ -226,25 +224,34 @@ export default function LoginPage() {
     const email = getValues("email");
     if (!email) {
       setFirebaseError(
-        "Please enter your email address to reset your password.",
+        "Please enter your email address in the field above to reset your password.",
       );
       return;
     }
 
+    setIsSendingReset(true);
     try {
       await sendPasswordResetEmail(auth, email);
       toast({
         title: "Password Reset Email Sent",
-        description: `If an account exists for ${email}, a password reset link has been sent to it.`,
+        description: `If an account exists for ${email}, a password reset link has been sent. Please check your inbox and spam folder.`,
       });
     } catch (error) {
+      console.error("Password reset error:", error);
       if (error instanceof FirebaseError) {
-        setFirebaseError(error.message);
+        const friendlyMessages: Record<string, string> = {
+          'auth/user-not-found': 'No account found with this email address.',
+          'auth/invalid-email': 'Please enter a valid email address.',
+          'auth/too-many-requests': 'Too many requests. Please wait a moment.',
+        };
+        setFirebaseError(friendlyMessages[error.code] || error.message);
       } else {
         setFirebaseError(
           "An unexpected error occurred while sending the password reset email.",
         );
       }
+    } finally {
+      setIsSendingReset(false);
     }
   };
 
@@ -255,7 +262,7 @@ export default function LoginPage() {
   ) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-        <p>Loading...</p>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -279,7 +286,7 @@ export default function LoginPage() {
                     size="icon"
                     className="rounded-full"
                     onClick={handleGoogleSignIn}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isSendingReset}
                   >
                     <GoogleIcon />
                   </Button>
@@ -289,7 +296,7 @@ export default function LoginPage() {
                     size="icon"
                     className="rounded-full"
                     onClick={handleFacebookSignIn}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isSendingReset}
                   >
                     <FacebookIcon />
                   </Button>
@@ -312,7 +319,7 @@ export default function LoginPage() {
                 >
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" {...register("email")} />
+                    <Input id="email" type="email" {...register("email")} placeholder="your@email.com" />
                     {errors.email && (
                       <p className="text-destructive text-sm">
                         {errors.email.message}
@@ -327,8 +334,9 @@ export default function LoginPage() {
                         variant="link"
                         className="h-auto p-0 text-xs"
                         onClick={handlePasswordReset}
+                        disabled={isSendingReset}
                       >
-                        Forgot Password?
+                        {isSendingReset ? "Sending..." : "Forgot Password?"}
                       </Button>
                     </div>
                     <div className="relative">
@@ -370,20 +378,20 @@ export default function LoginPage() {
                   )}
 
                   {firebaseError && (
-                    <p className="text-destructive text-sm">{firebaseError}</p>
+                    <p className="text-destructive text-sm font-medium border border-destructive/20 p-2 rounded bg-destructive/5">{firebaseError}</p>
                   )}
 
-                  <div className="pb-6 pt-2 px-6">
+                  <div className="pb-6 pt-2">
                     <Button
                       type="submit"
-                      className="w-full"
-                      disabled={isSubmitting || (!!RECAPTCHA_SITE_KEY && !recaptchaToken)}
+                      className="w-full font-bold"
+                      disabled={isSubmitting || isSendingReset || (!!RECAPTCHA_SITE_KEY && !recaptchaToken)}
                     >
                       {isSubmitting ? "Logging in..." : "Login"}
                     </Button>
                     <p className="mt-4 text-center text-sm">
                       Don't have an account?{" "}
-                      <Link href="/register" className="underline">
+                      <Link href="/register" className="underline font-bold">
                         Sign up
                       </Link>
                     </p>

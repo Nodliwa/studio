@@ -6,22 +6,22 @@ import { useRouter } from 'next/navigation';
 import { RefreshCw } from 'lucide-react';
 
 /**
- * Landing page for invitation links that only have a userId.
- * This standardizes the dynamic slug name to 'userId' to avoid Next.js routing conflicts.
- * Typically redirects or shows an error as we need both userId AND budgetId for a specific RSVP.
+ * Landing page for invitation links that only have a single ID.
+ * Standardized slug name to 'userId' to resolve Next.js routing conflicts.
+ * This page handles legacy links where the ID might be a budgetId or a userId.
  */
-export default function RsvpUserLanding({ params: { userId } }: { params: { userId: string } }) {
+export default function RsvpLanding({ params }: { params: { userId: string } }) {
   const router = useRouter();
+  const id = params.userId;
 
   useEffect(() => {
-    // If we only have a userId, we can't show a specific form.
-    // In a future update, this could list public events for this user.
-    // For now, we redirect to home.
+    // If we only have one ID, we try to redirect or show a generic message.
+    // In a future update, this could list public events for this ID.
     const timer = setTimeout(() => {
       router.push('/');
     }, 3000);
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [router, id]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-secondary p-4 text-center">
