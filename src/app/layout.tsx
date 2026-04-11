@@ -1,9 +1,11 @@
-import type { Metadata } from "next";
+
+import type { Metadata } from "metadata";
 import { PT_Sans } from "next/font/google";
 import "./globals.css";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 import { Toaster } from "@/components/ui/toaster";
 import Script from "next/script";
+import GlobalFooter from "@/components/global-footer";
 
 const ptSans = PT_Sans({ subsets: ["latin"], weight: ["400", "700"] });
 
@@ -18,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={ptSans.className}>
+    <html lang="en" className="h-full">
+      <body className={`${ptSans.className} h-full flex flex-col`}>
         {/* Google Tag (gtag.js) */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-17873532827"
@@ -36,7 +38,12 @@ export default function RootLayout({
         </Script>
         
         <FirebaseClientProvider>
-          {children}
+          <div className="flex flex-col min-h-screen flex-grow">
+            <div className="flex-grow">
+              {children}
+            </div>
+            <GlobalFooter />
+          </div>
           <Toaster />
         </FirebaseClientProvider>
       </body>
