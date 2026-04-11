@@ -80,7 +80,7 @@ export default function PricingPage() {
               {(tier.name === 'Basic' || tier.name === 'Standard') && (
                 <div className="absolute top-0 left-0 w-full bg-primary text-primary-foreground py-2 text-center text-xs font-semibold z-10">
                   <Star className="h-3 w-3 inline-block mr-1" />
-                  1st 100 subscribers keep their 1st event for life!
+                  1st 50 subscribers keep their 1st event for life!
                 </div>
               )}
               <CardHeader className="text-center pt-12">
