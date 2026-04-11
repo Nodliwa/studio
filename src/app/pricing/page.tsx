@@ -41,7 +41,7 @@ const tiers = [
   {
     name: 'Standard',
     price: 'R250',
-    priceSuffix: '/ month',
+    priceSuffix: '/ 4 plans',
     description: '4 plans • All Basic features • Multi-event management.',
     features: [
       'All features from the Basic plan',
