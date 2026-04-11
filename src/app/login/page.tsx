@@ -222,9 +222,12 @@ export default function LoginPage() {
     if (!auth) return;
     setFirebaseError(null);
     const email = getValues("email");
-    if (!email) {
+    
+    // Basic format check before calling Firebase
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
       setFirebaseError(
-        "Please enter your email address in the field above to reset your password.",
+        "Please enter a valid email address in the field above to reset your password.",
       );
       return;
     }
@@ -233,7 +236,7 @@ export default function LoginPage() {
     try {
       await sendPasswordResetEmail(auth, email);
       toast({
-        title: "Password Reset Email Sent",
+        title: "Check Your Inbox",
         description: `If an account exists for ${email}, a password reset link has been sent. Please check your inbox and spam folder.`,
       });
     } catch (error) {

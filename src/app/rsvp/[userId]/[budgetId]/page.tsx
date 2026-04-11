@@ -114,8 +114,7 @@ export default function PublicRsvpPage({ params: { userId, budgetId } }: { param
           <CardFooter>
             <Button variant="outline" className="w-full" onClick={() => setSubmitted(false)}>Update Response</Button>
           </CardFooter>
-        </Card>
-      </div>
+        </div>
     );
   }
 
