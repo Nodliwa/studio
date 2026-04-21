@@ -8,7 +8,7 @@
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
-// Initialize the Genkit AI instance.
+// Initialize the Genkit AI insatance.
 // It is crucial to configure plugins here. The googleAI plugin enables
 // the use of Google's AI models (e.g., Gemini).
 export const ai = genkit({

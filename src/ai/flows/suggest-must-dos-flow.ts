@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview AI flow for suggesting "must-do" tasks.
@@ -30,12 +31,13 @@ const suggestMustDosPrompt = ai.definePrompt({
   input: { schema: SuggestMustDosInputSchema },
   output: { schema: SuggestMustDosOutputSchema },
   system: `You are an expert event planner specializing in South African celebrations. 
-Your goal is to suggest exactly 5 critical, non-budgetary tasks that are essential for a specific event type.
+Your goal is to suggest exactly 5 critical, non-budgetary tasks that are essential for a specific event type (e.g. Wedding, Funeral, uMemulo, uMgidi).
 Always respond with valid JSON matching the output schema.`,
   prompt: `
 For a celebration of type: "{{eventType}}", suggest 5 unique tasks.
 Do NOT suggest tasks that are already in this list: {{#each existingTitles}}- {{this}} {{/each}}.
 Consider cultural protocols if the event is traditional.
+Focus on actionable planning steps.
 `,
 });
 
@@ -47,10 +49,18 @@ const suggestMustDosFlow = ai.defineFlow(
   },
   async (input) => {
     try {
+      console.log('Generating AI suggestions for:', input.eventType);
       const { output } = await suggestMustDosPrompt(input);
-      return output || { suggestions: [] };
+      
+      if (!output || !output.suggestions) {
+        console.warn('AI returned empty suggestions list.');
+        return { suggestions: [] };
+      }
+      
+      return output;
     } catch (error) {
       console.error('SuggestMustDosFlow Error:', error);
+      // Return empty instead of crashing the server action
       return { suggestions: [] };
     }
   }

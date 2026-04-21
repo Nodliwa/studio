@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, ComponentType } from 'react';
@@ -298,26 +299,29 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
   };
 
   const handleGetSuggestions = async () => {
-    if (!eventType) {
-      toast({ variant: "destructive", title: "Missing Context", description: "Set an event type in details first." });
-      return;
-    }
+    const effectiveEventType = eventType || 'Celebration';
+    
     setIsSuggesting(true);
     try {
       const existingTitles = items.map(item => item.title);
-      const result = await suggestMustDos({ eventType, existingTitles });
-      if (result.suggestions?.length) {
+      console.log('Requesting suggestions for event type:', effectiveEventType);
+      
+      const result = await suggestMustDos({ eventType: effectiveEventType, existingTitles });
+      
+      if (result.suggestions && result.suggestions.length > 0) {
         const titles = result.suggestions.map(s => s.title);
-        const scored = await scoreSuggestions(titles, `Event: ${eventType}. Tasks: ${existingTitles.join(', ')}`);
+        const scored = await scoreSuggestions(titles, `Event: ${effectiveEventType}. Tasks: ${existingTitles.join(', ')}`);
         setSuggestions(scored.sort((a, b) => b.score - a.score));
         setSelectedSuggestions({});
       } else {
-        toast({ title: "No suggestions", description: "The AI couldn't find new relevant tasks." });
+        toast({ title: "No suggestions", description: "The AI couldn't find new relevant tasks right now." });
       }
     } catch (error) {
-      console.error(error);
-      toast({ variant: "destructive", title: "AI Error", description: "Failed to generate suggestions." });
-    } finally { setIsSuggesting(false); }
+      console.error('AI Suggestion Error in UI:', error);
+      toast({ variant: "destructive", title: "AI Error", description: "Failed to generate suggestions. Please try again." });
+    } finally { 
+      setIsSuggesting(false); 
+    }
   };
 
   const handleAddSuggestions = () => {
@@ -369,7 +373,7 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>AI Planning Assistant</DialogTitle>
-            <DialogDescription>Select tasks to add to your {eventType?.toLowerCase()} plan.</DialogDescription>
+            <DialogDescription>Select tasks to add to your {eventType?.toLowerCase() || 'celebration'} plan.</DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-2 max-h-[400px] overflow-y-auto">
             {suggestions?.map((s, i) => (
