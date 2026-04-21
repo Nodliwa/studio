@@ -349,7 +349,7 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
       toast({
         variant: "destructive",
         title: "Cannot get suggestions",
-        description: "Please set an event type first in the event details.",
+        description: "Please set an event type first (e.g., Wedding, Funeral) in the event details.",
       });
       return;
     }
@@ -359,11 +359,13 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
   
     try {
       const existingTitles = items.map(item => item.title);
+      console.log(`Requesting suggestions for ${eventType} avoiding:`, existingTitles);
+      
       const result = await suggestMustDos({ eventType, existingTitles });
   
       if (result.suggestions && result.suggestions.length > 0) {
         const titles = result.suggestions.map(s => s.title);
-        const context = `Event type: ${eventType}`;
+        const context = `Event type: ${eventType}. Existing tasks: ${existingTitles.join(', ')}`;
         const scored = await scoreSuggestions(titles, context);
         const sorted = scored.sort((a, b) => b.score - a.score);
   
@@ -372,15 +374,15 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
       } else {
         toast({
           title: "No new suggestions found",
-          description: "The AI couldn't find any new tasks for this event type.",
+          description: "The AI couldn't find any additional tasks for this celebration.",
         });
       }
     } catch (error) {
-      console.error("AI Suggestion Error:", error);
+      console.error("AI Suggestion UI Error:", error);
       toast({
         variant: "destructive",
-        title: "AI Suggestion Failed",
-        description: "Could not retrieve suggestions. Please try again.",
+        title: "AI Error",
+        description: "There was a problem communicating with the AI. Please try again.",
       });
     } finally {
       setIsSuggesting(false);

@@ -324,9 +324,9 @@ export default function LoginPage() {
                     <Info className="h-4 w-4" />
                     <AlertTitle>Check your email</AlertTitle>
                     <AlertDescription className="text-xs">
-                      We've sent a **reset link** to **{resetSentTo}**. 
-                      Please click the link in that email to choose a new password. 
-                      **Check your Spam folder** if you don't see it within 2 minutes.
+                      We've sent a reset link to <strong>{resetSentTo}</strong>.{" "}
+                      Please click the link in that email to choose a new password.{" "}
+                      <strong>Check your Spam folder</strong> if you don't see it within 2 minutes.
                     </AlertDescription>
                   </Alert>
                 )}

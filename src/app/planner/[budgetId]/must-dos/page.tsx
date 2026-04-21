@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo } from 'react';
@@ -8,7 +9,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@
 import { collection, doc, query, orderBy } from 'firebase/firestore';
 import Greeter from '@/components/greeter';
 import { Budget } from '@/lib/types';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,6 +19,7 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isTemplateMode = budgetId === 'template';
   
   const budgetDocRef = useMemoFirebase(() => (
@@ -35,6 +37,11 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
   ), [mustDosCollection]);
 
   const { data: mustDos, isLoading: mustDosLoading } = useCollection<MustDo>(mustDosQuery);
+
+  // Derive event type from budget or search params (for template mode)
+  const eventType = isTemplateMode 
+    ? (searchParams.get('eventType') || undefined) 
+    : budget?.eventType;
 
   if (isUserLoading) {
     return (
@@ -67,7 +74,7 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
                     budgetRef={budgetDocRef} 
                     isTemplateMode={isTemplateMode} 
                     mustDos={mustDos} 
-                    eventType={budget?.eventType}
+                    eventType={eventType}
                 />
              )}
           </div>

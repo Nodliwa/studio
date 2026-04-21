@@ -34,18 +34,19 @@ const suggestMustDosPrompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash',
   input: { schema: SuggestMustDosInputSchema },
   output: { schema: SuggestMustDosOutputSchema },
+  system: `You are an expert event planner specializing in South African celebrations. 
+Your goal is to suggest 5 critical, non-budgetary tasks that are essential for the success of a specific event type.`,
   prompt: `
-You are an expert event planner specializing in South African celebrations. 
-For a {{eventType}}, suggest exactly 5 critical, non-budgetary tasks that are essential for success.
+For a celebration of type: "{{eventType}}", suggest exactly 5 important tasks.
 
-Follow these rules strictly:
+Rules:
 1. Do NOT suggest tasks that are already in this list: {{#each existingTitles}}- {{this}} {{/each}}.
 2. If the event is traditional (like uMemulo or uMgidi), suggest tasks related to cultural protocols, attire, or community announcements.
 3. Assign priority:
    - "high": Critical early-stage tasks.
    - "medium": Important logistics.
    - "low": Final touches.
-4. Your response MUST be valid JSON matching the schema.
+4. Your response must be a valid JSON object matching the requested schema.
 `,
 });
 
@@ -59,7 +60,10 @@ const suggestMustDosFlow = ai.defineFlow(
   async (input) => {
     try {
       const { output } = await suggestMustDosPrompt(input);
-      if (!output) return { suggestions: [] };
+      if (!output) {
+        console.error('SuggestMustDosFlow: No output from model');
+        return { suggestions: [] };
+      }
       return output;
     } catch (error) {
       console.error('SuggestMustDosFlow Error:', error);
