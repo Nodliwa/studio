@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Users, 
-  Link as LinkIcon, 
   CheckCircle2, 
   XCircle, 
   HelpCircle, 
@@ -26,7 +25,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface RsvpManagerProps {
@@ -38,10 +36,8 @@ export function RsvpManager({ budget, rsvps }: RsvpManagerProps) {
   const { toast } = useToast();
   const [showGuestList, setShowGuestList] = useState(false);
 
-  // Generate the public invitation link
   const inviteUrl = useMemo(() => {
     if (typeof window === 'undefined') return '';
-    // Standardized URL structure: /rsvp/[ownerId]/[budgetId]
     return `${window.location.origin}/rsvp/${budget.userId}/${budget.id}`;
   }, [budget.userId, budget.id]);
 
@@ -53,7 +49,7 @@ export function RsvpManager({ budget, rsvps }: RsvpManagerProps) {
       confirmed: attending.length,
       declined: list.filter(r => r.attending === 'no').length,
       maybe: list.filter(r => r.attending === 'maybe').length,
-      totalGuests: totalGuests + attending.length, // Primary guests + their extra guests
+      totalGuests: totalGuests + attending.length,
     };
   }, [rsvps]);
 
@@ -78,7 +74,6 @@ export function RsvpManager({ budget, rsvps }: RsvpManagerProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Link Sharing Section */}
         <div className="space-y-2">
           <h4 className="text-sm font-semibold text-muted-foreground">Your Invite Link</h4>
           <div className="flex gap-2">
@@ -90,12 +85,8 @@ export function RsvpManager({ budget, rsvps }: RsvpManagerProps) {
               <ExternalLink className="h-4 w-4" />
             </Button>
           </div>
-          <p className="text-[10px] text-muted-foreground italic">
-            Anyone with this link can RSVP to your event.
-          </p>
         </div>
 
-        {/* Summary Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
             <p className="text-xs text-green-600 font-bold uppercase">Going</p>
@@ -115,14 +106,13 @@ export function RsvpManager({ budget, rsvps }: RsvpManagerProps) {
           </div>
         </div>
 
-        {/* Guest List Toggle */}
         <div className="pt-2">
           <Button 
             variant="ghost" 
             className="w-full justify-between" 
             onClick={() => setShowGuestList(!showGuestList)}
           >
-            <span className="font-semibold">View Full Guest List</span>
+            <span className="font-semibold">View Guest List</span>
             {showGuestList ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </Button>
 

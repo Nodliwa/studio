@@ -1,9 +1,8 @@
-
 'use client';
 
 import { useState, useMemo, useEffect, ComponentType } from 'react';
 import { useUser, useFirestore, addMustDo, addMustDosBatch, updateDocumentNonBlocking, deleteDocument } from '@/firebase';
-import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import type { MustDo } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,21 +10,19 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, Trash2, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp, Mail, MessageSquare, Sparkles, Loader2 } from 'lucide-react';
+import { PlusCircle, Trash2, BellOff, Flag, ArrowDown, ArrowRight, ArrowUp, Mail, MessageSquare, Sparkles, Loader2, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentReference } from 'firebase/firestore';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 import { suggestMustDos } from '@/ai/flows/suggest-must-dos-flow';
 import { useToast } from '@/hooks/use-toast';
 import { scoreSuggestions, type ScoredSuggestion } from '@/ai/flows/score-suggestions-flow';
-
 
 interface MustDosProps {
   budgetId: string;
@@ -58,19 +55,11 @@ const WhatsappIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-
 function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id: string, data: Partial<MustDo>) => void, onDelete: (id: string) => void }) {
   const [title, setTitle] = useState(item.title);
   const [note, setNote] = useState(item.note || '');
   const [deadline, setDeadline] = useState(item.deadline ? new Date(item.deadline) : undefined);
-  const [reminderDays, setReminderDays] = useState(1);
-
-  useEffect(() => {
-    setReminderDays(item.reminderDaysBefore || 1)
-  }, [item.reminderDaysBefore]);
-  
-  const priority = item.priority || 'medium';
-  const reminderType = item.reminderType || 'none';
+  const [reminderDays, setReminderDays] = useState(item.reminderDaysBefore || 1);
 
   const handleBlur = (field: 'title' | 'note') => {
     const value = field === 'title' ? title : note;
@@ -96,13 +85,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   };
 
   const handleReminderToggle = (checked: boolean) => {
-    if (checked) {
-        if (reminderType === 'none') {
-            handleReminderTypeChange('email');
-        }
-    } else {
-        handleReminderTypeChange('none');
-    }
+    handleReminderTypeChange(checked ? (item.reminderType === 'none' ? 'email' : item.reminderType) : 'none');
   }
 
   const ReminderIcon = {
@@ -110,7 +93,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
       sms: MessageSquare,
       whatsapp: WhatsappIcon,
       none: BellOff,
-  }[reminderType] || BellOff;
+  }[item.reminderType || 'none'] || BellOff;
 
   return (
     <div className="flex flex-col p-3 border-b border-border/20 last:border-b-0">
@@ -138,8 +121,8 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-auto w-auto p-1 flex justify-start items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
-                          <PriorityIcon priority={priority} />
-                          <span className="w-14 text-left">{PriorityLevels[priority].label}</span>
+                          <PriorityIcon priority={item.priority || 'medium'} />
+                          <span className="w-14 text-left">{PriorityLevels[item.priority || 'medium'].label}</span>
                       </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
@@ -203,12 +186,12 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
             <div className="flex items-center space-x-2">
                 <Switch 
                     id={`reminder-switch-${item.id}`} 
-                    checked={reminderType !== 'none'} 
+                    checked={item.reminderType !== 'none'} 
                     onCheckedChange={handleReminderToggle} 
                 />
                 <Label htmlFor={`reminder-switch-${item.id}`} className="text-sm text-muted-foreground">Reminders</Label>
             </div>
-            {reminderType !== 'none' && (
+            {item.reminderType !== 'none' && (
                 <>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -234,10 +217,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
                             type="number" 
                             min="1" 
                             value={reminderDays} 
-                            onChange={(e) => {
-                                const value = parseInt(e.target.value, 10);
-                                setReminderDays(Number.isFinite(value) ? value : 1);
-                            }}
+                            onChange={(e) => setReminderDays(parseInt(e.target.value, 10) || 1)}
                             onBlur={handleReminderDaysBlur}
                             className="h-9 w-16 text-center" />
                         <Label className="text-sm text-muted-foreground">days before</Label>
@@ -254,48 +234,28 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
   const { user } = useUser();
   const firestore = useFirestore();
   const [localMustDos, setLocalMustDos] = useState<MustDo[]>([]);
-  const [isLoading, setIsLoading] = useState(!isTemplateMode && !mustDos);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<ScoredSuggestion[] | null>(null);
   const [selectedSuggestions, setSelectedSuggestions] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (mustDos) {
-      setIsLoading(false);
-    }
-  }, [mustDos]);
-
-
   const items = useMemo(() => {
-    const serverItems = mustDos || [];
-    const allItems = isTemplateMode ? localMustDos : serverItems;
-    
+    const allItems = isTemplateMode ? localMustDos : (mustDos || []);
     return [...allItems].sort((a, b) => {
-        // Primary sort: status (todo before done)
         if (a.status === 'todo' && b.status === 'done') return -1;
         if (a.status === 'done' && b.status === 'todo') return 1;
-
-        // Secondary sort: priority
         const priorityA = a.priority || 'medium';
         const priorityB = b.priority || 'medium';
-        if (PriorityLevels[priorityA].order < PriorityLevels[priorityB].order) return -1;
-        if (PriorityLevels[priorityA].order > PriorityLevels[priorityB].order) return 1;
-  
-        // Tertiary sort: deadline (earlier dates first)
-        const dateA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
-        const dateB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
-        if (dateA < dateB) return -1;
-        if (dateA > dateB) return 1;
-  
-        // Final sort: creation time (newest first)
+        if (PriorityLevels[priorityA].order !== PriorityLevels[priorityB].order) {
+            return PriorityLevels[priorityA].order - PriorityLevels[priorityB].order;
+        }
         const aTime = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
         const bTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
         return bTime - aTime;
-      });
+    });
   }, [mustDos, isTemplateMode, localMustDos]);
 
-  const completedCount = useMemo(() => items.filter(item => item.status === 'done').length, [items]);
+  const completedCount = items.filter(item => item.status === 'done').length;
   const progress = items.length > 0 ? (completedCount / items.length) * 100 : 0;
 
   const handleAddItem = () => {
@@ -315,7 +275,6 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
         setLocalMustDos(prev => [newItem, ...prev]);
         return;
     };
-    
     const ownerId = budgetRef?.path.split('/')[1] || user.uid;
     addMustDo(firestore, ownerId, budgetId, '');
   };
@@ -325,11 +284,8 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
       setLocalMustDos(prev => prev.map(item => item.id === id ? { ...item, ...data } : item));
       return;
     }
-    if (!user || !budgetRef || !firestore) return;
-    
-    const mustDosCollection = collection(budgetRef, 'mustDos');
-    const docRef = doc(mustDosCollection, id);
-    updateDocumentNonBlocking(docRef, data);
+    if (!budgetRef) return;
+    updateDocumentNonBlocking(doc(collection(budgetRef, 'mustDos'), id), data);
   };
 
   const handleDeleteItem = (id: string) => {
@@ -337,95 +293,47 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
       setLocalMustDos(prev => prev.filter(item => item.id !== id));
       return;
     }
-    if (!user || !budgetRef || !firestore) return;
-    
-    const mustDosCollection = collection(budgetRef, 'mustDos');
-    const docRef = doc(mustDosCollection, id);
-    deleteDocument(docRef);
+    if (!budgetRef) return;
+    deleteDocument(doc(collection(budgetRef, 'mustDos'), id));
   };
 
   const handleGetSuggestions = async () => {
     if (!eventType) {
-      toast({
-        variant: "destructive",
-        title: "Cannot get suggestions",
-        description: "Please set an event type first (e.g., Wedding, Funeral) in the event details.",
-      });
+      toast({ variant: "destructive", title: "Missing Context", description: "Set an event type in details first." });
       return;
     }
-  
     setIsSuggesting(true);
-    setSuggestions(null);
-  
     try {
       const existingTitles = items.map(item => item.title);
-      console.log(`Requesting suggestions for ${eventType} avoiding:`, existingTitles);
-      
       const result = await suggestMustDos({ eventType, existingTitles });
-  
-      if (result.suggestions && result.suggestions.length > 0) {
+      if (result.suggestions?.length) {
         const titles = result.suggestions.map(s => s.title);
-        const context = `Event type: ${eventType}. Existing tasks: ${existingTitles.join(', ')}`;
-        const scored = await scoreSuggestions(titles, context);
-        const sorted = scored.sort((a, b) => b.score - a.score);
-  
-        setSuggestions(sorted);
+        const scored = await scoreSuggestions(titles, `Event: ${eventType}. Tasks: ${existingTitles.join(', ')}`);
+        setSuggestions(scored.sort((a, b) => b.score - a.score));
         setSelectedSuggestions({});
       } else {
-        toast({
-          title: "No new suggestions found",
-          description: "The AI couldn't find any additional tasks for this celebration.",
-        });
+        toast({ title: "No suggestions", description: "The AI couldn't find new relevant tasks." });
       }
     } catch (error) {
-      console.error("AI Suggestion UI Error:", error);
-      toast({
-        variant: "destructive",
-        title: "AI Error",
-        description: "There was a problem communicating with the AI. Please try again.",
-      });
-    } finally {
-      setIsSuggesting(false);
-    }
+      console.error(error);
+      toast({ variant: "destructive", title: "AI Error", description: "Failed to generate suggestions." });
+    } finally { setIsSuggesting(false); }
   };
 
   const handleAddSuggestions = () => {
-    if (!suggestions || isTemplateMode || !user || !budgetRef || !firestore) {
-      setSuggestions(null);
-      return;
+    const titles = Object.keys(selectedSuggestions).filter(t => selectedSuggestions[t]);
+    if (!titles.length) return;
+    if (isTemplateMode) {
+        titles.forEach(t => {
+            const newItem: MustDo = { id: `ai-${Date.now()}-${t}`, budgetId, userId: '', title: t, status: 'todo', priority: 'medium', deadline: '', createdAt: new Date(), reminderType: 'none', reminderDaysBefore: 1 };
+            setLocalMustDos(prev => [newItem, ...prev]);
+        });
+    } else if (user && budgetRef) {
+        const ownerId = budgetRef.path.split('/')[1] || user.uid;
+        addMustDosBatch(firestore, ownerId, budgetId, titles);
     }
-  
-    const selectedTitles = Object.keys(selectedSuggestions).filter(title => selectedSuggestions[title]);
-    if (selectedTitles.length === 0) {
-      toast({ title: "No items selected", description: "Please select at least one suggestion to add." });
-      return;
-    }
-  
-    const ownerId = budgetRef?.path.split('/')[1] || user.uid;
-    
-    try {
-      addMustDosBatch(firestore, ownerId, budgetId, selectedTitles);
-      toast({
-        title: "Suggestions Added",
-        description: `${selectedTitles.length} new Must-Do item(s) have been added.`,
-      });
-    } catch (error) {
-      console.error("Error adding suggestions:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not add the selected suggestions.",
-      });
-    }
-  
     setSuggestions(null);
-  };
-
-  const handleSuggestionSelectionChange = (title: string, isChecked: boolean) => {
-    setSelectedSuggestions(prev => ({
-      ...prev,
-      [title]: isChecked,
-    }));
+    toast({ title: "Tasks Added", description: `${titles.length} tasks added to your plan.` });
   };
 
   return (
@@ -433,78 +341,49 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
       <Card className="h-full bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
         <CardHeader className="p-4">
           <CardTitle className="font-headline text-2xl">Must-Do's</CardTitle>
-          <CardDescription className="text-foreground/80">The things that make your event run smoothly. Add what matters most to you.</CardDescription>
+          <CardDescription className="text-foreground/80">Critical tasks to ensure your event runs smoothly.</CardDescription>
         </CardHeader>
         <CardContent className="p-4 pt-0">
-          <div className="space-y-2">
+          <div className="space-y-4">
             <div className="flex items-center gap-4 text-sm font-medium text-foreground/90">
-              <span>{completedCount} of {items.length} completed</span>
+              <span className="shrink-0">{completedCount} of {items.length} completed</span>
               <Progress value={progress} className="w-full h-2 bg-white/20" />
             </div>
-
             <div className="border border-border/20 rounded-lg overflow-hidden bg-white/5">
-              {items.map(item => (
-                <MustDoItem key={item.id} item={item} onUpdate={handleUpdateItem} onDelete={handleDeleteItem} />
-              ))}
-              {items.length === 0 && !isLoading && (
-                <p className="text-muted-foreground text-center p-8">No must-dos yet. Add one to get started!</p>
-              )}
-              {isLoading && (
-                   <p className="text-muted-foreground text-center p-8">Loading must-dos...</p>
-              )}
+              {items.map(item => ( <MustDoItem key={item.id} item={item} onUpdate={handleUpdateItem} onDelete={handleDeleteItem} /> ))}
+              {items.length === 0 && <p className="text-muted-foreground text-center p-8">Your list is empty.</p>}
             </div>
-            
-            <div className="flex flex-wrap gap-2 pt-2">
-              <Button variant="outline" onClick={() => handleAddItem()} className="bg-white/10 hover:bg-white/20 border-white/30">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add a Must-Do
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={handleAddItem} className="bg-white/10 hover:bg-white/20 border-white/30">
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add Task
               </Button>
-              {!isTemplateMode && (
-                  <Button variant="outline" onClick={handleGetSuggestions} disabled={isSuggesting} className="bg-white/10 hover:bg-white/20 border-white/30 min-w-[160px]">
-                      {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                      {isSuggesting ? 'Thinking...' : 'Suggest with AI'}
-                  </Button>
-              )}
+              <Button variant="outline" onClick={handleGetSuggestions} disabled={isSuggesting} className="bg-white/10 hover:bg-white/20 border-white/30">
+                  {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                  Suggest with AI
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
-
       <Dialog open={!!suggestions} onOpenChange={(open) => !open && setSuggestions(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Ranked AI Suggestions</DialogTitle>
-            <DialogDescription>
-              Here are ranked suggestions for your {eventType?.toLowerCase()}. Select the ones you want to add.
-            </DialogDescription>
+            <DialogTitle>AI Planning Assistant</DialogTitle>
+            <DialogDescription>Select tasks to add to your {eventType?.toLowerCase()} plan.</DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-2 max-h-[400px] overflow-y-auto pr-2">
-            {suggestions?.map((suggestion, index) => (
-              <div key={index} className="flex items-start space-x-3 p-3 rounded-md hover:bg-muted/50 border border-transparent hover:border-border transition-colors">
-                <Checkbox
-                  id={`suggestion-${index}`}
-                  checked={!!selectedSuggestions[suggestion.title]}
-                  onCheckedChange={(checked) => handleSuggestionSelectionChange(suggestion.title, !!checked)}
-                  className="mt-1"
-                />
-                <div className="grid gap-1.5 leading-none">
-                  <label
-                    htmlFor={`suggestion-${index}`}
-                    className="text-sm font-medium leading-none flex items-center cursor-pointer"
-                  >
-                    {suggestion.title}
-                    {suggestion.score > 0.8 && <span className="ml-2 text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full uppercase font-bold">🔥 Recommended</span>}
-                  </label>
-                  <p className="text-xs text-muted-foreground">Relevance: {Math.round(suggestion.score * 100)}%</p>
-                </div>
+          <div className="py-4 space-y-2 max-h-[400px] overflow-y-auto">
+            {suggestions?.map((s, i) => (
+              <div key={i} className="flex items-start space-x-3 p-3 rounded-md hover:bg-muted/50 border border-transparent hover:border-border transition-colors">
+                <Checkbox id={`s-${i}`} checked={!!selectedSuggestions[s.title]} onCheckedChange={(c) => setSelectedSuggestions(p => ({...p, [s.title]: !!c}))} className="mt-1" />
+                <label htmlFor={`s-${i}`} className="text-sm font-medium leading-none cursor-pointer flex-1">
+                    {s.title} {s.score > 0.8 && <span className="ml-2 text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full uppercase font-bold">Highly Relevant</span>}
+                </label>
               </div>
             ))}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setSuggestions(null)}>Cancel</Button>
-            <Button onClick={handleAddSuggestions} className="font-bold">
-              Add Selected ({Object.values(selectedSuggestions).filter(Boolean).length})
-            </Button>
+            <Button onClick={handleAddSuggestions} className="font-bold">Add Selected ({Object.values(selectedSuggestions).filter(Boolean).length})</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

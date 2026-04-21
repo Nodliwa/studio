@@ -1,5 +1,4 @@
-
-import type { Metadata } from "metadata";
+import type { Metadata } from "next";
 import { PT_Sans } from "next/font/google";
 import "./globals.css";
 import { FirebaseClientProvider } from "@/firebase/client-provider";

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from 'react';
@@ -6,13 +7,12 @@ import { RefreshCw } from 'lucide-react';
 
 /**
  * Standardized RSVP landing page.
- * Uses 'userId' as the primary dynamic segment to resolve Next.js routing conflicts.
+ * Uses 'ownerId' as the primary dynamic segment to resolve Next.js routing conflicts.
  */
-export default function RsvpLanding({ params }: { params: { userId: string } }) {
+export default function RsvpLanding({ params }: { params: { ownerId: string } }) {
   const router = useRouter();
 
   useEffect(() => {
-    // If no budgetId is provided, redirect to home as it's an incomplete link
     const timer = setTimeout(() => {
       router.push('/');
     }, 2000);

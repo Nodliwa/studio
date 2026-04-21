@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -28,14 +29,14 @@ const rsvpFormSchema = z.object({
 
 type RsvpFormValues = z.infer<typeof rsvpFormSchema>;
 
-export default function PublicRsvpPage({ params: { userId, budgetId } }: { params: { userId: string, budgetId: string } }) {
+export default function PublicRsvpPage({ params: { ownerId, budgetId } }: { params: { ownerId: string, budgetId: string } }) {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
 
   const budgetRef = useMemo(() => 
-    userId && budgetId ? doc(firestore, 'users', userId, 'budgets', budgetId) : null,
-  [firestore, userId, budgetId]);
+    ownerId && budgetId ? doc(firestore, 'users', ownerId, 'budgets', budgetId) : null,
+  [firestore, ownerId, budgetId]);
 
   const { data: budget, isLoading: budgetLoading } = useDoc<Budget>(budgetRef as any);
 
@@ -60,7 +61,7 @@ export default function PublicRsvpPage({ params: { userId, budgetId } }: { param
       const result = await submitRSVP({
         ...data,
         budgetId,
-        userId,
+        userId: ownerId,
       });
 
       if (result.success) {
@@ -165,7 +166,7 @@ export default function PublicRsvpPage({ params: { userId, budgetId } }: { param
             <CardTitle className="font-headline">Confirm Attendance</CardTitle>
             <CardDescription>Please let us know if you'll be joining us by filling out the form below.</CardDescription>
           </CardHeader>
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form handleSubmit={handleSubmit(onSubmit)}>
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="name">Your Full Name</Label>
