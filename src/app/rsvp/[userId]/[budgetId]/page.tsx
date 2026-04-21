@@ -29,12 +29,15 @@ const rsvpFormSchema = z.object({
 
 type RsvpFormValues = z.infer<typeof rsvpFormSchema>;
 
+/**
+ * Direct RSVP page.
+ * Parameter names MUST match the directory structure: [userId] / [budgetId]
+ */
 export default function PublicRsvpPage({ params: { userId, budgetId } }: { params: { userId: string, budgetId: string } }) {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
 
-  // Standard path: users/[ownerId]/budgets/[budgetId]
   const budgetRef = useMemo(() => 
     userId && budgetId ? doc(firestore, 'users', userId, 'budgets', budgetId) : null,
   [firestore, userId, budgetId]);
@@ -114,7 +117,8 @@ export default function PublicRsvpPage({ params: { userId, budgetId } }: { param
           <CardFooter>
             <Button variant="outline" className="w-full" onClick={() => setSubmitted(false)}>Update Response</Button>
           </CardFooter>
-        </div>
+        </Card>
+      </div>
     );
   }
 
@@ -127,7 +131,6 @@ export default function PublicRsvpPage({ params: { userId, budgetId } }: { param
   return (
     <div className="min-h-screen bg-secondary flex flex-col items-center py-12 px-4">
       <div className="max-w-xl w-full space-y-8">
-        {/* Event Header Card */}
         <Card className="overflow-hidden border-none shadow-xl">
           <div className="relative h-48 w-full bg-primary/20">
             {budget?.backgroundImageUrl ? (
@@ -162,7 +165,6 @@ export default function PublicRsvpPage({ params: { userId, budgetId } }: { param
           </CardContent>
         </Card>
 
-        {/* RSVP Form Card */}
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="font-headline">Confirm Attendance</CardTitle>
@@ -237,10 +239,6 @@ export default function PublicRsvpPage({ params: { userId, budgetId } }: { param
             </CardFooter>
           </form>
         </Card>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Powered by <strong>SimpliPlan</strong> - Celebration Planning Made Simple
-        </p>
       </div>
     </div>
   );

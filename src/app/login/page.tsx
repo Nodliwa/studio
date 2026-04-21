@@ -28,9 +28,10 @@ import {
 import { doc, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { initiateGoogleSignIn, initiateFacebookSignIn } from "@/firebase/auth-operations";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, Info } from "lucide-react";
 import Script from "next/script";
 import { verifyRecaptcha } from "@/app/actions";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -86,6 +87,7 @@ export default function LoginPage() {
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
   const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
+  const [resetSentTo, setResetSentTo] = useState<string | null>(null);
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
@@ -221,13 +223,13 @@ export default function LoginPage() {
   const handlePasswordReset = async () => {
     if (!auth) return;
     setFirebaseError(null);
+    setResetSentTo(null);
     const email = getValues("email");
     
-    // Basic format check before calling Firebase
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
       setFirebaseError(
-        "Please enter a valid email address in the field above to reset your password.",
+        "Please enter your full email address in the field above to receive a reset link.",
       );
       return;
     }
@@ -235,9 +237,10 @@ export default function LoginPage() {
     setIsSendingReset(true);
     try {
       await sendPasswordResetEmail(auth, email);
+      setResetSentTo(email);
       toast({
-        title: "Check Your Inbox",
-        description: `If an account exists for ${email}, a password reset link has been sent. Please check your inbox and spam folder.`,
+        title: "Reset Link Sent",
+        description: `Check your inbox (${email}) for a reset link. Note: There is no numeric code; simply click the link in the email.`,
       });
     } catch (error) {
       console.error("Password reset error:", error);
@@ -315,6 +318,18 @@ export default function LoginPage() {
                     </span>
                   </div>
                 </div>
+
+                {resetSentTo && (
+                  <Alert className="bg-primary/10 border-primary/20">
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>Check your email</AlertTitle>
+                    <AlertDescription className="text-xs">
+                      We've sent a **reset link** to **{resetSentTo}**. 
+                      Please click the link in that email to choose a new password. 
+                      **Check your Spam folder** if you don't see it within 2 minutes.
+                    </AlertDescription>
+                  </Alert>
+                )}
 
                 <form
                   onSubmit={handleSubmit(onEmailSubmit)}
