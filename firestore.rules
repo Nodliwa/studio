@@ -2,31 +2,35 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Admin email allowed to read all data
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == "elkay40@gmail.com";
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
     }
 
-    // Helper to check if the user is the owner or an authorized collaborator
     function canAccessBudget(userId, budgetId) {
       let budget = get(/databases/$(database)/documents/users/$(userId)/budgets/$(budgetId)).data;
       return request.auth != null && (
-        request.auth.uid == userId || 
+        request.auth.uid == userId ||
         (budget.collaboratorEmails != null && request.auth.token.email in budget.collaboratorEmails)
       );
+    }
+
+    match /admins/{email} {
+      allow read: if request.auth != null && request.auth.token.email == email;
+      allow write: if false;
     }
 
     match /users/{userId} {
       allow read: if isAdmin() || (request.auth != null && request.auth.uid == userId);
       allow write: if request.auth != null && request.auth.uid == userId;
-      
+
       match /budgets/{budgetId} {
         allow read: if isAdmin() || (request.auth != null && (
-          request.auth.uid == userId || 
+          request.auth.uid == userId ||
           (resource != null && resource.data.collaboratorEmails != null && request.auth.token.email in resource.data.collaboratorEmails)
         ));
         allow write: if request.auth != null && (
-          request.auth.uid == userId || 
+          request.auth.uid == userId ||
           (resource != null && resource.data.collaboratorEmails != null && request.auth.token.email in resource.data.collaboratorEmails) ||
           (request.resource != null && request.resource.data.collaboratorEmails != null && request.auth.token.email in request.resource.data.collaboratorEmails)
         );
@@ -46,5 +50,10 @@ service cloud.firestore {
         }
       }
     }
+
+    match /{path=**}/budgets/{budgetId} {
+      allow read: if isAdmin();
+    }
+
   }
 }

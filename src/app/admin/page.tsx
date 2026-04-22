@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collectionGroup, getDocs } from "firebase/firestore";
+import { getFirestore, collectionGroup, getDocs, doc, getDoc } from "firebase/firestore";
 
-const ADMIN_EMAIL = "elkay40@gmail.com";
+type Role = "admin" | "viewer";
 
 interface Plan {
   name: string;
@@ -27,6 +27,7 @@ export default function AdminPage() {
   const [typeFilter, setTypeFilter] = useState("");
   const [error, setError] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [role, setRole] = useState<Role | null>(null);
 
   useEffect(() => {
     const auth = getAuth();
@@ -36,26 +37,33 @@ export default function AdminPage() {
         return;
       }
       setUserEmail(user.email || "");
-      if (user.email !== ADMIN_EMAIL) {
-        setError(`Access denied. Logged in as ${user.email}`);
-        setLoading(false);
-        return;
-      }
       try {
         const db = getFirestore();
+
+        // Check role in Firestore admins collection
+        const roleDoc = await getDoc(doc(db, "admins", user.email!));
+        if (!roleDoc.exists()) {
+          setError(`Access denied. You do not have dashboard access.`);
+          setLoading(false);
+          return;
+        }
+        const userRole = roleDoc.data()?.role as Role;
+        setRole(userRole);
+
+        // Load plans
         const snap = await getDocs(collectionGroup(db, "budgets"));
         const data: Plan[] = [];
-        snap.forEach((doc) => {
-          const d = doc.data();
+        snap.forEach((d) => {
+          const p = d.data();
           data.push({
-            name: d.name || d.planName || "—",
-            eventType: d.eventType || "",
-            eventDate: d.eventDate || null,
-            eventLocation: d.eventLocation || "",
-            expectedGuests: d.expectedGuests || 0,
-            grandTotal: d.grandTotal || 0,
-            collaborators: d.collaborators || [],
-            collaboratorEmails: d.collaboratorEmails || [],
+            name: p.name || p.planName || "—",
+            eventType: p.eventType || "",
+            eventDate: p.eventDate || null,
+            eventLocation: p.eventLocation || "",
+            expectedGuests: p.expectedGuests || 0,
+            grandTotal: p.grandTotal || 0,
+            collaborators: p.collaborators || [],
+            collaboratorEmails: p.collaboratorEmails || [],
           });
         });
         setPlans(data);
@@ -126,7 +134,7 @@ export default function AdminPage() {
     <div style={{ minHeight: "100vh", background: "#0a0a0f", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div className="text-center">
         <div className="w-10 h-10 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-gray-500 text-sm font-mono">Loading plans...</p>
+        <p className="text-gray-500 text-sm font-mono">Loading...</p>
       </div>
     </div>
   );
@@ -134,9 +142,8 @@ export default function AdminPage() {
   if (error) return (
     <div style={{ minHeight: "100vh", background: "#0a0a0f", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div className="text-center max-w-md px-6">
-        <p className="text-red-400 font-mono text-sm mb-2">Error: {error}</p>
+        <p className="text-red-400 font-mono text-sm mb-2">{error}</p>
         <p className="text-gray-600 text-xs">Signed in as: {userEmail}</p>
-        <p className="text-gray-600 text-xs mt-1">Required: {ADMIN_EMAIL}</p>
       </div>
     </div>
   );
@@ -149,7 +156,9 @@ export default function AdminPage() {
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-white">S</div>
             <span className="font-bold text-lg tracking-tight">Simpli<span className="text-purple-400">Plan</span></span>
-            <span className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase tracking-widest">Admin</span>
+            <span className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase tracking-widest">
+              {role === "admin" ? "Admin" : "Viewer"}
+            </span>
           </div>
           <p className="text-xs text-gray-600">{userEmail} · {plans.length} plans</p>
         </div>
