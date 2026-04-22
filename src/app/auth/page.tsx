@@ -28,6 +28,11 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 type Step = "input" | "otp";
 type ContactType = "phone" | "email";
 
+// Validation helpers
+const isPhone = (val: string) => /^(\+27|0)[6-8][0-9]{8}$/.test(val.trim().replace(/\s/g, ""));
+const isEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+const isValidContact = (val: string) => isPhone(val) || isEmail(val);
+
 function AuthPageInner() {
   const { auth, firestore } = useFirebase();
   const router = useRouter();
@@ -35,6 +40,7 @@ function AuthPageInner() {
   const [step, setStep] = useState<Step>("input");
   const [contactType, setContactType] = useState<ContactType>("phone");
   const [contact, setContact] = useState("");
+  const [contactError, setContactError] = useState("");
   const [name, setName] = useState("");
   const [otp, setOtp] = useState("");
   const [isNewUser, setIsNewUser] = useState(false);
@@ -110,22 +116,34 @@ function AuthPageInner() {
     }
   };
 
-  const isPhone = (val: string) => /^[\+\d\s\-\(\)]{7,15}$/.test(val.trim());
+  const handleContactBlur = () => {
+    if (!contact.trim()) { setContactError(""); return; }
+    if (!isValidContact(contact)) {
+      setContactError("Enter a valid SA number (e.g. 0821234567) or email address");
+    } else {
+      setContactError("");
+    }
+  };
 
   const handleSendOTP = async () => {
     if (!auth) return;
     setError("");
+
     if (!contact.trim()) { setError("Please enter your cell number or email."); return; }
+    if (!isValidContact(contact)) { setError("Enter a valid SA number (e.g. 0821234567) or email address."); return; }
     if (!name.trim()) { setError("Please enter your name."); return; }
+    if (name.trim().length < 2) { setError("Please enter at least 2 characters for your name."); return; }
     if (!consentGiven) { setError("Please accept the Terms & Conditions."); return; }
     if (RECAPTCHA_SITE_KEY && !recaptchaToken) { setError("Please complete the reCAPTCHA challenge."); return; }
     if (RECAPTCHA_SITE_KEY && recaptchaToken) {
       const verified = await verifyRecaptcha(recaptchaToken);
       if (!verified) { setError("reCAPTCHA failed. Please try again."); return; }
     }
+
     setIsLoading(true);
     const detectedPhone = isPhone(contact);
     setContactType(detectedPhone ? "phone" : "email");
+
     try {
       if (detectedPhone) {
         if (phoneRecaptchaRef.current) phoneRecaptchaRef.current.clear();
@@ -166,6 +184,8 @@ function AuthPageInner() {
     if (!auth) return;
     setError("");
     if (!otp.trim()) { setError("Please enter the OTP."); return; }
+    if (otp.trim().length !== 6) { setError("OTP must be 6 digits."); return; }
+    if (!/^\d{6}$/.test(otp.trim())) { setError("OTP must contain numbers only."); return; }
     setIsLoading(true);
     try {
       if (contactType === "phone" && confirmationResult) {
@@ -247,12 +267,22 @@ function AuthPageInner() {
                   </div>
                 </div>
 
-                <Input
-                  placeholder="0821234567 or you@email.com"
-                  value={contact}
-                  onChange={(e) => setContact(e.target.value)}
-                  disabled={isLoading}
-                />
+                <div className="space-y-1">
+                  <Input
+                    placeholder="0821234567 or you@email.com"
+                    value={contact}
+                    onChange={(e) => { setContact(e.target.value); setContactError(""); }}
+                    onBlur={handleContactBlur}
+                    disabled={isLoading}
+                    className={contactError ? "border-destructive" : ""}
+                  />
+                  {contactError && <p className="text-xs text-destructive">{contactError}</p>}
+                  {!contactError && contact && isValidContact(contact) && (
+                    <p className="text-xs text-muted-foreground">
+                      {isPhone(contact) ? "📱 We'll send an SMS OTP" : "📧 We'll send a sign-in link"}
+                    </p>
+                  )}
+                </div>
 
                 <Input
                   placeholder="Your name"
@@ -306,10 +336,11 @@ function AuthPageInner() {
                 <Input
                   placeholder="123456"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                   maxLength={6}
                   className="text-center text-2xl tracking-widest font-mono h-14"
                   disabled={isLoading}
+                  inputMode="numeric"
                 />
 
                 {error && <p className="text-destructive text-sm font-medium bg-destructive/5 border border-destructive/20 p-2 rounded">{error}</p>}
