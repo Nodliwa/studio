@@ -101,7 +101,7 @@ export default function AdminPage() {
 
   const typeCounts: Record<string, number> = {};
   plans.forEach((p) => {
-    const t = (p.eventType || "unknown").toLowerCase();
+    const t = (p.eventType?.trim() || "not set").toLowerCase();
     typeCounts[t] = (typeCounts[t] || 0) + 1;
   });
   const sortedTypes = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]);
@@ -254,7 +254,7 @@ export default function AdminPage() {
                   <td className="px-4 py-3 font-semibold">{p.name}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded text-xs capitalize ${typeColor[(p.eventType || "").toLowerCase()] || "bg-gray-800 text-gray-500"}`}>
-                      {p.eventType || "unknown"}
+                      {p.eventType?.trim() || "not set"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{formatDate(p.eventDate)}</td>
