@@ -19,7 +19,7 @@ const eventCategories = [
   },
   {
     name: "Funeral",
-    image: "/images/funeral2.png",
+    image: "/images/funeral2.jpg",
     eventType: "funeral",
     comingSoon: false,
     backImage: null,

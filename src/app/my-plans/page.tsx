@@ -74,7 +74,7 @@ import { budgetTemplates } from "@/lib/data";
 
 const eventTypeImages: { [key: string]: string } = {
   wedding: "/images/wedding.jpg",
-  funeral: "/images/funeral2.png",
+  funeral: "/images/funeral2.jpg",
   umemulo: "/images/umemulo.jpg",
   umgidi: "/images/umgidi1.jpg",
 };
