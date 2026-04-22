@@ -9,7 +9,6 @@ import { initiateGoogleSignIn } from "@/firebase/auth-operations";
 import { verifyRecaptcha } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import PageHeader from "@/components/page-header";
 import { Loader2 } from "lucide-react";
@@ -49,7 +48,6 @@ function AuthPageInner() {
   const recaptchaWidgetId = useRef<number | null>(null);
   const phoneRecaptchaRef = useRef<RecaptchaVerifier | null>(null);
 
-  // Redirect if already logged in
   useEffect(() => {
     if (!auth) return;
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -61,7 +59,6 @@ function AuthPageInner() {
     return () => unsub();
   }, [auth, router, searchParams]);
 
-  // Handle email link sign-in on page load
   useEffect(() => {
     if (!auth) return;
     if (isSignInWithEmailLink(auth, window.location.href)) {
@@ -81,7 +78,6 @@ function AuthPageInner() {
     }
   }, [auth]);
 
-  // reCAPTCHA
   const renderEnterpriseRecaptcha = () => {
     if (!RECAPTCHA_SITE_KEY || !recaptchaContainerRef.current) return;
     if (recaptchaWidgetId.current !== null) return;
@@ -119,31 +115,20 @@ function AuthPageInner() {
   const handleSendOTP = async () => {
     if (!auth) return;
     setError("");
-
     if (!contact.trim()) { setError("Please enter your cell number or email."); return; }
-    if (isNewUser && !name.trim()) { setError("Please enter your name."); return; }
-    if (isNewUser && !consentGiven) { setError("Please accept the Terms & Conditions."); return; }
-
-    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
-      setError("Please complete the reCAPTCHA challenge.");
-      return;
-    }
-
+    if (!name.trim()) { setError("Please enter your name."); return; }
+    if (!consentGiven) { setError("Please accept the Terms & Conditions."); return; }
+    if (RECAPTCHA_SITE_KEY && !recaptchaToken) { setError("Please complete the reCAPTCHA challenge."); return; }
     if (RECAPTCHA_SITE_KEY && recaptchaToken) {
       const verified = await verifyRecaptcha(recaptchaToken);
       if (!verified) { setError("reCAPTCHA failed. Please try again."); return; }
     }
-
     setIsLoading(true);
     const detectedPhone = isPhone(contact);
     setContactType(detectedPhone ? "phone" : "email");
-
     try {
       if (detectedPhone) {
-        // Phone OTP via Firebase
-        if (phoneRecaptchaRef.current) {
-          phoneRecaptchaRef.current.clear();
-        }
+        if (phoneRecaptchaRef.current) phoneRecaptchaRef.current.clear();
         const recaptchaVerifier = new RecaptchaVerifier(auth, "phone-recaptcha-container", { size: "invisible" });
         phoneRecaptchaRef.current = recaptchaVerifier;
         const formatted = contact.trim().startsWith("+") ? contact.trim() : `+27${contact.trim().replace(/^0/, "")}`;
@@ -151,10 +136,8 @@ function AuthPageInner() {
         setConfirmationResult(result);
         setStep("otp");
       } else {
-        // Email link (passwordless)
         const methods = await fetchSignInMethodsForEmail(auth, contact.trim());
-        const userExists = methods.length > 0;
-        if (!userExists) setIsNewUser(true);
+        if (methods.length === 0) setIsNewUser(true);
         localStorage.setItem("emailForSignIn", contact.trim());
         localStorage.setItem("nameForSignIn", name.trim());
         await sendSignInLinkToEmail(auth, contact.trim(), {
@@ -220,11 +203,6 @@ function AuthPageInner() {
     }
   };
 
-  const handleContactChange = (val: string) => {
-    setContact(val);
-    setIsNewUser(false);
-  };
-
   return (
     <div className="min-h-screen bg-secondary">
       <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
@@ -249,7 +227,6 @@ function AuthPageInner() {
 
             {step === "input" && (
               <>
-                {/* Google Sign In */}
                 <Button
                   type="button"
                   variant="outline"
@@ -270,32 +247,20 @@ function AuthPageInner() {
                   </div>
                 </div>
 
-                {/* Contact input */}
-                <div className="space-y-2">
-                  <Label>Cell number or Email</Label>
-                  <Input
-                    placeholder="0821234567 or you@email.com"
-                    value={contact}
-                    onChange={(e) => handleContactChange(e.target.value)}
-                    disabled={isLoading}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {isPhone(contact) ? "📱 We'll send an SMS OTP" : contact.includes("@") ? "📧 We'll send an email link" : "Enter your cell number or email"}
-                  </p>
-                </div>
+                <Input
+                  placeholder="0821234567 or you@email.com"
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  disabled={isLoading}
+                />
 
-                {/* Name — shown for new users or when registering */}
-                <div className="space-y-2">
-                  <Label>What should we call you?</Label>
-                  <Input
-                    placeholder="Your name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </div>
+                <Input
+                  placeholder="Your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={isLoading}
+                />
 
-                {/* reCAPTCHA */}
                 {RECAPTCHA_SITE_KEY && (
                   <div className="flex justify-center">
                     <div ref={recaptchaContainerRef} />
@@ -307,7 +272,6 @@ function AuthPageInner() {
                   </div>
                 )}
 
-                {/* Terms */}
                 <div className="flex items-start gap-3">
                   <input
                     type="checkbox"
@@ -339,17 +303,14 @@ function AuthPageInner() {
 
             {step === "otp" && contactType === "phone" && (
               <>
-                <div className="space-y-2">
-                  <Label>6-digit OTP</Label>
-                  <Input
-                    placeholder="123456"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    maxLength={6}
-                    className="text-center text-2xl tracking-widest font-mono h-14"
-                    disabled={isLoading}
-                  />
-                </div>
+                <Input
+                  placeholder="123456"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  maxLength={6}
+                  className="text-center text-2xl tracking-widest font-mono h-14"
+                  disabled={isLoading}
+                />
 
                 {error && <p className="text-destructive text-sm font-medium bg-destructive/5 border border-destructive/20 p-2 rounded">{error}</p>}
 
@@ -393,7 +354,6 @@ function AuthPageInner() {
               </>
             )}
 
-            {/* Invisible reCAPTCHA for phone */}
             <div id="phone-recaptcha-container" />
 
           </div>

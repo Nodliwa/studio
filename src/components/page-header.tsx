@@ -6,19 +6,16 @@ import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { useUser, useAuth } from "@/firebase";
 import { signOutUser } from "@/firebase/auth-operations";
-
 export default function PageHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
-
   const handleLogout = async () => {
     if (!auth) return;
     await signOutUser(auth);
     router.push("/auth");
   };
-
   return (
     <header className="sticky top-0 z-50 w-full bg-[hsl(210,55%,93%)] shadow-md">
       <div className="container flex h-20 items-center justify-between mx-auto">
@@ -33,7 +30,6 @@ export default function PageHeader() {
             />
           </Link>
         </div>
-
         <nav className="hidden md:flex items-center justify-center gap-6 text-lg">
           <Link
             href="/"
@@ -67,7 +63,6 @@ export default function PageHeader() {
             Pricing
           </Link>
         </nav>
-
         <div className="flex items-center justify-end flex-1 mr-4">
           <div className="flex items-center gap-2">
             {!isUserLoading && user && !user.isAnonymous ? (
@@ -80,18 +75,9 @@ export default function PageHeader() {
                 Logout
               </Button>
             ) : (
-              <>
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="hidden md:inline-flex text-base md:text-lg mr-[5px]"
-                >
-                  <Link href="/auth">Login</Link>
-                </Button>
-                <Button asChild size="sm" className="text-base md:text-lg mr-4">
-                  <Link href="/auth">Sign Up</Link>
-                </Button>
-              </>
+              <Button asChild size="sm" className="text-base md:text-lg mr-4">
+                <Link href="/auth">Get Started</Link>
+              </Button>
             )}
           </div>
         </div>
