@@ -33,7 +33,7 @@ export default function AdminPage() {
     const auth = getAuth();
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        router.push("/login?redirect=/admin");
+        router.push("/auth?redirect=/admin");
         return;
       }
       setUserEmail(user.email || "");

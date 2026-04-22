@@ -364,7 +364,7 @@ function LoginPageInner() {
                     </Button>
                     <p className="mt-4 text-center text-sm">
                       Don't have an account?{" "}
-                      <Link href="/register" className="underline font-bold">Sign up</Link>
+                      <Link href="/auth" className="underline font-bold">Sign up</Link>
                     </p>
                     <p className="mt-6 text-center text-xs text-muted-foreground">
                       By continuing, you agree to our{" "}

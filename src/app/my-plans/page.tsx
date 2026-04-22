@@ -249,7 +249,7 @@ export default function MyPlansPage() {
 
   useEffect(() => {
     if (!isUserLoading && (!user || user.isAnonymous)) {
-      router.push("/login");
+      router.push("/auth");
     }
   }, [user, isUserLoading, router]);
 

@@ -16,7 +16,7 @@ export default function PageHeader() {
   const handleLogout = async () => {
     if (!auth) return;
     await signOutUser(auth);
-    router.push("/login");
+    router.push("/auth");
   };
 
   return (
@@ -86,10 +86,10 @@ export default function PageHeader() {
                   variant="ghost"
                   className="hidden md:inline-flex text-base md:text-lg mr-[5px]"
                 >
-                  <Link href="/login">Login</Link>
+                  <Link href="/auth">Login</Link>
                 </Button>
                 <Button asChild size="sm" className="text-base md:text-lg mr-4">
-                  <Link href="/register">Sign Up</Link>
+                  <Link href="/auth">Sign Up</Link>
                 </Button>
               </>
             )}

@@ -165,7 +165,7 @@ export default function PlannerPage({
 
   useEffect(() => {
     if (!isUserLoading && !user && !isTemplateMode) {
-      router.push("/login");
+      router.push("/auth");
     }
   }, [user, isUserLoading, router, isTemplateMode]);
 

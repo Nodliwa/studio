@@ -270,7 +270,7 @@ export default function RegisterPage() {
                   Create Account
                 </h2>
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/login" className="font-bold">
+                  <Link href="/auth" className="font-bold">
                     Login
                   </Link>
                 </Button>
@@ -451,7 +451,7 @@ export default function RegisterPage() {
               </div>
               <p className="mt-4 text-center text-sm">
                 Already have an account?{" "}
-                <Link href="/login" className="underline">
+                <Link href="/auth" className="underline">
                   Login
                 </Link>
               </p>

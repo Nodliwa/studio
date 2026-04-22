@@ -122,7 +122,7 @@ export function EventDetails({
 
   const onSubmit = (data: FormData) => {
     if (isTemplateMode) {
-      router.push("/register");
+      router.push("/auth");
       return;
     }
     if (!budgetRef) return;
@@ -181,7 +181,7 @@ export function EventDetails({
             <p className="text-sm font-semibold text-primary">{daysLeftText}</p>
           </div>
           {isTemplateMode ? (
-            <Button onClick={() => router.push("/register")} size="sm">
+            <Button onClick={() => router.push("/auth")} size="sm">
               Sign Up to Save
             </Button>
           ) : (
