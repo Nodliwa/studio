@@ -1,17 +1,12 @@
-
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { BudgetItem, BudgetCategory, Budget, MustDo, RSVP } from "@/lib/types";
 import { budgetTemplates } from "@/lib/data";
 import PageHeader from "@/components/page-header";
-import { BudgetAccordion } from "@/components/budget-accordion";
 import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";
-import { MustDosSummary } from "@/components/must-dos-summary";
-import { CollaboratorManager } from "@/components/collaborator-manager";
-import { RsvpManager } from "@/components/RsvpManager";
 import {
   useUser,
   useFirestore,
@@ -45,6 +40,27 @@ import {
 import Greeter from "@/components/greeter";
 import { RefreshCw } from "lucide-react";
 
+// Lazy load heavy components not needed on initial render
+const BudgetAccordion = lazy(() =>
+  import("@/components/budget-accordion").then((m) => ({ default: m.BudgetAccordion }))
+);
+const CollaboratorManager = lazy(() =>
+  import("@/components/collaborator-manager").then((m) => ({ default: m.CollaboratorManager }))
+);
+const RsvpManager = lazy(() =>
+  import("@/components/RsvpManager").then((m) => ({ default: m.RsvpManager }))
+);
+const MustDosSummary = lazy(() =>
+  import("@/components/must-dos-summary").then((m) => ({ default: m.MustDosSummary }))
+);
+
+// Fallback spinner for lazy loaded components
+const ComponentLoader = () => (
+  <div className="flex items-center justify-center p-8">
+    <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+  </div>
+);
+
 function calculateTotals(categories: BudgetCategory[]): {
   categories: BudgetCategory[];
   grandTotal: number;
@@ -58,9 +74,9 @@ function calculateTotals(categories: BudgetCategory[]): {
       categoryTotal += itemTotal;
       return { ...item, total: itemTotal };
     });
-    
+
     category.items = itemsWithTotals;
-    
+
     const subCategories = category.subCategories
       ? calculateTotals(category.subCategories).categories
       : [];
@@ -192,11 +208,11 @@ export default function PlannerPage({
         const rootId = categoryPath[0];
         const rootCat = categories.find((c: BudgetCategory) => c.id === rootId);
         if (rootCat) {
-            const rootCatRef = doc(firestore, "users", budget.userId, "budgets", budgetId, "categories", rootId);
-            setDoc(rootCatRef, rootCat, { merge: true });
+          const rootCatRef = doc(firestore, "users", budget.userId, "budgets", budgetId, "categories", rootId);
+          setDoc(rootCatRef, rootCat, { merge: true });
         }
         if (budgetDocRef) {
-            setDoc(budgetDocRef, { grandTotal: newGrandTotal }, { merge: true });
+          setDoc(budgetDocRef, { grandTotal: newGrandTotal }, { merge: true });
         }
       }
     }
@@ -212,7 +228,7 @@ export default function PlannerPage({
     }
     if (target) {
       target.items = [...(target.items || []), { id: `${Date.now()}`, name: "", metric: "", quantity: 0, unitPrice: 0, total: 0, comment: "" }];
-      
+
       const { categories, grandTotal: newGrandTotal } = calculateTotals(updated);
       setBudgetData(categories);
       setGrandTotal(newGrandTotal);
@@ -221,8 +237,8 @@ export default function PlannerPage({
         const rootId = categoryPath[0];
         const rootCat = categories.find((c: BudgetCategory) => c.id === rootId);
         if (rootCat) {
-            const rootCatRef = doc(firestore, "users", budget.userId, "budgets", budgetId, "categories", rootId);
-            setDoc(rootCatRef, rootCat, { merge: true });
+          const rootCatRef = doc(firestore, "users", budget.userId, "budgets", budgetId, "categories", rootId);
+          setDoc(rootCatRef, rootCat, { merge: true });
         }
       }
     }
@@ -246,11 +262,11 @@ export default function PlannerPage({
         const rootId = categoryPath[0];
         const rootCat = categories.find((c: BudgetCategory) => c.id === rootId);
         if (rootCat) {
-            const rootCatRef = doc(firestore, "users", budget.userId, "budgets", budgetId, "categories", rootId);
-            setDoc(rootCatRef, rootCat, { merge: true });
+          const rootCatRef = doc(firestore, "users", budget.userId, "budgets", budgetId, "categories", rootId);
+          setDoc(rootCatRef, rootCat, { merge: true });
         }
         if (budgetDocRef) {
-            setDoc(budgetDocRef, { grandTotal: newGrandTotal }, { merge: true });
+          setDoc(budgetDocRef, { grandTotal: newGrandTotal }, { merge: true });
         }
       }
     }
@@ -279,7 +295,7 @@ export default function PlannerPage({
       let parent;
       const targetId = categoryPath[categoryPath.length - 1];
       const parentPath = categoryPath.slice(0, -1);
-      
+
       for (const id of parentPath) {
         parent = current.find((c: BudgetCategory) => c.id === id);
         if (parent) current = parent.subCategories || [];
@@ -295,11 +311,11 @@ export default function PlannerPage({
           const rootId = categoryPath[0];
           const rootCat = categories.find((c: BudgetCategory) => c.id === rootId);
           if (rootCat) {
-              const rootCatRef = doc(firestore, "users", budget.userId, "budgets", budgetId, "categories", rootId);
-              setDoc(rootCatRef, rootCat, { merge: true });
+            const rootCatRef = doc(firestore, "users", budget.userId, "budgets", budgetId, "categories", rootId);
+            setDoc(rootCatRef, rootCat, { merge: true });
           }
           if (budgetDocRef) {
-              setDoc(budgetDocRef, { grandTotal: newGrandTotal }, { merge: true });
+            setDoc(budgetDocRef, { grandTotal: newGrandTotal }, { merge: true });
           }
         }
       }
@@ -315,7 +331,9 @@ export default function PlannerPage({
         const newOrder = arrayMove(items, oldIndex, newIndex);
         if (!isTemplateMode && budget?.userId) {
           const batch = writeBatch(firestore);
-          newOrder.forEach((cat, index) => batch.update(doc(firestore, "users", budget.userId, "budgets", budgetId, "categories", cat.id), { order: index }));
+          newOrder.forEach((cat, index) =>
+            batch.update(doc(firestore, "users", budget.userId, "budgets", budgetId, "categories", cat.id), { order: index })
+          );
           batch.commit().catch(console.error);
         }
         return newOrder;
@@ -341,43 +359,55 @@ export default function PlannerPage({
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
           <Greeter />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-            <EventDetails 
-                budget={budget} 
-                budgetRef={budgetDocRef} 
-                isBudgetLoading={budgetLoading}
-                isTemplateMode={isTemplateMode} 
-                eventType={isTemplateMode ? (searchParams.get("eventType") || "other") : budget?.eventType} 
+            <EventDetails
+              budget={budget}
+              budgetRef={budgetDocRef}
+              isBudgetLoading={budgetLoading}
+              isTemplateMode={isTemplateMode}
+              eventType={isTemplateMode ? (searchParams.get("eventType") || "other") : budget?.eventType}
             />
-            <BudgetSummary 
-                grandTotal={grandTotal} 
-                daysLeft={daysLeft} 
-                mustDosTotal={mustDos?.length || 0} 
-                mustDosCompleted={mustDos?.filter(m => m.status === 'done').length || 0} 
-                budgetId={isTemplateMode ? undefined : budgetId} 
-                isTemplateMode={isTemplateMode} 
+            <BudgetSummary
+              grandTotal={grandTotal}
+              daysLeft={daysLeft}
+              mustDosTotal={mustDos?.length || 0}
+              mustDosCompleted={mustDos?.filter(m => m.status === 'done').length || 0}
+              budgetId={isTemplateMode ? undefined : budgetId}
+              isTemplateMode={isTemplateMode}
             />
           </div>
 
           <div className="mt-8">
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={budgetData} strategy={verticalListSortingStrategy}>
-                <BudgetAccordion 
-                  categories={budgetData} 
-                  onItemChange={handleItemChange} 
-                  onAddItem={handleAddItem} 
-                  onDeleteItem={handleDeleteItem}
-                  onDeleteCategory={handleDeleteCategory}
-                />
-              </SortableContext>
-            </DndContext>
+            <Suspense fallback={<ComponentLoader />}>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={budgetData} strategy={verticalListSortingStrategy}>
+                  <BudgetAccordion
+                    categories={budgetData}
+                    onItemChange={handleItemChange}
+                    onAddItem={handleAddItem}
+                    onDeleteItem={handleDeleteItem}
+                    onDeleteCategory={handleDeleteCategory}
+                  />
+                </SortableContext>
+              </DndContext>
+            </Suspense>
           </div>
 
           {!isTemplateMode && budget && budgetDocRef && (
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-              <CollaboratorManager budget={budget} budgetRef={budgetDocRef} inviterName={user?.displayName || 'A SimpliPlan User'} />
-              <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
+              <Suspense fallback={<ComponentLoader />}>
+                <CollaboratorManager
+                  budget={budget}
+                  budgetRef={budgetDocRef}
+                  inviterName={user?.displayName || 'A SimpliPlan User'}
+                />
+              </Suspense>
+              <Suspense fallback={<ComponentLoader />}>
+                <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
+              </Suspense>
               <div className="md:col-span-2">
-                <RsvpManager budget={budget} rsvps={rsvps} />
+                <Suspense fallback={<ComponentLoader />}>
+                  <RsvpManager budget={budget} rsvps={rsvps} />
+                </Suspense>
               </div>
             </div>
           )}
