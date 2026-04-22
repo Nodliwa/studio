@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -61,7 +61,7 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || "";
 
-export default function LoginPage() {
+function LoginPageInner() {
   const { auth, firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
@@ -380,5 +380,12 @@ export default function LoginPage() {
         </main>
       </div>
     </div>
+  );
+}
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen w-full bg-background flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+      <LoginPageInner />
+    </Suspense>
   );
 }
