@@ -292,7 +292,6 @@ const funeralBudgetData: BudgetCategory[] = [
         ],
       },
     ],
-    items: [],
   },
   {
     id: "cat-6",

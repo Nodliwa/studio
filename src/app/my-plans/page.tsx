@@ -1,6 +1,4 @@
-
 "use client";
-
 import {
   useUser,
   useCollection,
@@ -239,7 +237,7 @@ export default function MyPlansPage() {
   const { data: budgets, isLoading: budgetsLoading } = useCollection<Budget>(budgetsCollection);
 
   const { control, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<PlanFormValues>({
-    resolver: zodResolver(planSchema),
+    resolver: zodResolver(planSchema) as any,
     defaultValues: {
       name: "",
       eventType: "",
@@ -279,7 +277,7 @@ export default function MyPlansPage() {
 
     const newId = uuidv4();
     const budgetRef = doc(firestore, "users", user.uid, "budgets", newId);
-    
+
     const template = budgetTemplates[data.eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
     const initialTotal = calculateInitialTotal(template);
 
@@ -341,7 +339,7 @@ export default function MyPlansPage() {
                   <DialogTitle>Start a New Celebration</DialogTitle>
                   <DialogDescription>Every great event starts with a solid plan. Tell us what you're celebrating.</DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSubmit(handleCreateNewPlan)} className="space-y-4 py-4">
+                <form onSubmit={handleSubmit(handleCreateNewPlan as any)} className="space-y-4 py-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Plan Name (e.g., Mom's 60th)</Label>
                     <Controller

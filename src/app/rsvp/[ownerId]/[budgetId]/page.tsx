@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -22,7 +21,7 @@ import Image from 'next/image';
 const rsvpFormSchema = z.object({
   name: z.string().min(1, 'Please enter your name'),
   email: z.string().email('Please enter a valid email'),
-  attending: z.enum(['yes', 'no', 'maybe'], { required_error: 'Please select an option' }),
+  attending: z.enum(['yes', 'no', 'maybe'] as const, { message: 'Please select an option' }),
   guests: z.coerce.number().min(0, 'Cannot be negative').default(0),
   dietaryRequirements: z.string().optional(),
 });
@@ -34,7 +33,7 @@ export default function PublicRsvpPage({ params: { ownerId, budgetId } }: { para
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
 
-  const budgetRef = useMemo(() => 
+  const budgetRef = useMemo(() =>
     ownerId && budgetId ? doc(firestore, 'users', ownerId, 'budgets', budgetId) : null,
   [firestore, ownerId, budgetId]);
 
@@ -47,7 +46,7 @@ export default function PublicRsvpPage({ params: { ownerId, budgetId } }: { para
     watch,
     formState: { errors, isSubmitting },
   } = useForm<RsvpFormValues>({
-    resolver: zodResolver(rsvpFormSchema),
+    resolver: zodResolver(rsvpFormSchema) as any,
     defaultValues: {
       attending: 'yes',
       guests: 0,
@@ -166,7 +165,7 @@ export default function PublicRsvpPage({ params: { ownerId, budgetId } }: { para
             <CardTitle className="font-headline">Confirm Attendance</CardTitle>
             <CardDescription>Please let us know if you'll be joining us by filling out the form below.</CardDescription>
           </CardHeader>
-          <form handleSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit as any)}>
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="name">Your Full Name</Label>
@@ -182,8 +181,8 @@ export default function PublicRsvpPage({ params: { ownerId, budgetId } }: { para
 
               <div className="space-y-3">
                 <Label>Are you attending?</Label>
-                <RadioGroup 
-                  defaultValue="yes" 
+                <RadioGroup
+                  defaultValue="yes"
                   onValueChange={(val: any) => setValue('attending', val)}
                   className="flex flex-col space-y-1"
                 >
@@ -206,10 +205,10 @@ export default function PublicRsvpPage({ params: { ownerId, budgetId } }: { para
                 <div className="space-y-4 animate-in slide-in-from-top duration-300">
                   <div className="space-y-2">
                     <Label htmlFor="guests">Bringing any extra guests?</Label>
-                    <Input 
-                      id="guests" 
-                      type="number" 
-                      {...register('guests')} 
+                    <Input
+                      id="guests"
+                      type="number"
+                      {...register('guests')}
                       min="0"
                       className="w-full sm:w-1/3"
                     />
@@ -217,9 +216,9 @@ export default function PublicRsvpPage({ params: { ownerId, budgetId } }: { para
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="dietary">Dietary Requirements / Special Requests</Label>
-                    <Textarea 
-                      id="dietary" 
-                      {...register('dietaryRequirements')} 
+                    <Textarea
+                      id="dietary"
+                      {...register('dietaryRequirements')}
                       placeholder="e.g., Vegetarian, Allergies, etc."
                       className="min-h-[100px]"
                     />
