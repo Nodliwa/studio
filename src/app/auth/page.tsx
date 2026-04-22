@@ -221,7 +221,7 @@ function AuthPageInner() {
                   ? contactType === "phone"
                     ? `We sent a 6-digit code to ${contact}`
                     : `We sent a sign-in link to ${contact}. Click the link in your email.`
-                  : "Plan your celebrations with ease"}
+                  : "Plan every moment that matters"}
               </p>
             </div>
 
@@ -262,7 +262,7 @@ function AuthPageInner() {
                 />
 
                 {RECAPTCHA_SITE_KEY && (
-                  <div className="flex justify-center">
+                  <div className="flex justify-center overflow-hidden w-full">
                     <div ref={recaptchaContainerRef} />
                     <Script
                       src="https://www.google.com/recaptcha/enterprise.js"

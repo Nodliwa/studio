@@ -18,18 +18,21 @@ export default function PageHeader() {
   };
   return (
     <header className="sticky top-0 z-50 w-full bg-[hsl(210,55%,93%)] shadow-md">
-      <div className="container flex h-20 items-center justify-between mx-auto">
-        <div className="flex items-center justify-start flex-1">
-          <Link href="/" className="flex items-center space-x-2 ml-[20px]">
+      <div className="container flex h-16 md:h-20 items-center justify-between mx-auto px-4">
+        {/* Logo */}
+        <div className="flex items-center">
+          <Link href="/" className="flex items-center">
             <Image
               src="/images/brand2.png"
               alt="SimpliPlan Logo"
-              width={143}
-              height={36}
+              width={110}
+              height={28}
+              className="w-[90px] h-auto md:w-[143px]"
               priority
             />
           </Link>
         </div>
+        {/* Nav — desktop only */}
         <nav className="hidden md:flex items-center justify-center gap-6 text-lg">
           <Link
             href="/"
@@ -44,9 +47,7 @@ export default function PageHeader() {
             href="/my-plans"
             className={cn(
               "font-bold transition-colors hover:text-foreground/80",
-              pathname === "/my-plans"
-                ? "text-foreground"
-                : "text-foreground/60",
+              pathname === "/my-plans" ? "text-foreground" : "text-foreground/60",
             )}
           >
             MyPlans
@@ -55,31 +56,28 @@ export default function PageHeader() {
             href="/pricing"
             className={cn(
               "font-bold transition-colors hover:text-foreground/80",
-              pathname === "/pricing"
-                ? "text-foreground"
-                : "text-foreground/60",
+              pathname === "/pricing" ? "text-foreground" : "text-foreground/60",
             )}
           >
             Pricing
           </Link>
         </nav>
-        <div className="flex items-center justify-end flex-1 mr-4">
-          <div className="flex items-center gap-2">
-            {!isUserLoading && user && !user.isAnonymous ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-base md:text-lg mr-4"
-                onClick={handleLogout}
-              >
-                Logout
-              </Button>
-            ) : (
-              <Button asChild size="sm" className="text-base md:text-lg mr-4">
-                <Link href="/auth">Get Started</Link>
-              </Button>
-            )}
-          </div>
+        {/* CTA */}
+        <div className="flex items-center">
+          {!isUserLoading && user && !user.isAnonymous ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-sm md:text-lg"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+          ) : (
+            <Button asChild size="sm" className="text-sm md:text-lg">
+              <Link href="/auth">Get Started</Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>
