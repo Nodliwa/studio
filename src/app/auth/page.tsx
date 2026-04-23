@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { RecaptchaVerifier, signInWithPhoneNumber, signInWithEmailLink, sendSignInLinkToEmail, isSignInWithEmailLink, onAuthStateChanged } from "firebase/auth";
+import { RecaptchaVerifier, signInWithPhoneNumber, signInWithCustomToken, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useFirebase } from "@/firebase";
 import { initiateGoogleSignIn } from "@/firebase/auth-operations";
@@ -21,7 +21,7 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
     <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
     <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.612-3.512-11.284-8.285l-6.571,4.819C9.656,39.663,16.318,44,24,44z"/>
-    <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.99,34.551,44,29.869,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+    <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-4.087,5.574l6.19,5.238C39.99,34.551,44,29.869,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
   </svg>
 );
 
@@ -69,26 +69,6 @@ function AuthPageInner() {
     });
     return () => unsub();
   }, [auth, router, searchParams, step]);
-
-  useEffect(() => {
-    if (!auth) return;
-    if (isSignInWithEmailLink(auth, window.location.href)) {
-      const savedEmail = localStorage.getItem("emailForSignIn");
-      if (savedEmail) {
-        signInWithEmailLink(auth, savedEmail, window.location.href)
-          .then(async (result) => {
-            localStorage.removeItem("emailForSignIn");
-            if (result.additionalUserInfo?.isNewUser) {
-              setStep("register");
-            } else {
-              const redirect = searchParams.get("redirect") || "/my-plans";
-              router.push(redirect);
-            }
-          })
-          .catch(() => setError("Invalid or expired link. Please try again."));
-      }
-    }
-  }, [auth]);
 
   useEffect(() => {
     if (step === "register") {
@@ -152,15 +132,22 @@ function AuthPageInner() {
         const result = await signInWithPhoneNumber(auth, formatted, recaptchaVerifier);
         setConfirmationResult(result);
         setSendStatus("sent_phone");
-        // Auto-navigate to OTP screen after 2 seconds
         setTimeout(() => setStep("otp"), 2000);
       } else {
-        localStorage.setItem("emailForSignIn", contactVal.trim());
-        await sendSignInLinkToEmail(auth, contactVal.trim(), {
-          url: "https://simpliplan.co.za/auth",
-          handleCodeInApp: true,
+        // Email OTP
+        const res = await fetch('/api/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: contactVal.trim() }),
         });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || 'Failed to send OTP.');
+          setSendStatus("error");
+          return;
+        }
         setSendStatus("sent_email");
+        setTimeout(() => setStep("otp"), 2000);
       }
     } catch (e: any) {
       const msgs: Record<string, string> = {
@@ -184,6 +171,25 @@ function AuthPageInner() {
       if (contactType === "phone" && confirmationResult) {
         const result = await confirmationResult.confirm(otp.trim());
         if (result.additionalUserInfo?.isNewUser) {
+          setStep("register");
+        } else {
+          const redirect = searchParams.get("redirect") || "/my-plans";
+          router.push(redirect);
+        }
+      } else if (contactType === "email") {
+        const res = await fetch('/api/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: contact.trim(), otp: otp.trim() }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || 'Incorrect OTP. Please try again.');
+          return;
+        }
+        const { customToken, isNewUser } = data;
+        await signInWithCustomToken(auth, customToken);
+        if (isNewUser) {
           setStep("register");
         } else {
           const redirect = searchParams.get("redirect") || "/my-plans";
@@ -254,12 +260,12 @@ function AuthPageInner() {
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
                 {step === "register" ? "Just a few more details to get you started" :
-                 step === "otp" ? `We sent a 6-digit code to ${formatPhone(contact)}` :
+                 step === "otp" && contactType === "phone" ? `We sent a 6-digit code to ${formatPhone(contact)}` :
+                 step === "otp" && contactType === "email" ? `We sent a 6-digit code to ${contact}` :
                  "Plan every moment that matters"}
               </p>
             </div>
 
-            {/* Step 1 — Contact only */}
             {step === "input" && (
               <>
                 <Button
@@ -310,39 +316,20 @@ function AuthPageInner() {
                   </div>
 
                   {contactError && <p className="text-xs text-destructive">{contactError}</p>}
-
                   {sendStatus === "sending" && (
-                    <p className="text-xs text-muted-foreground animate-pulse">Sending...</p>
+                    <p className="text-xs text-muted-foreground animate-pulse">Sending OTP...</p>
                   )}
-
                   {sendStatus === "sent_phone" && (
-                    <p className="text-xs text-green-600 font-medium">
-                      ✅ OTP sent to {formatPhone(contact)} — redirecting...
-                    </p>
+                    <p className="text-xs text-green-600 font-medium">✅ OTP sent to {formatPhone(contact)} — redirecting...</p>
                   )}
-
                   {sendStatus === "sent_email" && (
-                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-1">
-                      <p className="text-xs text-primary font-medium">
-                        ✅ Link sent to {contact}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Check your inbox and spam folder. Click the link to sign in.
-                      </p>
-                    </div>
+                    <p className="text-xs text-green-600 font-medium">✅ OTP sent to {contact} — redirecting...</p>
                   )}
-
                   {sendStatus === "error" && error && (
                     <p className="text-xs text-destructive font-medium bg-destructive/5 border border-destructive/20 p-2 rounded">{error}</p>
                   )}
-
                   {sendStatus === "error" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => { setSendStatus("idle"); setError(""); }}
-                    >
+                    <Button variant="outline" size="sm" className="w-full" onClick={() => { setSendStatus("idle"); setError(""); }}>
                       Try again
                     </Button>
                   )}
@@ -350,7 +337,6 @@ function AuthPageInner() {
               </>
             )}
 
-            {/* Step 2 — OTP */}
             {step === "otp" && (
               <>
                 <Input
@@ -378,7 +364,6 @@ function AuthPageInner() {
               </>
             )}
 
-            {/* Step 3 — New user registration */}
             {step === "register" && (
               <>
                 <Input
@@ -389,7 +374,6 @@ function AuthPageInner() {
                   className="h-12"
                   autoFocus
                 />
-
                 {RECAPTCHA_SITE_KEY && (
                   <div className="w-full flex justify-center">
                     <div className="scale-[0.85] origin-center">
@@ -402,7 +386,6 @@ function AuthPageInner() {
                     </div>
                   </div>
                 )}
-
                 <div className="flex items-start gap-3">
                   <input
                     type="checkbox"
@@ -418,9 +401,7 @@ function AuthPageInner() {
                     <Link href="/privacy" className="underline text-primary">Privacy Policy</Link>
                   </label>
                 </div>
-
                 {error && <p className="text-destructive text-sm font-medium bg-destructive/5 border border-destructive/20 p-2 rounded">{error}</p>}
-
                 <Button
                   className="w-full h-12 font-bold"
                   onClick={handleCompleteRegistration}
