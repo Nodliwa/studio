@@ -56,7 +56,7 @@ export async function POST(req) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('Send OTP error:', err);
+    console.error('Send OTP error:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
     return NextResponse.json({ error: 'An unexpected error occurred.' }, { status: 500 });
   }
 }
