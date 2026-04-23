@@ -170,7 +170,10 @@ function AuthPageInner() {
     try {
       if (contactType === "phone" && confirmationResult) {
         const result = await confirmationResult.confirm(otp.trim());
-        if (result.additionalUserInfo?.isNewUser) {
+        // Check Firestore if user profile exists
+        const userRef = doc(firestore, "users", result.user.uid);
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
           setStep("register");
         } else {
           const redirect = searchParams.get("redirect") || "/my-plans";
