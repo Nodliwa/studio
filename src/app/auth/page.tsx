@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, signInWithEmailLink, sendSignInLinkToEmail, isSignInWithEmailLink, fetchSignInMethodsForEmail, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import { RecaptchaVerifier, signInWithPhoneNumber, signInWithEmailLink, sendSignInLinkToEmail, isSignInWithEmailLink, onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useFirebase } from "@/firebase";
 import { initiateGoogleSignIn } from "@/firebase/auth-operations";
 import { verifyRecaptcha } from "@/app/actions";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import PageHeader from "@/components/page-header";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 import Script from "next/script";
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || "";
@@ -25,13 +25,18 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-type Step = "input" | "otp";
+type Step = "input" | "otp" | "register";
 type ContactType = "phone" | "email";
+type SendStatus = "idle" | "sending" | "sent_phone" | "sent_email" | "error";
 
-// Validation helpers
 const isPhone = (val: string) => /^(\+27|0)[6-8][0-9]{8}$/.test(val.trim().replace(/\s/g, ""));
 const isEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
 const isValidContact = (val: string) => isPhone(val) || isEmail(val);
+
+const formatPhone = (val: string) => {
+  const digits = val.replace(/\D/g, "").replace(/^27/, "0");
+  return digits.replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3");
+};
 
 function AuthPageInner() {
   const { auth, firestore } = useFirebase();
@@ -43,7 +48,7 @@ function AuthPageInner() {
   const [contactError, setContactError] = useState("");
   const [name, setName] = useState("");
   const [otp, setOtp] = useState("");
-  const [isNewUser, setIsNewUser] = useState(false);
+  const [sendStatus, setSendStatus] = useState<SendStatus>("idle");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
@@ -57,32 +62,39 @@ function AuthPageInner() {
   useEffect(() => {
     if (!auth) return;
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (user && !user.isAnonymous) {
+      if (user && !user.isAnonymous && step !== "register") {
         const redirect = searchParams.get("redirect") || "/my-plans";
         router.push(redirect);
       }
     });
     return () => unsub();
-  }, [auth, router, searchParams]);
+  }, [auth, router, searchParams, step]);
 
   useEffect(() => {
     if (!auth) return;
     if (isSignInWithEmailLink(auth, window.location.href)) {
       const savedEmail = localStorage.getItem("emailForSignIn");
-      const savedName = localStorage.getItem("nameForSignIn");
       if (savedEmail) {
         signInWithEmailLink(auth, savedEmail, window.location.href)
           .then(async (result) => {
             localStorage.removeItem("emailForSignIn");
-            localStorage.removeItem("nameForSignIn");
-            await saveUserToFirestore(result.user, savedEmail, savedName || "");
-            const redirect = searchParams.get("redirect") || "/my-plans";
-            router.push(redirect);
+            if (result.additionalUserInfo?.isNewUser) {
+              setStep("register");
+            } else {
+              const redirect = searchParams.get("redirect") || "/my-plans";
+              router.push(redirect);
+            }
           })
           .catch(() => setError("Invalid or expired link. Please try again."));
       }
     }
   }, [auth]);
+
+  useEffect(() => {
+    if (step === "register") {
+      setTimeout(() => renderEnterpriseRecaptcha(), 500);
+    }
+  }, [step]);
 
   const renderEnterpriseRecaptcha = () => {
     if (!RECAPTCHA_SITE_KEY || !recaptchaContainerRef.current) return;
@@ -100,15 +112,13 @@ function AuthPageInner() {
     });
   };
 
-  useEffect(() => { renderEnterpriseRecaptcha(); }, []);
-
-  const saveUserToFirestore = async (user: any, email: string, displayName: string) => {
+  const saveUserToFirestore = async (user: any, displayName: string) => {
     if (!firestore) return;
     const userRef = doc(firestore, "users", user.uid);
     const userSnap = await getDoc(userRef);
     if (!userSnap.exists()) {
       await setDoc(userRef, {
-        email: email || user.email || "",
+        email: user.email || "",
         displayName: displayName || user.displayName || "",
         knownAs: (displayName || user.displayName || "").split(" ")[0],
         phoneNumber: user.phoneNumber || "",
@@ -116,53 +126,41 @@ function AuthPageInner() {
     }
   };
 
-  const handleContactBlur = () => {
-    if (!contact.trim()) { setContactError(""); return; }
-    if (!isValidContact(contact)) {
-      setContactError("Enter a valid SA number (e.g. 0821234567) or email address");
-    } else {
-      setContactError("");
+  const handleContactBlur = async () => {
+    if (!contact.trim() || !isValidContact(contact)) {
+      if (contact.trim() && !isValidContact(contact)) {
+        setContactError("Enter a valid SA number (e.g. 0821234567) or email address");
+      }
+      return;
     }
+    setContactError("");
+    await handleAutoSend(contact);
   };
 
-  const handleSendOTP = async () => {
+  const handleAutoSend = async (contactVal: string) => {
     if (!auth) return;
+    setSendStatus("sending");
     setError("");
-
-    if (!contact.trim()) { setError("Please enter your cell number or email."); return; }
-    if (!isValidContact(contact)) { setError("Enter a valid SA number (e.g. 0821234567) or email address."); return; }
-    if (!name.trim()) { setError("Please enter your name."); return; }
-    if (name.trim().length < 2) { setError("Please enter at least 2 characters for your name."); return; }
-    if (!consentGiven) { setError("Please accept the Terms & Conditions."); return; }
-    if (RECAPTCHA_SITE_KEY && !recaptchaToken) { setError("Please complete the reCAPTCHA challenge."); return; }
-    if (RECAPTCHA_SITE_KEY && recaptchaToken) {
-      const verified = await verifyRecaptcha(recaptchaToken);
-      if (!verified) { setError("reCAPTCHA failed. Please try again."); return; }
-    }
-
-    setIsLoading(true);
-    const detectedPhone = isPhone(contact);
+    const detectedPhone = isPhone(contactVal);
     setContactType(detectedPhone ? "phone" : "email");
-
     try {
       if (detectedPhone) {
         if (phoneRecaptchaRef.current) phoneRecaptchaRef.current.clear();
         const recaptchaVerifier = new RecaptchaVerifier(auth, "phone-recaptcha-container", { size: "invisible" });
         phoneRecaptchaRef.current = recaptchaVerifier;
-        const formatted = contact.trim().startsWith("+") ? contact.trim() : `+27${contact.trim().replace(/^0/, "")}`;
+        const formatted = contactVal.trim().startsWith("+") ? contactVal.trim() : `+27${contactVal.trim().replace(/^0/, "")}`;
         const result = await signInWithPhoneNumber(auth, formatted, recaptchaVerifier);
         setConfirmationResult(result);
-        setStep("otp");
+        setSendStatus("sent_phone");
+        // Auto-navigate to OTP screen after 2 seconds
+        setTimeout(() => setStep("otp"), 2000);
       } else {
-        const methods = await fetchSignInMethodsForEmail(auth, contact.trim());
-        if (methods.length === 0) setIsNewUser(true);
-        localStorage.setItem("emailForSignIn", contact.trim());
-        localStorage.setItem("nameForSignIn", name.trim());
-        await sendSignInLinkToEmail(auth, contact.trim(), {
-          url: `${window.location.origin}/auth`,
+        localStorage.setItem("emailForSignIn", contactVal.trim());
+        await sendSignInLinkToEmail(auth, contactVal.trim(), {
+          url: "https://simpliplan.co.za/auth",
           handleCodeInApp: true,
         });
-        setStep("otp");
+        setSendStatus("sent_email");
       }
     } catch (e: any) {
       const msgs: Record<string, string> = {
@@ -171,12 +169,7 @@ function AuthPageInner() {
         "auth/invalid-email": "Invalid email address.",
       };
       setError(msgs[e.code] || e.message);
-      if (recaptchaWidgetId.current !== null) {
-        (window as any).grecaptcha?.enterprise?.reset(recaptchaWidgetId.current);
-      }
-      setRecaptchaToken(null);
-    } finally {
-      setIsLoading(false);
+      setSendStatus("error");
     }
   };
 
@@ -190,11 +183,12 @@ function AuthPageInner() {
     try {
       if (contactType === "phone" && confirmationResult) {
         const result = await confirmationResult.confirm(otp.trim());
-        await saveUserToFirestore(result.user, result.user.email || "", name);
-        const redirect = searchParams.get("redirect") || "/my-plans";
-        router.push(redirect);
-      } else {
-        setError("Please check your email for a sign-in link and click it.");
+        if (result.additionalUserInfo?.isNewUser) {
+          setStep("register");
+        } else {
+          const redirect = searchParams.get("redirect") || "/my-plans";
+          router.push(redirect);
+        }
       }
     } catch (e: any) {
       const msgs: Record<string, string> = {
@@ -207,6 +201,28 @@ function AuthPageInner() {
     }
   };
 
+  const handleCompleteRegistration = async () => {
+    if (!auth?.currentUser) return;
+    setError("");
+    if (!name.trim() || name.trim().length < 2) { setError("Please enter your name."); return; }
+    if (!consentGiven) { setError("Please accept the Terms & Conditions."); return; }
+    if (RECAPTCHA_SITE_KEY && !recaptchaToken) { setError("Please complete the reCAPTCHA challenge."); return; }
+    if (RECAPTCHA_SITE_KEY && recaptchaToken) {
+      const verified = await verifyRecaptcha(recaptchaToken);
+      if (!verified) { setError("reCAPTCHA failed. Please try again."); return; }
+    }
+    setIsLoading(true);
+    try {
+      await saveUserToFirestore(auth.currentUser, name.trim());
+      const redirect = searchParams.get("redirect") || "/my-plans";
+      router.push(redirect);
+    } catch (e: any) {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     if (!auth) return;
     setIsGoogleLoading(true);
@@ -214,7 +230,7 @@ function AuthPageInner() {
     try {
       const result = await initiateGoogleSignIn(auth);
       if (result) {
-        await saveUserToFirestore(result.user, result.user.email || "", result.user.displayName || "");
+        await saveUserToFirestore(result.user, result.user.displayName || "");
       }
     } catch (e: any) {
       setError("Could not complete Google sign-in. Please try again.");
@@ -228,23 +244,22 @@ function AuthPageInner() {
       <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
         <PageHeader />
         <main className="container mx-auto flex items-center justify-center px-4 flex-grow mb-16">
-          <div className="w-full max-w-md bg-card rounded-2xl shadow-lg p-8 space-y-6">
+          <div className="w-full max-w-lg bg-card rounded-2xl shadow-lg px-3 py-8 space-y-6 overflow-visible">
 
             <div className="text-center">
               <h1 className="text-2xl font-bold tracking-tight">
-                {step === "otp"
-                  ? contactType === "phone" ? "Enter OTP" : "Check your email"
-                  : "Welcome to SimpliPlan"}
+                {step === "register" ? "Almost there! 👋" :
+                 step === "otp" ? "Enter OTP" :
+                 "Welcome to SimpliPlan"}
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
-                {step === "otp"
-                  ? contactType === "phone"
-                    ? `We sent a 6-digit code to ${contact}`
-                    : `We sent a sign-in link to ${contact}. Click the link in your email.`
-                  : "Plan every moment that matters"}
+                {step === "register" ? "Just a few more details to get you started" :
+                 step === "otp" ? `We sent a 6-digit code to ${formatPhone(contact)}` :
+                 "Plan every moment that matters"}
               </p>
             </div>
 
+            {/* Step 1 — Contact only */}
             {step === "input" && (
               <>
                 <Button
@@ -252,7 +267,7 @@ function AuthPageInner() {
                   variant="outline"
                   className="w-full flex items-center gap-3 h-12 text-sm font-medium"
                   onClick={handleGoogleSignIn}
-                  disabled={isGoogleLoading}
+                  disabled={isGoogleLoading || sendStatus === "sending"}
                 >
                   {isGoogleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
                   Continue with Google
@@ -267,38 +282,124 @@ function AuthPageInner() {
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <Input
-                    placeholder="0821234567 or you@email.com"
-                    value={contact}
-                    onChange={(e) => { setContact(e.target.value); setContactError(""); }}
-                    onBlur={handleContactBlur}
-                    disabled={isLoading}
-                    className={contactError ? "border-destructive" : ""}
-                  />
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Input
+                      placeholder="0821234567 or you@email.com"
+                      value={contact}
+                      onChange={(e) => {
+                        setContact(e.target.value);
+                        setContactError("");
+                        setSendStatus("idle");
+                      }}
+                      onBlur={handleContactBlur}
+                      onKeyDown={(e) => { if (e.key === "Enter" && isValidContact(contact)) handleAutoSend(contact); }}
+                      disabled={sendStatus === "sending" || sendStatus === "sent_phone" || sendStatus === "sent_email"}
+                      className={contactError ? "border-destructive pr-16" : "pr-16"}
+                    />
+                    {sendStatus === "sending" ? (
+                      <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />
+                    ) : sendStatus === "idle" && contact && isValidContact(contact) ? (
+                      <button onClick={() => handleAutoSend(contact)} className="absolute right-2 top-1.5 h-9 w-9 rounded-full bg-primary flex items-center justify-center text-white hover:bg-primary/90 transition-colors z-10 shadow-md">
+                        <span className="text-base font-bold">→</span>
+                      </button>
+                    ) : null}
+                    {(sendStatus === "sent_phone" || sendStatus === "sent_email") && (
+                      <CheckCircle className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+                    )}
+                  </div>
+
                   {contactError && <p className="text-xs text-destructive">{contactError}</p>}
-                  {!contactError && contact && isValidContact(contact) && (
-                    <p className="text-xs text-muted-foreground">
-                      {isPhone(contact) ? "📱 We'll send an SMS OTP" : "📧 We'll send a sign-in link"}
+
+                  {sendStatus === "sending" && (
+                    <p className="text-xs text-muted-foreground animate-pulse">Sending...</p>
+                  )}
+
+                  {sendStatus === "sent_phone" && (
+                    <p className="text-xs text-green-600 font-medium">
+                      ✅ OTP sent to {formatPhone(contact)} — redirecting...
                     </p>
                   )}
-                </div>
 
+                  {sendStatus === "sent_email" && (
+                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-1">
+                      <p className="text-xs text-primary font-medium">
+                        ✅ Link sent to {contact}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Check your inbox and spam folder. Click the link to sign in.
+                      </p>
+                    </div>
+                  )}
+
+                  {sendStatus === "error" && error && (
+                    <p className="text-xs text-destructive font-medium bg-destructive/5 border border-destructive/20 p-2 rounded">{error}</p>
+                  )}
+
+                  {sendStatus === "error" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => { setSendStatus("idle"); setError(""); }}
+                    >
+                      Try again
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Step 2 — OTP */}
+            {step === "otp" && (
+              <>
+                <Input
+                  placeholder="123456"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                  maxLength={6}
+                  className="text-center text-2xl tracking-widest font-mono h-14"
+                  disabled={isLoading}
+                  inputMode="numeric"
+                  autoFocus
+                />
+                {error && <p className="text-destructive text-sm font-medium bg-destructive/5 border border-destructive/20 p-2 rounded">{error}</p>}
+                <Button
+                  className="w-full h-12 font-bold"
+                  onClick={handleVerifyOTP}
+                  disabled={isLoading || otp.length < 6}
+                >
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {isLoading ? "Verifying..." : "Verify OTP"}
+                </Button>
+                <Button variant="ghost" className="w-full" onClick={() => { setStep("input"); setOtp(""); setError(""); setSendStatus("idle"); }}>
+                  ← Back
+                </Button>
+              </>
+            )}
+
+            {/* Step 3 — New user registration */}
+            {step === "register" && (
+              <>
                 <Input
                   placeholder="Your name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   disabled={isLoading}
+                  className="h-12"
+                  autoFocus
                 />
 
                 {RECAPTCHA_SITE_KEY && (
-                  <div className="flex justify-center overflow-hidden w-full">
-                    <div ref={recaptchaContainerRef} />
-                    <Script
-                      src="https://www.google.com/recaptcha/enterprise.js"
-                      strategy="afterInteractive"
-                      onLoad={renderEnterpriseRecaptcha}
-                    />
+                  <div className="w-full flex justify-center">
+                    <div className="scale-[0.85] origin-center">
+                      <div ref={recaptchaContainerRef} />
+                      <Script
+                        src="https://www.google.com/recaptcha/enterprise.js"
+                        strategy="afterInteractive"
+                        onLoad={renderEnterpriseRecaptcha}
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -322,71 +423,16 @@ function AuthPageInner() {
 
                 <Button
                   className="w-full h-12 font-bold"
-                  onClick={handleSendOTP}
-                  disabled={isLoading || (!!RECAPTCHA_SITE_KEY && !recaptchaToken) || !consentGiven}
+                  onClick={handleCompleteRegistration}
+                  disabled={isLoading || name.trim().length < 2 || !consentGiven || (!!RECAPTCHA_SITE_KEY && !recaptchaToken)}
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  {isLoading ? "Sending..." : "Send OTP"}
-                </Button>
-              </>
-            )}
-
-            {step === "otp" && contactType === "phone" && (
-              <>
-                <Input
-                  placeholder="123456"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                  maxLength={6}
-                  className="text-center text-2xl tracking-widest font-mono h-14"
-                  disabled={isLoading}
-                  inputMode="numeric"
-                />
-
-                {error && <p className="text-destructive text-sm font-medium bg-destructive/5 border border-destructive/20 p-2 rounded">{error}</p>}
-
-                <Button
-                  className="w-full h-12 font-bold"
-                  onClick={handleVerifyOTP}
-                  disabled={isLoading || otp.length < 6}
-                >
-                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  {isLoading ? "Verifying..." : "Verify OTP"}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => { setStep("input"); setOtp(""); setError(""); }}
-                >
-                  ← Back
-                </Button>
-              </>
-            )}
-
-            {step === "otp" && contactType === "email" && (
-              <>
-                <div className="text-center py-4">
-                  <div className="text-5xl mb-4">📧</div>
-                  <p className="text-sm text-muted-foreground">
-                    Click the link in your email to sign in. You can close this tab.
-                  </p>
-                </div>
-
-                {error && <p className="text-destructive text-sm">{error}</p>}
-
-                <Button
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => { setStep("input"); setError(""); }}
-                >
-                  ← Try again
+                  {isLoading ? "Setting up..." : "Let's Go! 🎉"}
                 </Button>
               </>
             )}
 
             <div id="phone-recaptcha-container" />
-
           </div>
         </main>
       </div>

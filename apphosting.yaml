@@ -7,3 +7,13 @@ headers:
 - headers:
   - key: Cache-Control
     value: no-store
+
+env:
+  - variable: RESEND_API_KEY
+    secret: RESEND_API_KEY
+  - variable: RESEND_FROM_EMAIL
+    value: noreply@simpliplan.co.za
+  - variable: FIREBASE_CLIENT_EMAIL
+    value: firebase-adminsdk-fbsvc@studio-1406892914-3d877.iam.gserviceaccount.com
+  - variable: FIREBASE_PRIVATE_KEY
+    secret: FIREBASE_PRIVATE_KEY

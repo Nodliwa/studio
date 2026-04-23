@@ -18,67 +18,29 @@ export default function PageHeader() {
   };
   return (
     <header className="sticky top-0 z-50 w-full bg-[hsl(210,55%,93%)] shadow-md">
-      <div className="container flex h-16 md:h-20 items-center justify-between mx-auto px-4">
-        {/* Logo */}
-        <div className="flex items-center">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/images/brand2.png"
-              alt="SimpliPlan Logo"
-              width={110}
-              height={28}
-              className="w-[90px] h-auto md:w-[143px]"
-              priority
-            />
-          </Link>
-        </div>
-        {/* Nav — desktop only */}
+      <div className="w-full flex h-16 md:h-20 items-center justify-between px-4 md:px-8">
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/images/brand2.png"
+            alt="SimpliPlan Logo"
+            width={143}
+            height={36}
+            className="w-[120px] h-auto md:w-[143px]"
+            priority
+          />
+        </Link>
         <nav className="hidden md:flex items-center justify-center gap-6 text-lg">
-          <Link
-            href="/"
-            className={cn(
-              "font-bold transition-colors hover:text-foreground/80",
-              pathname === "/" ? "text-foreground" : "text-foreground/60",
-            )}
-          >
-            Home
-          </Link>
-          <Link
-            href="/my-plans"
-            className={cn(
-              "font-bold transition-colors hover:text-foreground/80",
-              pathname === "/my-plans" ? "text-foreground" : "text-foreground/60",
-            )}
-          >
-            MyPlans
-          </Link>
-          <Link
-            href="/pricing"
-            className={cn(
-              "font-bold transition-colors hover:text-foreground/80",
-              pathname === "/pricing" ? "text-foreground" : "text-foreground/60",
-            )}
-          >
-            Pricing
-          </Link>
+          <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>Home</Link>
+          <Link href="/my-plans" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/my-plans" ? "text-foreground" : "text-foreground/60")}>MyPlans</Link>
+          <Link href="/pricing" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/pricing" ? "text-foreground" : "text-foreground/60")}>Pricing</Link>
         </nav>
-        {/* CTA */}
-        <div className="flex items-center">
-          {!isUserLoading && user && !user.isAnonymous ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-sm md:text-lg"
-              onClick={handleLogout}
-            >
-              Logout
-            </Button>
-          ) : (
-            <Button asChild size="sm" className="text-sm md:text-lg">
-              <Link href="/auth">Get Started</Link>
-            </Button>
-          )}
-        </div>
+        {!isUserLoading && user && !user.isAnonymous ? (
+          <Button variant="outline" size="sm" className="text-sm md:text-lg" onClick={handleLogout}>Get Out</Button>
+        ) : (
+          <Button asChild size="sm" className="text-sm md:text-lg">
+            <Link href="/auth">Get In</Link>
+          </Button>
+        )}
       </div>
     </header>
   );
