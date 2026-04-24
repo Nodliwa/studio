@@ -71,6 +71,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { budgetTemplates } from "@/lib/data";
+import usePlacesAutocomplete from "use-places-autocomplete";
+import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
 
 const eventTypeImages: { [key: string]: string } = {
   wedding: "/images/wedding.jpg",
@@ -236,6 +238,13 @@ export default function MyPlansPage() {
 
   const { data: budgets, isLoading: budgetsLoading } = useCollection<Budget>(budgetsCollection);
 
+  const {
+    ready,
+    suggestions: { status, data: autocompleteData },
+    setValue: setAutocompleteValue,
+    clearSuggestions,
+  } = usePlacesAutocomplete({ debounce: 300 });
+
   const { control, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<PlanFormValues>({
     resolver: zodResolver(planSchema) as any,
     defaultValues: {
@@ -397,7 +406,49 @@ export default function MyPlansPage() {
                     <Controller
                       name="eventLocation"
                       control={control}
-                      render={({ field }) => <Input id="eventLocation" {...field} placeholder="City, Venue, or Address" />}
+                      render={({ field }) => (
+                        <Popover open={ready && status === "OK" && autocompleteData.length > 0}>
+                          <PopoverAnchor>
+                            <Input
+                              id="eventLocation"
+                              {...field}
+                              placeholder={ready ? "Start typing your address..." : "Loading location..."}
+                              autoComplete="off"
+                              onChange={(e) => {
+                                field.onChange(e);
+                                setAutocompleteValue(e.target.value);
+                              }}
+                            />
+                          </PopoverAnchor>
+                          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                            {status === "OK" && (
+                              <div className="flex flex-col gap-2 p-2">
+                                {autocompleteData.map((suggestion) => {
+                                  const { place_id, structured_formatting: { main_text, secondary_text }, description } = suggestion;
+                                  return (
+                                    <Button
+                                      key={place_id}
+                                      type="button"
+                                      variant="ghost"
+                                      className="justify-start h-auto text-left"
+                                      onClick={() => {
+                                        field.onChange(description);
+                                        clearSuggestions();
+                                      }}
+                                    >
+                                      <div>
+                                        <strong>{main_text}</strong>
+                                        <br />
+                                        <small className="text-muted-foreground">{secondary_text}</small>
+                                      </div>
+                                    </Button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </PopoverContent>
+                        </Popover>
+                      )}
                     />
                     {errors.eventLocation && <p className="text-xs text-destructive">{errors.eventLocation.message}</p>}
                   </div>
