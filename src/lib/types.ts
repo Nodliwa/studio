@@ -75,3 +75,30 @@ export interface RSVP {
   dietaryRequirements?: string;
   createdAt: any; // Firestore Timestamp
 }
+
+export interface InviteToken {
+  id: string;
+  budgetId: string;
+  budgetName: string;
+  ownerId: string;
+  createdAt: any;
+  expiresAt: any;
+  used: boolean;
+  usedAt?: any;
+  usedBy?: string;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: 'collaborator_request' | 'collaborator_approved' | 'collaborator_rejected';
+  budgetId: string;
+  budgetName: string;
+  inviteeName: string;
+  inviteeContact: string;
+  inviteeUid: string;
+  token: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: any;
+  read: boolean;
+}

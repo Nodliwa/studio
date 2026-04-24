@@ -4,19 +4,108 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { useUser, useAuth } from "@/firebase";
+import { useUser, useAuth, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { signOutUser } from "@/firebase/auth-operations";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Bell } from "lucide-react";
+import { collection, query, where, doc, updateDoc, writeBatch } from "firebase/firestore";
+import type { Notification } from "@/lib/types";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { formatDistanceToNow } from "date-fns";
+
 export default function PageHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
+
+  const notificationsQuery = useMemoFirebase(() => {
+    if (!user || user.isAnonymous || !firestore) return null;
+    return query(
+      collection(firestore, "notifications"),
+      where("userId", "==", user.uid),
+    );
+  }, [user, firestore]);
+
+  const { data: notifications } = useCollection<Notification>(notificationsQuery);
+
+  const unreadCount = notifications?.filter(n => !n.read && n.status === 'pending').length || 0;
+  const pendingNotifications = notifications?.filter(n => n.status === 'pending') || [];
+
   const handleLogout = async () => {
     if (!auth) return;
     await signOutUser(auth);
     router.push("/auth");
   };
+
+  const handleApprove = async (notification: Notification) => {
+    if (!firestore || !user) return;
+    const batch = writeBatch(firestore);
+    const notifRef = doc(firestore, "notifications", notification.id);
+    batch.update(notifRef, { status: 'approved', read: true });
+    const budgetRef = doc(firestore, "users", user.uid, "budgets", notification.budgetId);
+    const newCollaborator = {
+      email: notification.inviteeContact,
+      name: notification.inviteeName,
+      rights: 'read/write'
+    };
+    batch.update(budgetRef, {
+      collaborators: [...([] as any[]), newCollaborator],
+      collaboratorEmails: [notification.inviteeContact],
+    });
+    const inviteeNotifRef = doc(collection(firestore, "notifications"));
+    batch.set(inviteeNotifRef, {
+      userId: notification.inviteeUid,
+      type: 'collaborator_approved',
+      budgetId: notification.budgetId,
+      budgetName: notification.budgetName,
+      inviteeName: notification.inviteeName,
+      inviteeContact: notification.inviteeContact,
+      inviteeUid: notification.inviteeUid,
+      token: notification.token,
+      status: 'approved',
+      createdAt: new Date(),
+      read: false,
+    });
+    await batch.commit();
+  };
+
+  const handleReject = async (notification: Notification) => {
+    if (!firestore) return;
+    const batch = writeBatch(firestore);
+    const notifRef = doc(firestore, "notifications", notification.id);
+    batch.update(notifRef, { status: 'rejected', read: true });
+    const inviteeNotifRef = doc(collection(firestore, "notifications"));
+    batch.set(inviteeNotifRef, {
+      userId: notification.inviteeUid,
+      type: 'collaborator_rejected',
+      budgetId: notification.budgetId,
+      budgetName: notification.budgetName,
+      inviteeName: notification.inviteeName,
+      inviteeContact: notification.inviteeContact,
+      inviteeUid: notification.inviteeUid,
+      token: notification.token,
+      status: 'rejected',
+      createdAt: new Date(),
+      read: false,
+    });
+    await batch.commit();
+  };
+
+  const markAllRead = async () => {
+    if (!firestore || !notifications) return;
+    const batch = writeBatch(firestore);
+    notifications.filter(n => !n.read).forEach(n => {
+      batch.update(doc(firestore, "notifications", n.id), { read: true });
+    });
+    await batch.commit();
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full bg-[hsl(210,55%,93%)] shadow-md">
       <div className="w-full flex h-16 md:h-20 items-center justify-between px-4 md:px-8">
@@ -37,6 +126,80 @@ export default function PageHeader() {
         </nav>
         {!isUserLoading && user && !user.isAnonymous ? (
           <div className="flex items-center gap-3">
+
+            <DropdownMenu onOpenChange={(open) => { if (open) markAllRead(); }}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80 p-0">
+                <div className="p-3 border-b">
+                  <p className="font-semibold text-sm">Notifications</p>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {notifications && notifications.length > 0 ? (
+                    <div className="divide-y">
+                      {notifications.map((notif) => (
+                        <div key={notif.id} className={cn("p-3 space-y-2", !notif.read && "bg-primary/5")}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              {notif.type === 'collaborator_request' && (
+                                <p className="text-sm font-medium">
+                                  <span className="text-primary">{notif.inviteeName}</span> wants to collaborate on <span className="font-bold">{notif.budgetName}</span>
+                                </p>
+                              )}
+                              {notif.type === 'collaborator_approved' && (
+                                <p className="text-sm font-medium text-green-600">
+                                  Your request to join <span className="font-bold">{notif.budgetName}</span> was approved!
+                                </p>
+                              )}
+                              {notif.type === 'collaborator_rejected' && (
+                                <p className="text-sm font-medium text-destructive">
+                                  Your request to join <span className="font-bold">{notif.budgetName}</span> was not approved.
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {notif.inviteeContact} · {notif.createdAt?.toDate ? formatDistanceToNow(notif.createdAt.toDate(), { addSuffix: true }) : 'just now'}
+                              </p>
+                            </div>
+                            {!notif.read && <span className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1" />}
+                          </div>
+                          {notif.type === 'collaborator_request' && notif.status === 'pending' && (
+                            <div className="flex gap-2">
+                              <Button size="sm" className="flex-1 h-7 text-xs" onClick={() => handleApprove(notif)}>Approve</Button>
+                              <Button size="sm" variant="outline" className="flex-1 h-7 text-xs text-destructive border-destructive/30" onClick={() => handleReject(notif)}>Reject</Button>
+                            </div>
+                          )}
+                          {notif.status === 'approved' && notif.type === 'collaborator_request' && (
+                            <p className="text-xs text-green-600 font-medium">✅ Approved</p>
+                          )}
+                          {notif.status === 'rejected' && notif.type === 'collaborator_request' && (
+                            <p className="text-xs text-destructive font-medium">❌ Rejected</p>
+                          )}
+                          {notif.type === 'collaborator_approved' && (
+                            <Button size="sm" className="w-full h-7 text-xs" onClick={() => router.push('/planner/' + notif.budgetId)}>
+                              Open Plan
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center">
+                      <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">No notifications yet</p>
+                    </div>
+                  )}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Link href="/profile">
               <Avatar className="h-9 w-9 cursor-pointer ring-2 ring-primary/20 hover:ring-primary/60 transition-all">
                 <AvatarImage src={user.photoURL || undefined} alt="Profile" />
