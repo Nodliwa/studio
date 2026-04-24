@@ -312,7 +312,12 @@ export default function ProfilePage() {
                       )}
 
                       <div className="flex items-center justify-between pt-2">
-                        <p className="text-xs text-muted-foreground">Member since {getMemberSince()}</p>
+                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-2"><p className="text-xs text-muted-foreground">Member since {getMemberSince()}</p><span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">🏆 Founding Member</span></div>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                          🏆 Founding Member
+                        </span>
+                      </div>
                         <Button type="submit" disabled={isSubmitting || !isDirty}>
                           {isSubmitting ? 'Saving...' : 'Save changes'}
                         </Button>

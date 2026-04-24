@@ -7,7 +7,7 @@ import { Button } from "./ui/button";
 import { useUser, useAuth, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { signOutUser } from "@/firebase/auth-operations";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Bell, Home, LayoutGrid, DollarSign } from "lucide-react";
+import { Bell, Home, LayoutGrid } from "lucide-react";
 import { collection, query, where, doc, updateDoc, writeBatch } from "firebase/firestore";
 import type { Notification } from "@/lib/types";
 import {
@@ -234,12 +234,15 @@ export default function PageHeader() {
               <span className="text-[10px] font-medium">My Plans</span>
             </Link>
             <Link href="/pricing" className={cn("flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors", pathname === "/pricing" ? "text-primary" : "text-muted-foreground")}>
-              <DollarSign className="h-5 w-5" />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <text x="12" y="16" textAnchor="middle" fontSize="11" fontWeight="bold" fill="currentColor" stroke="none">R</text>
+              </svg>
               <span className="text-[10px] font-medium">Pricing</span>
             </Link>
-            <div className={cn("flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors", "text-muted-foreground")}>
+            <div className="flex flex-col items-center gap-0 px-3 py-1 rounded-lg text-muted-foreground">
               <NotificationsDropdown />
-              <span className="text-[10px] font-medium">Alerts</span>
+              <span className="text-[10px] font-medium -mt-1">Alerts</span>
             </div>
           </div>
         </nav>
