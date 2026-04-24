@@ -62,6 +62,7 @@ const suggestMustDosFlow = ai.defineFlow(
       console.log('Generating AI suggestions for:', input.eventType);
       const { output } = await suggestMustDosPrompt(input);
       
+      console.log('Raw AI output:', JSON.stringify(output));
       if (!output || !output.suggestions) {
         console.warn('AI returned empty suggestions list.');
         return { suggestions: [] };
