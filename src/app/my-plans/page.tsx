@@ -270,13 +270,26 @@ export default function MyPlansPage() {
     const fetchSharedPlans = async () => {
       setSharedPlansLoading(true);
       try {
-        const q = firestoreQuery(
-          collectionGroup(firestore, "budgets"),
-          firestoreWhere("collaboratorEmails", "array-contains", user.email)
-        );
-        const snap = await firestoreGetDocs(q);
-        const plans = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Budget[];
-        setSharedPlans(plans);
+        const results: Budget[] = [];
+        const contacts = [user.email, user.phoneNumber].filter(Boolean);
+        for (const contact of contacts) {
+          try {
+            const q = firestoreQuery(
+              collectionGroup(firestore, "budgets"),
+              firestoreWhere("collaboratorEmails", "array-contains", contact)
+            );
+            const snap = await firestoreGetDocs(q);
+            snap.docs.forEach(d => {
+              const plan = { id: d.id, ...d.data() } as Budget;
+              if (!results.find(r => r.id === plan.id) && plan.userId !== user.uid) {
+                results.push(plan);
+              }
+            });
+          } catch (e) {
+            console.error("Query error for contact:", contact, e);
+          }
+        }
+        setSharedPlans(results);
       } catch (e) {
         console.error("Error fetching shared plans:", e);
       } finally {
@@ -487,32 +500,37 @@ export default function MyPlansPage() {
             </Dialog>
           </div>
 
-          {sharedPlans.length > 0 && (
-            <div className="mt-8">
-              <h3 className="text-xl font-bold font-headline mb-4">Shared with me</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sharedPlans.map((budget) => (
-                  <PlanCard key={budget.id} budget={budget} onDelete={() => {}} />
-                ))}
-              </div>
-            </div>
-          )}
-
           {budgetsLoading ? (
             <div className="flex justify-center items-center py-20">
               <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : budgets && budgets.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-              {budgets.map((budget) => (
-                <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} />
-              ))}
+            <div className="mt-8">
+              <h3 className="text-xl font-bold font-headline mb-2">My Plans</h3>
+              <p className="text-muted-foreground text-sm mb-4">Plans you have created</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {budgets.map((budget) => (
+                  <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} />
+                ))}
+              </div>
             </div>
           ) : (
             <div className="text-center py-16">
               <p className="text-lg text-muted-foreground">
                 You haven't saved any celebration plans yet. Start a new one above to get started!
               </p>
+            </div>
+          )}
+
+          {sharedPlans.length > 0 && (
+            <div className="mt-10">
+              <h3 className="text-xl font-bold font-headline mb-2">Shared with me</h3>
+              <p className="text-muted-foreground text-sm mb-4">Plans others have invited you to collaborate on</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sharedPlans.map((budget) => (
+                  <PlanCard key={budget.id} budget={budget} onDelete={() => {}} />
+                ))}
+              </div>
             </div>
           )}
         </main>
