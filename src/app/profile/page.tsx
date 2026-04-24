@@ -61,7 +61,7 @@ async function compressImage(file: File): Promise<Blob> {
 }
 
 function getDiceBearUrl(seed: string) {
-  return 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=' + encodeURIComponent(seed);
+  return 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + encodeURIComponent(seed);
 }
 
 function getProviderLabel(providerId: string) {
