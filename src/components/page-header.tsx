@@ -242,7 +242,7 @@ export default function PageHeader() {
             </Link>
             <DropdownMenu onOpenChange={(open) => { if (open) markAllRead(); }}>
               <DropdownMenuTrigger asChild>
-                <button className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-muted-foreground">
+                <button className={cn("flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors", pathname === "/alerts" ? "text-muted-foreground" : "text-primary")}>  
                   <div className="relative">
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
