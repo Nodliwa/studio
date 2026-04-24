@@ -250,7 +250,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="flex flex-col items-center gap-1">
                         <span className="text-base font-semibold tracking-wide text-amber-700">Membership</span>
-                        <span className="text-lg font-bold text-amber-800 bg-amber-50 border border-amber-300 px-4 py-1.5 rounded-full shadow-sm">🏆 Founding Member 🏆</span>
+                        <span className="text-base font-bold text-amber-800 bg-amber-50 border border-amber-300 px-4 py-1.5 rounded-full shadow-sm">🏆 Founding Member 🏆</span>
                       </div>
 
                       {showAvatarPicker && (
@@ -316,7 +316,7 @@ export default function ProfilePage() {
 
                       <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center gap-3">
-                        <div className="space-y-1"><p className="text-sm">Member since: {getMemberSince()}</p></div>
+                        <p className="text-sm">Member since: {getMemberSince()}</p>
                         <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
                           🏆 Founding Member
                         </span>
