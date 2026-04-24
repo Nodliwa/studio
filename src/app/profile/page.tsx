@@ -248,7 +248,10 @@ export default function ProfilePage() {
                         </Avatar>
                         <div className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">+</div>
                       </div>
-                      <p className="text-xs text-muted-foreground">Tap avatar to change</p>
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-base font-semibold tracking-wide text-amber-700">Membership</span>
+                        <span className="text-lg font-bold text-amber-800 bg-amber-50 border border-amber-300 px-4 py-1.5 rounded-full shadow-sm">🏆 Founding Member 🏆</span>
+                      </div>
 
                       {showAvatarPicker && (
                         <div className="w-full border rounded-lg p-4 space-y-3 bg-muted/30">
@@ -313,13 +316,13 @@ export default function ProfilePage() {
 
                       <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center gap-3">
-                        <div className="space-y-1"><p className="text-xs text-muted-foreground">Member since: {getMemberSince()}</p><p className="text-xs font-semibold text-amber-800">Membership: 🏆 Founding Member 🏆</p></div>
+                        <div className="space-y-1"><p className="text-sm">Member since: {getMemberSince()}</p></div>
                         <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
                           🏆 Founding Member
                         </span>
                       </div>
                         <Button type="submit" disabled={isSubmitting || !isDirty}>
-                          {isSubmitting ? 'Saving...' : 'Save changes'}
+                          {isSubmitting ? 'Saving...' : 'Save'}
                         </Button>
                       </div>
                     </form>
