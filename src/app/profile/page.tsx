@@ -72,7 +72,7 @@ export default function ProfilePage() {
 
     useEffect(() => {
         if (!isAuthUserLoading && (!authUser || authUser.isAnonymous)) {
-            router.push('/login');
+            router.push('/auth');
         }
     }, [authUser, isAuthUserLoading, router]);
     
