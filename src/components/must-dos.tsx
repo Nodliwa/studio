@@ -23,7 +23,7 @@ import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 import { suggestMustDos } from '@/ai/flows/suggest-must-dos-flow';
 import { useToast } from '@/hooks/use-toast';
-import { scoreSuggestions, type ScoredSuggestion } from '@/ai/flows/score-suggestions-flow';
+import { scoreByPriority, type ScoredSuggestion } from '@/ai/flows/score-suggestions-flow';
 
 interface MustDosProps {
   budgetId: string;
@@ -309,8 +309,7 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
       const result = await suggestMustDos({ eventType: effectiveEventType, existingTitles });
       
       if (result.suggestions && result.suggestions.length > 0) {
-        const titles = result.suggestions.map(s => s.title);
-        const scored = await scoreSuggestions(titles, `Event: ${effectiveEventType}. Tasks: ${existingTitles.join(', ')}`);
+        const scored = scoreByPriority(result.suggestions);
         setSuggestions(scored.sort((a, b) => b.score - a.score));
         setSelectedSuggestions({});
       } else {

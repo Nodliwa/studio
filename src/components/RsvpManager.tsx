@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -38,6 +37,7 @@ export function RsvpManager({ budget, rsvps }: RsvpManagerProps) {
 
   const inviteUrl = useMemo(() => {
     if (typeof window === 'undefined') return '';
+    // Standardized to [userId] to match standardized app/rsvp structure
     return `${window.location.origin}/rsvp/${budget.userId}/${budget.id}`;
   }, [budget.userId, budget.id]);
 
