@@ -240,10 +240,73 @@ export default function PageHeader() {
               </svg>
               <span className="text-[10px] font-medium">Pricing</span>
             </Link>
-            <div className="flex flex-col items-center px-3 py-1 rounded-lg text-muted-foreground">
-              <div className="-mb-1"><NotificationsDropdown /></div>
-              <span className="text-[10px] font-medium">Alerts</span>
-            </div>
+            <DropdownMenu onOpenChange={(open) => { if (open) markAllRead(); }}>
+              <DropdownMenuTrigger asChild>
+                <button className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-muted-foreground">
+                  <div className="relative">
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-bold">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-medium">Alerts</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80 p-0">
+                <div className="p-3 border-b">
+                  <p className="font-semibold text-sm">Notifications</p>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {notifications && notifications.length > 0 ? (
+                    <div className="divide-y">
+                      {notifications.map((notif) => (
+                        <div key={notif.id} className={cn("p-3 space-y-2", !notif.read && "bg-primary/5")}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              {notif.type === 'collaborator_request' && (
+                                <p className="text-sm font-medium"><span className="text-primary">{notif.inviteeName}</span> wants to collaborate on <span className="font-bold">{notif.budgetName}</span></p>
+                              )}
+                              {notif.type === 'collaborator_approved' && (
+                                <p className="text-sm font-medium text-green-600">Your request to join <span className="font-bold">{notif.budgetName}</span> was approved!</p>
+                              )}
+                              {notif.type === 'collaborator_rejected' && (
+                                <p className="text-sm font-medium text-destructive">Your request to join <span className="font-bold">{notif.budgetName}</span> was not approved.</p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {notif.inviteeContact} · {notif.createdAt?.toDate ? formatDistanceToNow(notif.createdAt.toDate(), { addSuffix: true }) : 'just now'}
+                              </p>
+                            </div>
+                            {!notif.read && <span className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1" />}
+                          </div>
+                          {notif.type === 'collaborator_request' && notif.status === 'pending' && (
+                            <div className="flex gap-2">
+                              <Button size="sm" className="flex-1 h-7 text-xs" onClick={() => handleApprove(notif)}>Approve</Button>
+                              <Button size="sm" variant="outline" className="flex-1 h-7 text-xs text-destructive border-destructive/30" onClick={() => handleReject(notif)}>Reject</Button>
+                            </div>
+                          )}
+                          {notif.status === 'approved' && notif.type === 'collaborator_request' && (
+                            <p className="text-xs text-green-600 font-medium">Approved</p>
+                          )}
+                          {notif.status === 'rejected' && notif.type === 'collaborator_request' && (
+                            <p className="text-xs text-destructive font-medium">Rejected</p>
+                          )}
+                          {notif.type === 'collaborator_approved' && (
+                            <Button size="sm" className="w-full h-7 text-xs" onClick={() => router.push('/planner/' + notif.budgetId)}>Open Plan</Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center">
+                      <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">No notifications yet</p>
+                    </div>
+                  )}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </nav>
       )}
