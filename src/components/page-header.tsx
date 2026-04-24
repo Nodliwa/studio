@@ -7,7 +7,7 @@ import { Button } from "./ui/button";
 import { useUser, useAuth, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { signOutUser } from "@/firebase/auth-operations";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Bell } from "lucide-react";
+import { Bell, Home, LayoutGrid, DollarSign } from "lucide-react";
 import { collection, query, where, doc, updateDoc, writeBatch } from "firebase/firestore";
 import type { Notification } from "@/lib/types";
 import {
@@ -33,7 +33,6 @@ export default function PageHeader() {
   }, [user, firestore]);
 
   const { data: notifications } = useCollection<Notification>(notificationsQuery);
-
   const unreadCount = notifications?.filter(n => !n.read && n.status === 'pending').length || 0;
   const pendingNotifications = notifications?.filter(n => n.status === 'pending') || [];
 
@@ -106,116 +105,149 @@ export default function PageHeader() {
     await batch.commit();
   };
 
+  const NotificationsDropdown = () => (
+    <DropdownMenu onOpenChange={(open) => { if (open) markAllRead(); }}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
+              {unreadCount}
+            </span>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80 p-0">
+        <div className="p-3 border-b">
+          <p className="font-semibold text-sm">Notifications</p>
+        </div>
+        <div className="max-h-96 overflow-y-auto">
+          {notifications && notifications.length > 0 ? (
+            <div className="divide-y">
+              {notifications.map((notif) => (
+                <div key={notif.id} className={cn("p-3 space-y-2", !notif.read && "bg-primary/5")}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      {notif.type === 'collaborator_request' && (
+                        <p className="text-sm font-medium">
+                          <span className="text-primary">{notif.inviteeName}</span> wants to collaborate on <span className="font-bold">{notif.budgetName}</span>
+                        </p>
+                      )}
+                      {notif.type === 'collaborator_approved' && (
+                        <p className="text-sm font-medium text-green-600">
+                          Your request to join <span className="font-bold">{notif.budgetName}</span> was approved!
+                        </p>
+                      )}
+                      {notif.type === 'collaborator_rejected' && (
+                        <p className="text-sm font-medium text-destructive">
+                          Your request to join <span className="font-bold">{notif.budgetName}</span> was not approved.
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {notif.inviteeContact} · {notif.createdAt?.toDate ? formatDistanceToNow(notif.createdAt.toDate(), { addSuffix: true }) : 'just now'}
+                      </p>
+                    </div>
+                    {!notif.read && <span className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1" />}
+                  </div>
+                  {notif.type === 'collaborator_request' && notif.status === 'pending' && (
+                    <div className="flex gap-2">
+                      <Button size="sm" className="flex-1 h-7 text-xs" onClick={() => handleApprove(notif)}>Approve</Button>
+                      <Button size="sm" variant="outline" className="flex-1 h-7 text-xs text-destructive border-destructive/30" onClick={() => handleReject(notif)}>Reject</Button>
+                    </div>
+                  )}
+                  {notif.status === 'approved' && notif.type === 'collaborator_request' && (
+                    <p className="text-xs text-green-600 font-medium">Approved</p>
+                  )}
+                  {notif.status === 'rejected' && notif.type === 'collaborator_request' && (
+                    <p className="text-xs text-destructive font-medium">Rejected</p>
+                  )}
+                  {notif.type === 'collaborator_approved' && (
+                    <Button size="sm" className="w-full h-7 text-xs" onClick={() => router.push('/planner/' + notif.budgetId)}>
+                      Open Plan
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-6 text-center">
+              <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No notifications yet</p>
+            </div>
+          )}
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-[hsl(210,55%,93%)] shadow-md">
-      <div className="w-full flex h-16 md:h-20 items-center justify-between px-4 md:px-8">
-        <Link href="/" className="flex items-center">
-          <Image
-            src="/images/brand2.png"
-            alt="SimpliPlan Logo"
-            width={143}
-            height={36}
-            className="w-[120px] h-auto md:w-[143px]"
-            priority
-          />
-        </Link>
-        <nav className="hidden md:flex items-center justify-center gap-6 text-lg">
-          <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>Home</Link>
-          <Link href="/my-plans" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/my-plans" ? "text-foreground" : "text-foreground/60")}>MyPlans</Link>
-          <Link href="/pricing" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/pricing" ? "text-foreground" : "text-foreground/60")}>Pricing</Link>
-        </nav>
-        {!isUserLoading && user && !user.isAnonymous ? (
-          <div className="flex items-center gap-3">
+    <>
+      <header className="sticky top-0 z-50 w-full bg-[hsl(210,55%,93%)] shadow-md">
+        <div className="w-full flex h-16 md:h-20 items-center justify-between px-4 md:px-8">
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/images/brand2.png"
+              alt="SimpliPlan Logo"
+              width={143}
+              height={36}
+              className="w-[120px] h-auto md:w-[143px]"
+              priority
+            />
+          </Link>
 
-            <DropdownMenu onOpenChange={(open) => { if (open) markAllRead(); }}>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
-                      {unreadCount}
-                    </span>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80 p-0">
-                <div className="p-3 border-b">
-                  <p className="font-semibold text-sm">Notifications</p>
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  {notifications && notifications.length > 0 ? (
-                    <div className="divide-y">
-                      {notifications.map((notif) => (
-                        <div key={notif.id} className={cn("p-3 space-y-2", !notif.read && "bg-primary/5")}>
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              {notif.type === 'collaborator_request' && (
-                                <p className="text-sm font-medium">
-                                  <span className="text-primary">{notif.inviteeName}</span> wants to collaborate on <span className="font-bold">{notif.budgetName}</span>
-                                </p>
-                              )}
-                              {notif.type === 'collaborator_approved' && (
-                                <p className="text-sm font-medium text-green-600">
-                                  Your request to join <span className="font-bold">{notif.budgetName}</span> was approved!
-                                </p>
-                              )}
-                              {notif.type === 'collaborator_rejected' && (
-                                <p className="text-sm font-medium text-destructive">
-                                  Your request to join <span className="font-bold">{notif.budgetName}</span> was not approved.
-                                </p>
-                              )}
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {notif.inviteeContact} · {notif.createdAt?.toDate ? formatDistanceToNow(notif.createdAt.toDate(), { addSuffix: true }) : 'just now'}
-                              </p>
-                            </div>
-                            {!notif.read && <span className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1" />}
-                          </div>
-                          {notif.type === 'collaborator_request' && notif.status === 'pending' && (
-                            <div className="flex gap-2">
-                              <Button size="sm" className="flex-1 h-7 text-xs" onClick={() => handleApprove(notif)}>Approve</Button>
-                              <Button size="sm" variant="outline" className="flex-1 h-7 text-xs text-destructive border-destructive/30" onClick={() => handleReject(notif)}>Reject</Button>
-                            </div>
-                          )}
-                          {notif.status === 'approved' && notif.type === 'collaborator_request' && (
-                            <p className="text-xs text-green-600 font-medium">✅ Approved</p>
-                          )}
-                          {notif.status === 'rejected' && notif.type === 'collaborator_request' && (
-                            <p className="text-xs text-destructive font-medium">❌ Rejected</p>
-                          )}
-                          {notif.type === 'collaborator_approved' && (
-                            <Button size="sm" className="w-full h-7 text-xs" onClick={() => router.push('/planner/' + notif.budgetId)}>
-                              Open Plan
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-6 text-center">
-                      <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">No notifications yet</p>
-                    </div>
-                  )}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <nav className="hidden md:flex items-center justify-center gap-6 text-lg">
+            <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>Home</Link>
+            <Link href="/my-plans" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/my-plans" ? "text-foreground" : "text-foreground/60")}>MyPlans</Link>
+            <Link href="/pricing" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/pricing" ? "text-foreground" : "text-foreground/60")}>Pricing</Link>
+          </nav>
 
-            <Link href="/profile">
-              <Avatar className="h-9 w-9 cursor-pointer ring-2 ring-primary/20 hover:ring-primary/60 transition-all">
-                <AvatarImage src={user.photoURL || undefined} alt="Profile" />
-                <AvatarFallback className="text-sm font-medium">
-                  {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase() || '?'}
-                </AvatarFallback>
-              </Avatar>
+          {!isUserLoading && user && !user.isAnonymous ? (
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="hidden md:block"><NotificationsDropdown /></div>
+              <Link href="/profile">
+                <Avatar className="h-9 w-9 cursor-pointer ring-2 ring-primary/20 hover:ring-primary/60 transition-all">
+                  <AvatarImage src={user.photoURL || undefined} alt="Profile" />
+                  <AvatarFallback className="text-sm font-medium">
+                    {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase() || '?'}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+              <Button variant="outline" size="sm" className="text-sm md:text-lg" onClick={handleLogout}>Get Out</Button>
+            </div>
+          ) : (
+            <Button asChild size="sm" className="text-sm md:text-lg">
+              <Link href="/auth">Get In</Link>
+            </Button>
+          )}
+        </div>
+      </header>
+
+      {!isUserLoading && user && !user.isAnonymous && (
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[hsl(210,55%,93%)] border-t border-border shadow-lg">
+          <div className="flex items-center justify-around h-16 px-2">
+            <Link href="/" className={cn("flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors", pathname === "/" ? "text-primary" : "text-muted-foreground")}>
+              <Home className="h-5 w-5" />
+              <span className="text-[10px] font-medium">Home</span>
             </Link>
-            <Button variant="outline" size="sm" className="text-sm md:text-lg" onClick={handleLogout}>Get Out</Button>
+            <Link href="/my-plans" className={cn("flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors", pathname === "/my-plans" ? "text-primary" : "text-muted-foreground")}>
+              <LayoutGrid className="h-5 w-5" />
+              <span className="text-[10px] font-medium">My Plans</span>
+            </Link>
+            <Link href="/pricing" className={cn("flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors", pathname === "/pricing" ? "text-primary" : "text-muted-foreground")}>
+              <DollarSign className="h-5 w-5" />
+              <span className="text-[10px] font-medium">Pricing</span>
+            </Link>
+            <div className={cn("flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors", "text-muted-foreground")}>
+              <NotificationsDropdown />
+              <span className="text-[10px] font-medium">Alerts</span>
+            </div>
           </div>
-        ) : (
-          <Button asChild size="sm" className="text-sm md:text-lg">
-            <Link href="/auth">Get In</Link>
-          </Button>
-        )}
-      </div>
-    </header>
+        </nav>
+      )}
+
+      {!isUserLoading && user && !user.isAnonymous && (
+        <div className="md:hidden h-16" />
+      )}
+    </>
   );
 }
