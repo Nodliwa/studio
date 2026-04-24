@@ -18,4 +18,4 @@ env:
   - variable: FIREBASE_PRIVATE_KEY
     secret: FIREBASE_PRIVATE_KEY
   - variable: GOOGLE_GENAI_API_KEY
-    value: AIzaSyBkc8FvMb1knt_kOdNCTEON8RSg7OieNGw
+    secret: GOOGLE_GENAI_API_KEY
