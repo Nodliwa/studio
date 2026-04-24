@@ -68,9 +68,9 @@ const suggestMustDosFlow = ai.defineFlow(
       }
       
       return output;
-    } catch (error) {
-      console.error('SuggestMustDosFlow Error:', error);
-      // Return empty instead of crashing the server action
+    } catch (error: any) {
+      console.error('SuggestMustDosFlow Error:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      console.error('API Key present:', !!process.env.GOOGLE_GENAI_API_KEY);
       return { suggestions: [] };
     }
   }
