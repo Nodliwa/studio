@@ -61,7 +61,16 @@ export function EventDetails({
     clearSuggestions,
   } = usePlacesAutocomplete({
     debounce: 300,
+    initOnMount: false,
   });
+
+  useEffect(() => {
+    if (isEditing) {
+      setAutocompleteValue('', false);
+    } else {
+      clearSuggestions();
+    }
+  }, [isEditing]);
 
   const {
     control,

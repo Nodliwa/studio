@@ -20,11 +20,13 @@ export default function InvitePage({ params: { token } }: { params: { token: str
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
     if (!auth) return;
     const unsub = onAuthStateChanged(auth, (user) => {
       if (user && !user.isAnonymous) setCurrentUser(user);
+      setAuthLoading(false);
     });
     return () => unsub();
   }, [auth]);
@@ -48,7 +50,7 @@ export default function InvitePage({ params: { token } }: { params: { token: str
 
   const handleSubmit = async () => {
     if (!name.trim() || !contact.trim()) return;
-    if (!firestore || !currentUser) {
+    if (!firestore || !currentUser || authLoading) {
       localStorage.setItem('pendingInviteToken', token);
       localStorage.setItem('pendingInviteName', name);
       localStorage.setItem('pendingInviteContact', contact);
@@ -141,7 +143,7 @@ export default function InvitePage({ params: { token } }: { params: { token: str
           </div>
           <Button className="w-full font-bold" onClick={handleSubmit} disabled={isSubmitting || !name.trim() || !contact.trim()}>
             {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            {currentUser ? 'Request Access' : 'Continue to Sign In'}
+            {authLoading ? 'Loading...' : currentUser ? 'Request Access' : 'Continue to Sign In'}
           </Button>
         </div>
       </div>

@@ -71,6 +71,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { budgetTemplates } from "@/lib/data";
+import { collectionGroup, query as firestoreQuery, where as firestoreWhere, getDocs as firestoreGetDocs } from "firebase/firestore";
 import usePlacesAutocomplete from "use-places-autocomplete";
 import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
 
@@ -230,6 +231,8 @@ export default function MyPlansPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [sharedPlans, setSharedPlans] = useState<Budget[]>([]);
+  const [sharedPlansLoading, setSharedPlansLoading] = useState(false);
 
   const budgetsCollection = useMemoFirebase(
     () => (user && !user.isAnonymous ? collection(firestore, "users", user.uid, "budgets") : null),
@@ -261,6 +264,27 @@ export default function MyPlansPage() {
       router.push("/auth");
     }
   }, [user, isUserLoading, router]);
+
+  useEffect(() => {
+    if (!user || user.isAnonymous || !firestore || !user.email) return;
+    const fetchSharedPlans = async () => {
+      setSharedPlansLoading(true);
+      try {
+        const q = firestoreQuery(
+          collectionGroup(firestore, "budgets"),
+          firestoreWhere("collaboratorEmails", "array-contains", user.email)
+        );
+        const snap = await firestoreGetDocs(q);
+        const plans = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Budget[];
+        setSharedPlans(plans);
+      } catch (e) {
+        console.error("Error fetching shared plans:", e);
+      } finally {
+        setSharedPlansLoading(false);
+      }
+    };
+    fetchSharedPlans();
+  }, [user, firestore]);
 
   const handleDeletePlan = async (budgetId: string) => {
     if (!user || !firestore) return;
@@ -462,6 +486,17 @@ export default function MyPlansPage() {
               </DialogContent>
             </Dialog>
           </div>
+
+          {sharedPlans.length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-xl font-bold font-headline mb-4">Shared with me</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sharedPlans.map((budget) => (
+                  <PlanCard key={budget.id} budget={budget} onDelete={() => {}} />
+                ))}
+              </div>
+            </div>
+          )}
 
           {budgetsLoading ? (
             <div className="flex justify-center items-center py-20">
