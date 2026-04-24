@@ -313,7 +313,7 @@ export default function ProfilePage() {
 
                       <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center gap-3">
-                        <div className="flex flex-wrap items-center gap-2"><p className="text-xs text-muted-foreground">Member since {getMemberSince()}</p><span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">🏆 Founding Member</span></div>
+                        <div className="space-y-1"><p className="text-xs text-muted-foreground">Member since: {getMemberSince()}</p><p className="text-xs font-semibold text-amber-800">Membership: 🏆 Founding Member 🏆</p></div>
                         <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
                           🏆 Founding Member
                         </span>

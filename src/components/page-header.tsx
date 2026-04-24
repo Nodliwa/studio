@@ -225,24 +225,24 @@ export default function PageHeader() {
       {!isUserLoading && user && !user.isAnonymous && (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[hsl(210,55%,93%)] border-t border-border shadow-lg">
           <div className="flex items-center justify-around h-16 px-2">
-            <Link href="/" className={cn("flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors", pathname === "/" ? "text-primary" : "text-muted-foreground")}>
+            <Link href="/" className={cn("flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors", pathname === "/" ? "text-muted-foreground" : "text-primary")}>
               <Home className="h-5 w-5" />
               <span className="text-[10px] font-medium">Home</span>
             </Link>
-            <Link href="/my-plans" className={cn("flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors", pathname === "/my-plans" ? "text-primary" : "text-muted-foreground")}>
+            <Link href="/my-plans" className={cn("flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors", pathname === "/my-plans" ? "text-muted-foreground" : "text-primary")}>
               <LayoutGrid className="h-5 w-5" />
               <span className="text-[10px] font-medium">My Plans</span>
             </Link>
-            <Link href="/pricing" className={cn("flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors", pathname === "/pricing" ? "text-primary" : "text-muted-foreground")}>
+            <Link href="/pricing" className={cn("flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors", pathname === "/pricing" ? "text-muted-foreground" : "text-primary")}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/>
                 <text x="12" y="16" textAnchor="middle" fontSize="11" fontWeight="bold" fill="currentColor" stroke="none">R</text>
               </svg>
               <span className="text-[10px] font-medium">Pricing</span>
             </Link>
-            <div className="flex flex-col items-center gap-0 px-3 py-1 rounded-lg text-muted-foreground">
-              <NotificationsDropdown />
-              <span className="text-[10px] font-medium -mt-1">Alerts</span>
+            <div className="flex flex-col items-center px-3 py-1 rounded-lg text-muted-foreground">
+              <div className="-mb-1"><NotificationsDropdown /></div>
+              <span className="text-[10px] font-medium">Alerts</span>
             </div>
           </div>
         </nav>
