@@ -13,7 +13,7 @@ import {googleAI} from '@genkit-ai/google-genai';
 // the use of Google's AI models (e.g., Gemini).
 export const ai = genkit({
   plugins: [
-    googleAI(), // Enables Google's generative AI models like Gemini.
+    googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY }), // Enables Google's generative AI models like Gemini.
   ],
 });
 

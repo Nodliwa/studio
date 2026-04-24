@@ -17,3 +17,5 @@ env:
     value: firebase-adminsdk-fbsvc@studio-1406892914-3d877.iam.gserviceaccount.com
   - variable: FIREBASE_PRIVATE_KEY
     secret: FIREBASE_PRIVATE_KEY
+  - variable: GOOGLE_GENAI_API_KEY
+    secret: GOOGLE_GENAI_API_KEY
