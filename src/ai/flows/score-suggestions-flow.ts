@@ -25,7 +25,7 @@ const ScoreSuggestionsOutputSchema = z.object({
 
 const scoreSuggestionsPrompt = ai.definePrompt({
   name: 'scoreSuggestionsPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-2.0-flash',
 // @ts-ignore
 // @ts-ignore
   input: { schema: ScoreSuggestionsInputSchema },

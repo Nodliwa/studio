@@ -27,7 +27,7 @@ export type SuggestMustDosOutput = z.infer<typeof SuggestMustDosOutputSchema>;
 
 const suggestMustDosPrompt = ai.definePrompt({
   name: 'suggestMustDosPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-2.0-flash',
 // @ts-ignore
 // @ts-ignore
   input: { schema: SuggestMustDosInputSchema },
