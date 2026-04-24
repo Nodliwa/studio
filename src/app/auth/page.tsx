@@ -62,7 +62,7 @@ function AuthPageInner() {
   useEffect(() => {
     if (!auth) return;
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (user && !user.isAnonymous && step !== "register") {
+      if (user && !user.isAnonymous && step !== "register" && step !== "otp") {
         const redirect = searchParams.get("redirect") || "/my-plans";
         router.push(redirect);
       }
