@@ -17,7 +17,7 @@ function getAdminApp() {
 
 const MAX_ATTEMPTS = 3;
 
-export async function POST(req) {
+export async function POST(req: NextRequest) {
   try {
     const { email, otp } = await req.json();
     if (!email || !otp) {
@@ -63,7 +63,7 @@ export async function POST(req) {
     try {
       const userRecord = await adminAuth.getUserByEmail(email.toLowerCase());
       uid = userRecord.uid;
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'auth/user-not-found') {
         const newUser = await adminAuth.createUser({ email: email.toLowerCase() });
         uid = newUser.uid;

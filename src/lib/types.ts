@@ -49,6 +49,7 @@ export interface User {
     displayName: string;
     knownAs?: string;
     photoURL?: string;
+    phoneNumber?: string;
 }
 
 export interface MustDo {

@@ -38,7 +38,7 @@ export default function InvitePage({ params: { token } }: { params: { token: str
         const tokenRef = doc(firestore, "invite_tokens", token);
         const tokenSnap = await getDoc(tokenRef);
         if (!tokenSnap.exists()) { setTokenStatus('invalid'); return; }
-        const data = { id: tokenSnap.id, ...tokenSnap.data() };
+        const data = { id: tokenSnap.id, ...tokenSnap.data() } as any;
         setTokenData(data);
         if (data.used) { setTokenStatus('used'); return; }
         if (data.expiresAt?.toDate() < new Date()) { setTokenStatus('expired'); return; }
