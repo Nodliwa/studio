@@ -101,6 +101,7 @@ export default function PlannerPage({
   const router = useRouter();
   const [budgetData, setBudgetData] = useState<BudgetCategory[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
+  const [showQuickStartBanner, setShowQuickStartBanner] = useState(false);
   const isTemplateMode = budgetId === "template";
 
   const budgetDocRef = useMemoFirebase(
@@ -168,6 +169,12 @@ export default function PlannerPage({
       router.push("/auth");
     }
   }, [user, isUserLoading, router, isTemplateMode]);
+
+  useEffect(() => {
+    if (!isTemplateMode && searchParams.get('quickStart') === 'true') {
+      setShowQuickStartBanner(true);
+    }
+  }, [isTemplateMode, searchParams]);
 
   useEffect(() => {
     if (isTemplateMode) {
@@ -358,6 +365,25 @@ export default function PlannerPage({
         <PageHeader />
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
           <Greeter />
+
+          {showQuickStartBanner && (
+            <div className="mt-4 flex items-center gap-3 rounded-lg border border-pink-200 bg-pink-50 px-4 py-3 text-sm text-pink-800 dark:border-pink-800 dark:bg-pink-950 dark:text-pink-200">
+              <span className="flex-1">This is a default plan — tap any section to personalise it.</span>
+              <button
+                onClick={() => setShowQuickStartBanner(false)}
+                className="shrink-0 font-semibold hover:underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
+          {!isTemplateMode && budget?.birthdayMeta?.isMilestone && (
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-1.5 text-sm font-semibold text-amber-800 dark:bg-amber-900 dark:text-amber-100">
+              🎉 Milestone Birthday!
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
             <EventDetails
               budget={budget}
@@ -375,6 +401,12 @@ export default function PlannerPage({
               isTemplateMode={isTemplateMode}
             />
           </div>
+
+          {!isTemplateMode && budget?.eventType === 'birthday' && budget.birthdayMeta && (
+            <div className="mt-4 text-sm text-muted-foreground">
+              {`🎂 Age: ${budget.birthdayMeta.birthdayAge} · ${budget.birthdayMeta.isMilestone ? '🎉 Milestone · ' : ''}${budget.birthdayMeta.ageGroup.charAt(0).toUpperCase() + budget.birthdayMeta.ageGroup.slice(1)} Birthday`}
+            </div>
+          )}
 
           <div className="mt-8">
             <Suspense fallback={<ComponentLoader />}>

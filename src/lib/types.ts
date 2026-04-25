@@ -29,6 +29,27 @@ export interface Collaborator {
   rights: 'read' | 'read/write';
 }
 
+export type AgeGroup = 'child' | 'teen' | 'adult' | 'senior';
+
+export type BirthdayCelebrationType =
+  | 'simple_home'
+  | 'venue_party'
+  | 'surprise_party'
+  | 'family_braai'
+  | 'luxury_dinner'
+  | 'kids_themed'
+  | 'milestone'
+  | 'outdoor_picnic'
+  | 'club_lounge'
+  | 'cultural_family';
+
+export interface BirthdayMeta {
+  birthdayAge: number;
+  ageGroup: AgeGroup;
+  celebrationType?: BirthdayCelebrationType;
+  isMilestone: boolean;
+}
+
 export interface Budget {
   id:string;
   name: string;
@@ -41,6 +62,7 @@ export interface Budget {
   backgroundImageUrl?: string;
   collaborators?: Collaborator[];
   collaboratorEmails?: string[];
+  birthdayMeta?: BirthdayMeta;
 }
 
 export interface User {

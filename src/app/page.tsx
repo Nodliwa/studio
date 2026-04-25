@@ -7,15 +7,24 @@ import Link from "next/link";
 import Image from "next/image";
 import PageHeader from "@/components/page-header";
 import LandingFooter from "@/components/landing-footer";
-import { ListChecks, Calendar, Wallet, RefreshCw } from "lucide-react";
+import { ListChecks, Wallet, Users, Zap } from "lucide-react";
 
 const eventCategories = [
+  {
+    name: "Birthday",
+    image: "/images/birthday.pic.jpg",
+    eventType: "birthday",
+    comingSoon: false,
+    backImage: null,
+    gradient: null,
+  },
   {
     name: "Wedding",
     image: "/images/wedding.jpg",
     eventType: "wedding",
     comingSoon: false,
     backImage: null,
+    gradient: null,
   },
   {
     name: "Funeral",
@@ -23,13 +32,7 @@ const eventCategories = [
     eventType: "funeral",
     comingSoon: false,
     backImage: null,
-  },
-  {
-    name: "uMemulo",
-    image: "/images/umemulo.jpg",
-    eventType: "umemulo",
-    comingSoon: false,
-    backImage: "/images/girl.jpg",
+    gradient: null,
   },
   {
     name: "uMgidi",
@@ -37,33 +40,38 @@ const eventCategories = [
     eventType: "umgidi",
     comingSoon: false,
     backImage: "/images/boy.jpg",
+    gradient: null,
+  },
+  {
+    name: "uMemulo",
+    image: "/images/umemulo.jpg",
+    eventType: "umemulo",
+    comingSoon: false,
+    backImage: "/images/girl.jpg",
+    gradient: null,
   },
 ];
 
-const features = [
+const benefits = [
   {
     icon: ListChecks,
-    title: "Don't forget a thing",
-    description:
-      "We give you a handy list of items to think about for your event, so nothing slips through the cracks.",
-  },
-  {
-    icon: Calendar,
-    title: "Planning That Fits Your Life",
-    description:
-      "Plan anywhere, with anyone, whenever it suits you — simple, flexible, and stress-free.",
+    title: "Stay Organised",
+    description: "Never miss event items, tasks, bookings or deadlines.",
   },
   {
     icon: Wallet,
-    title: "Effortless Budgeting",
-    description:
-      "Forget diaries & spreadsheets - Organise your spending and see where your money goes, all in one place",
+    title: "Control Your Budget",
+    description: "Track every cost in one place.",
   },
   {
-    icon: RefreshCw,
-    title: "Real-Time Updates",
-    description:
-      "See your grand total update instantly as you adjust quantities and prices. No surprises.",
+    icon: Users,
+    title: "Plan Together",
+    description: "Share plans with family or friends and plan together.",
+  },
+  {
+    icon: Zap,
+    title: "Move Fast",
+    description: "Create a birthday plan in seconds.",
   },
 ];
 
@@ -73,8 +81,8 @@ function FlipCard({ cat }: { cat: (typeof eventCategories)[number] }) {
   if (cat.comingSoon) {
     return (
       <div
-        className="cursor-pointer"
-        style={{ height: "220px", perspective: "1000px" }}
+        className="cursor-pointer h-64"
+        style={{ perspective: "1000px" }}
         onClick={() => setFlipped((f) => !f)}
       >
         <div
@@ -88,20 +96,18 @@ function FlipCard({ cat }: { cat: (typeof eventCategories)[number] }) {
           {/* Front */}
           <div
             className="absolute inset-0 rounded-xl overflow-hidden shadow-md"
-            style={{
-              backfaceVisibility: "hidden",
-              WebkitBackfaceVisibility: "hidden",
-            }}
+            style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
           >
             <Image
-              src={cat.image}
+              src={cat.image ?? ""}
               alt={cat.name}
               fill
               className="object-cover"
-              sizes="(max-width: 768px) 50vw, 25vw"
+              sizes="(max-width: 768px) 80vw, 20vw"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
             <div className="absolute inset-0 flex items-end justify-center pb-4">
-              <span className="text-white font-bold text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+              <span className="text-white font-bold text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
                 {cat.name}
               </span>
             </div>
@@ -119,12 +125,8 @@ function FlipCard({ cat }: { cat: (typeof eventCategories)[number] }) {
             }}
           >
             <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center px-3 text-center">
-              <span className="text-white font-extrabold text-2xl drop-shadow-lg">
-                {cat.name}
-              </span>
-              <span className="text-white/90 font-semibold text-sm mt-1 drop-shadow">
-                Stay Tuned!
-              </span>
+              <span className="text-white font-extrabold text-2xl drop-shadow-lg">{cat.name}</span>
+              <span className="text-white/90 font-semibold text-sm mt-1 drop-shadow">Stay Tuned!</span>
             </div>
           </div>
         </div>
@@ -135,18 +137,27 @@ function FlipCard({ cat }: { cat: (typeof eventCategories)[number] }) {
   return (
     <Link
       href={`/planner/template?eventType=${cat.eventType}`}
-      className="relative overflow-hidden rounded-xl shadow-md group cursor-pointer block"
-      style={{ height: "220px" }}
+      className="relative overflow-hidden rounded-xl shadow-md group cursor-pointer block h-64"
     >
-      <Image
-        src={cat.image}
-        alt={cat.name}
-        fill
-        className="object-cover transition-transform duration-500 group-hover:scale-110"
-        sizes="(max-width: 768px) 50vw, 25vw"
-      />
+      {cat.image !== null ? (
+        <Image
+          src={cat.image}
+          alt={cat.name}
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-110"
+          sizes="(max-width: 768px) 80vw, 20vw"
+        />
+      ) : (
+        <div
+          className={`absolute inset-0 bg-gradient-to-br ${cat.gradient} transition-transform duration-500 group-hover:scale-110`}
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+      <div className="absolute top-2 right-2 z-10 bg-teal-600/90 backdrop-blur-sm text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
+        Click to plan
+      </div>
       <div className="absolute inset-0 flex items-end justify-center pb-4">
-        <span className="text-white font-bold text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+        <span className="text-white font-bold text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
           {cat.name}
         </span>
       </div>
@@ -159,53 +170,114 @@ export default function Home() {
     <div className="min-h-screen bg-secondary">
       <PageHeader />
       <main>
-        {/* Hero Section */}
-        <section className="py-20 px-4 text-center">
-          <h1 className="text-5xl font-extrabold tracking-tight lg:text-6xl">
-            Celebrate Loved Ones. Plan Smart.
+
+        {/* ── Hero ──────────────────────────────────────────── */}
+        <section className="pt-10 pb-8 md:pt-14 md:pb-10 px-4 text-center">
+          <div className="flex justify-center mb-4">
+            <span className="bg-yellow-500 text-white text-xs font-semibold px-3 py-1 rounded-full tracking-wide">
+              Built for Mzansi
+            </span>
+          </div>
+
+          <h1 className="text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl max-w-3xl mx-auto leading-tight">
+            Plan Weddings, Birthdays &amp; Ceremonies Without Stress
           </h1>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            SimpliPlan helps you budget for life&apos;s most important moments.
-            From Weddings to Funerals, plan your celebration with ease and
-            confidence.
+
+          <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
+            Budgets, checklists, guest planning and smart tools for Weddings,
+            Birthdays, Funerals and Traditional Ceremonies.
           </p>
-          <div className="mt-8">
-            <Button asChild size="lg" className="px-8">
+
+          <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button asChild size="lg" className="px-8 h-12 text-base font-bold w-full sm:w-auto">
               <Link href="#categories">Plan your Event</Link>
             </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="h-12 text-base font-bold border-teal-500 text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:border-teal-400 dark:hover:bg-teal-950 w-full sm:w-auto"
+            >
+              <Link href="/my-plans">
+                <Zap className="mr-2 h-4 w-4 fill-yellow-500 text-yellow-500" />
+                Plan a Birthday in 10 Seconds
+              </Link>
+            </Button>
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-sm text-muted-foreground">
+            <span>✓ Free to start</span>
+            <span>✓ Built for South Africa</span>
+            <span>✓ Mobile friendly</span>
           </div>
         </section>
 
-        {/* Event Category Cards */}
-        <section id="categories" className="px-4 pb-16">
-          <div className="container mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl">
-            {eventCategories.map((cat) => (
-              <FlipCard key={cat.name} cat={cat} />
-            ))}
-          </div>
-        </section>
-
-        {/* Features Section */}
-        <section className="py-16 px-4">
+        {/* ── Event Type Cards ──────────────────────────────── */}
+        <section id="categories" className="px-4 pb-10 md:pb-14">
           <div className="container mx-auto max-w-6xl">
-            <h2 className="text-4xl font-extrabold text-center mb-12">
-              Features
+            {/*
+              Mobile:  horizontal scroll-snap carousel (80vw cards, CSS only)
+              Desktop: 5-column grid
+            */}
+            <div
+              className="flex md:grid md:grid-cols-5 gap-4 overflow-x-auto md:overflow-visible pb-2 md:pb-0 snap-x snap-mandatory"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
+            >
+              {eventCategories.map((cat) => (
+                <div
+                  key={cat.name}
+                  className="snap-start flex-shrink-0 w-[80vw] md:w-auto"
+                >
+                  <FlipCard cat={cat} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Why SimpliPlan ────────────────────────────────── */}
+        <section className="py-12 md:py-16 px-4">
+          <div className="container mx-auto max-w-5xl">
+            <h2 className="text-3xl font-extrabold text-center mb-10">
+              Why people use SimpliPlan
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-              {features.map((feature) => (
-                <Card key={feature.title} className="text-center">
+              {benefits.map((b) => (
+                <Card key={b.title} className="text-center">
                   <CardContent className="pt-8 pb-8">
-                    <feature.icon className="h-10 w-10 mx-auto text-primary mb-4" />
-                    <h3 className="font-bold text-base">{feature.title}</h3>
-                    <p className="text-muted-foreground text-sm mt-2">
-                      {feature.description}
-                    </p>
+                    <b.icon className="h-10 w-10 mx-auto text-primary mb-4" />
+                    <h3 className="font-bold text-base mb-2">{b.title}</h3>
+                    <p className="text-muted-foreground text-sm">{b.description}</p>
                   </CardContent>
                 </Card>
               ))}
             </div>
           </div>
         </section>
+
+        {/* ── Mid-page CTA ──────────────────────────────────── */}
+        <section className="py-14 px-4 text-center">
+          <h2 className="text-3xl font-extrabold mb-6">
+            Ready to plan something important?
+          </h2>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button asChild size="lg" className="px-8 h-12 text-base font-bold w-full sm:w-auto">
+              <Link href="/my-plans">Create Free Plan</Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="h-12 text-base font-bold border-teal-500 text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:border-teal-400 dark:hover:bg-teal-950 w-full sm:w-auto"
+            >
+              <Link href="/my-plans">
+                <Zap className="mr-2 h-4 w-4 fill-yellow-500 text-yellow-500" />
+                Try Birthday Quick Start
+              </Link>
+            </Button>
+          </div>
+        </section>
+
       </main>
       <LandingFooter />
     </div>

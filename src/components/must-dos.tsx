@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect, ComponentType } from 'react';
 import { useUser, useFirestore, addMustDo, addMustDosBatch, updateDocumentNonBlocking, deleteDocument } from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
-import type { MustDo } from '@/lib/types';
+import type { MustDo, BirthdayMeta } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +31,7 @@ interface MustDosProps {
   isTemplateMode?: boolean;
   mustDos: MustDo[] | null;
   eventType?: string;
+  birthdayMeta?: BirthdayMeta;
 }
 
 const PriorityLevels: Record<MustDo['priority'], { label: string; icon: ComponentType<{className?: string}>, order: number }> = {
@@ -231,7 +232,7 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   );
 }
 
-export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, eventType }: MustDosProps) {
+export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, eventType, birthdayMeta }: MustDosProps) {
   const { user } = useUser();
   const firestore = useFirestore();
   const [localMustDos, setLocalMustDos] = useState<MustDo[]>([]);
@@ -306,7 +307,11 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
       const existingTitles = items.map(item => item.title);
       console.log('Requesting suggestions for event type:', effectiveEventType);
       
-      const result = await suggestMustDos({ eventType: effectiveEventType, existingTitles });
+      const result = await suggestMustDos({
+        eventType: effectiveEventType,
+        existingTitles,
+        ...(birthdayMeta && { birthdayMeta }),
+      });
       
       if (result.suggestions && result.suggestions.length > 0) {
         const scored = scoreByPriority(result.suggestions);

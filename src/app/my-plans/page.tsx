@@ -15,7 +15,8 @@ import {
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import type { Budget, BudgetCategory } from "@/lib/types";
+import type { Budget, BudgetCategory, BirthdayMeta } from "@/lib/types";
+import { getAgeGroup, isMilestoneBirthday } from "@/lib/utils";
 import PageHeader from "@/components/page-header";
 import {
   Card,
@@ -59,6 +60,7 @@ import {
   MapPin,
   Users,
   Plus,
+  Zap,
   Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -80,6 +82,7 @@ const eventTypeImages: { [key: string]: string } = {
   funeral: "/images/funeral2.jpg",
   umemulo: "/images/umemulo.jpg",
   umgidi: "/images/umgidi1.jpg",
+  birthday: "/images/birthday.pic.jpg",
 };
 
 const planSchema = z.object({
@@ -88,6 +91,15 @@ const planSchema = z.object({
   eventDate: z.string().min(1, "Event date is required"),
   eventLocation: z.string().min(1, "Event location is required"),
   expectedGuests: z.coerce.number().int().min(1, "At least 1 guest expected"),
+  birthdayAge: z.coerce.number().int().min(1).max(120).optional(),
+}).superRefine((data, ctx) => {
+  if (data.eventType === 'birthday' && !data.birthdayAge) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Age being celebrated is required",
+      path: ['birthdayAge'],
+    });
+  }
 });
 
 type PlanFormValues = z.infer<typeof planSchema>;
@@ -231,6 +243,7 @@ export default function MyPlansPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isQuickStartLoading, setIsQuickStartLoading] = useState(false);
   const [sharedPlans, setSharedPlans] = useState<Budget[]>([]);
   const [sharedPlansLoading, setSharedPlansLoading] = useState(false);
 
@@ -248,7 +261,7 @@ export default function MyPlansPage() {
     clearSuggestions,
   } = usePlacesAutocomplete({ debounce: 300 });
 
-  const { control, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<PlanFormValues>({
+  const { control, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<PlanFormValues>({
     resolver: zodResolver(planSchema) as any,
     defaultValues: {
       name: "",
@@ -256,8 +269,17 @@ export default function MyPlansPage() {
       eventDate: "",
       eventLocation: "",
       expectedGuests: 50,
+      birthdayAge: undefined,
     }
   });
+
+  const watchedEventType = watch('eventType');
+
+  useEffect(() => {
+    if (watchedEventType !== 'birthday') {
+      setValue('birthdayAge', undefined);
+    }
+  }, [watchedEventType, setValue]);
 
   useEffect(() => {
     if (!isUserLoading && (!user || user.isAnonymous)) {
@@ -318,13 +340,63 @@ export default function MyPlansPage() {
     }
   };
 
+  const handleQuickStartBirthday = async () => {
+    if (!user || !firestore) return;
+    setIsQuickStartLoading(true);
+    const newId = uuidv4();
+    const budgetRef = doc(firestore, "users", user.uid, "budgets", newId);
+    const template = budgetTemplates.birthday_adult;
+    const initialTotal = calculateInitialTotal(template);
+    const newBudget: Budget = {
+      id: newId,
+      name: "My Birthday Celebration",
+      grandTotal: initialTotal,
+      userId: user.uid,
+      eventType: 'birthday',
+      expectedGuests: 20,
+      birthdayMeta: {
+        birthdayAge: 30,
+        ageGroup: getAgeGroup(30),
+        isMilestone: isMilestoneBirthday(30),
+      },
+    };
+    try {
+      const batch = writeBatch(firestore);
+      batch.set(budgetRef, newBudget);
+      template.forEach((category, index) => {
+        const catRef = doc(collection(budgetRef, "categories"));
+        batch.set(catRef, { ...category, id: catRef.id, order: index, budgetId: newId });
+      });
+      await batch.commit();
+      router.push(`/planner/${newId}?quickStart=true`);
+    } catch (error) {
+      console.error("Quick start failed:", error);
+      toast({ variant: "destructive", title: "Failed to create birthday plan" });
+    } finally {
+      setIsQuickStartLoading(false);
+    }
+  };
+
   const handleCreateNewPlan = async (data: PlanFormValues) => {
     if (!user || !firestore) return;
 
     const newId = uuidv4();
     const budgetRef = doc(firestore, "users", user.uid, "budgets", newId);
 
-    const template = budgetTemplates[data.eventType as keyof typeof budgetTemplates] || budgetTemplates.other;
+    let templateKey = data.eventType as keyof typeof budgetTemplates;
+    let birthdayMeta: BirthdayMeta | undefined;
+
+    if (data.eventType === 'birthday' && data.birthdayAge) {
+      const ageGroup = getAgeGroup(data.birthdayAge);
+      templateKey = `birthday_${ageGroup}` as keyof typeof budgetTemplates;
+      birthdayMeta = {
+        birthdayAge: data.birthdayAge,
+        ageGroup,
+        isMilestone: isMilestoneBirthday(data.birthdayAge),
+      };
+    }
+
+    const template = budgetTemplates[templateKey] || budgetTemplates.other;
     const initialTotal = calculateInitialTotal(template);
 
     const newBudget: Budget = {
@@ -336,6 +408,7 @@ export default function MyPlansPage() {
       eventDate: new Date(data.eventDate).toISOString(),
       eventLocation: data.eventLocation,
       expectedGuests: data.expectedGuests,
+      ...(birthdayMeta && { birthdayMeta }),
     };
 
     try {
@@ -373,6 +446,7 @@ export default function MyPlansPage() {
               <p className="text-muted-foreground">Manage your celebrations or start a new one.</p>
             </div>
 
+            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="lg" className="font-bold">
@@ -411,12 +485,35 @@ export default function MyPlansPage() {
                             <SelectItem value="funeral">Funeral</SelectItem>
                             <SelectItem value="umemulo">uMemulo</SelectItem>
                             <SelectItem value="umgidi">uMgidi</SelectItem>
+                            <SelectItem value="birthday">Birthday</SelectItem>
                           </SelectContent>
                         </Select>
                       )}
                     />
                     {errors.eventType && <p className="text-xs text-destructive">{errors.eventType.message}</p>}
                   </div>
+
+                  {watchedEventType === 'birthday' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="birthdayAge">Age being celebrated</Label>
+                      <Controller
+                        name="birthdayAge"
+                        control={control}
+                        render={({ field }) => (
+                          <Input
+                            id="birthdayAge"
+                            type="number"
+                            min={1}
+                            max={120}
+                            placeholder="e.g. 30"
+                            {...field}
+                            value={field.value ?? ''}
+                          />
+                        )}
+                      />
+                      {errors.birthdayAge && <p className="text-xs text-destructive">{errors.birthdayAge.message}</p>}
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -498,6 +595,21 @@ export default function MyPlansPage() {
                 </form>
               </DialogContent>
             </Dialog>
+            <Button
+              size="lg"
+              variant="outline"
+              className="font-bold border-pink-400 text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-950"
+              onClick={handleQuickStartBirthday}
+              disabled={isQuickStartLoading}
+            >
+              {isQuickStartLoading ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <Zap className="mr-2 h-5 w-5" />
+              )}
+              Create Birthday Plan in 10 seconds
+            </Button>
+            </div>
           </div>
 
           {budgetsLoading ? (

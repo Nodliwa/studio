@@ -5,6 +5,11 @@ import OpenAI from 'openai';
 export type SuggestMustDosInput = {
   eventType: string;
   existingTitles: string[];
+  birthdayMeta?: {
+    birthdayAge: number;
+    ageGroup: string;
+    isMilestone: boolean;
+  };
 };
 
 export type SuggestMustDosOutput = {
@@ -25,6 +30,23 @@ export async function suggestMustDos(input: SuggestMustDosInput): Promise<Sugges
       ? 'Do NOT suggest any of these existing tasks: ' + input.existingTitles.join(', ')
       : '';
 
+    let eventContext = `${input.eventType} event`;
+    let birthdayFocus = '';
+
+    if (input.eventType === 'birthday' && input.birthdayMeta) {
+      const { birthdayAge, ageGroup, isMilestone } = input.birthdayMeta;
+      eventContext = `birthday celebration for a ${ageGroup} turning ${birthdayAge}${isMilestone ? '. This is a milestone birthday' : ''}`;
+      const focusByGroup: Record<string, string> = {
+        child: 'Focus on: jumping castle booking, themed cake order, party pack preparation, sending invitations to parents.',
+        teen: 'Focus on: sound system or DJ setup, photo booth booking, ensuring non-alcoholic drinks, venue setup coordination.',
+        adult: isMilestone
+          ? 'Focus on: photographer booking, sending invitations early, creating a memory book, ordering a premium cake.'
+          : 'Focus on: venue confirmation, catering coordination, entertainment booking, guest list management.',
+        senior: 'Focus on: arranging shuttle for elderly guests, live band booking, preparing a family slideshow, confirming formal seating plan.',
+      };
+      birthdayFocus = focusByGroup[ageGroup] ?? '';
+    }
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
@@ -34,8 +56,9 @@ export async function suggestMustDos(input: SuggestMustDosInput): Promise<Sugges
         },
         {
           role: 'user',
-          content: `For a ${input.eventType} event, suggest exactly 5 critical non-budgetary planning tasks.
+          content: `For a ${eventContext}, suggest exactly 5 critical non-budgetary planning tasks.
 ${existingList}
+${birthdayFocus}
 Consider cultural protocols if the event is traditional (uMemulo, uMgidi, etc).
 Focus on actionable planning steps.
 

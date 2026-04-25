@@ -74,6 +74,7 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
                   isTemplateMode={isTemplateMode}
                   mustDos={mustDos}
                   eventType={eventType}
+                  birthdayMeta={budget?.birthdayMeta}
                 />
               </Suspense>
             )}
