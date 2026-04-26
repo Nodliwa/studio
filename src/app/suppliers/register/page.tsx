@@ -103,6 +103,7 @@ function RegisterFormInner() {
     getDoc(doc(firestore, "suppliers", user.uid)).then((snap) => {
       if (justRegistered.current) return;
       if (snap.exists()) {
+        console.log("supplier exists, redirecting to dashboard");
         router.push("/suppliers/dashboard");
       } else {
         setIsRedirectChecking(false);
