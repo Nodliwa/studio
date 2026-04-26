@@ -1,23 +1,42 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { doc, getDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { useUser, useAuth } from "@/firebase";
+import { useUser, useAuth, useFirestore } from "@/firebase";
 import { signOutUser } from "@/firebase/auth-operations";
 import { Home } from "lucide-react";
+import { SupplierNotificationBell } from "@/components/suppliers/supplier-notification-bell";
 
 export function SupplierNav() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
 
   const isLoggedIn = !isUserLoading && !!user && !user.isAnonymous;
+  const uid = isLoggedIn ? user!.uid : undefined;
+
+  const [hasPlanner, setHasPlanner] = useState(false);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    getDoc(doc(firestore, "users", user!.uid)).then((snap) => {
+      setHasPlanner(snap.exists());
+    });
+  }, [isLoggedIn, user, firestore]);
 
   const handleLogout = async () => {
     await signOutUser(auth);
     router.push("/suppliers");
+  };
+
+  const handleSwitchToPlanner = () => {
+    localStorage.setItem("simpliplan_active_role", "planner");
+    router.push("/my-plans");
   };
 
   return (
@@ -48,13 +67,27 @@ export function SupplierNav() {
           </Link>
         </div>
 
-        {/* Right — auth-aware buttons, no spinner */}
+        {/* Right — auth-aware buttons */}
         <div className="flex items-center gap-2">
           {isLoggedIn ? (
             <>
+              {hasPlanner && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden sm:inline-flex text-xs"
+                  onClick={handleSwitchToPlanner}
+                >
+                  Switch to Planner
+                </Button>
+              )}
               <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
                 <Link href="/suppliers/dashboard">Dashboard</Link>
               </Button>
+              <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+                <Link href="/suppliers/profile">My Profile</Link>
+              </Button>
+              {uid && <SupplierNotificationBell uid={uid} />}
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 Log Out
               </Button>

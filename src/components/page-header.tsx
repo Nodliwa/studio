@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -8,8 +9,9 @@ import { useUser, useAuth, useFirestore, useCollection, useMemoFirebase } from "
 import { signOutUser } from "@/firebase/auth-operations";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Bell, Home, LayoutGrid } from "lucide-react";
-import { collection, query, where, doc, writeBatch } from "firebase/firestore";
+import { collection, query, where, doc, writeBatch, getDoc } from "firebase/firestore";
 import type { Notification } from "@/lib/types";
+import type { SupplierNotification } from "@/lib/supplier-types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 
@@ -34,6 +36,32 @@ export default function PageHeader() {
 
   const { data: notifications } = useCollection<Notification>(notificationsQuery);
   const unreadCount = notifications?.filter(n => !n.read && n.status === 'pending').length || 0;
+
+  // Dual-role: check if this user also has a supplier profile
+  const [isSupplier, setIsSupplier] = useState(false);
+  useEffect(() => {
+    if (isUserLoading || !user || user.isAnonymous) return;
+    getDoc(doc(firestore, "suppliers", user.uid)).then((snap) => {
+      setIsSupplier(snap.exists());
+    });
+  }, [isUserLoading, user, firestore]);
+
+  // Supplier unread notifications — only fetched when dual-role is confirmed
+  const supplierNotifsQuery = useMemoFirebase(() => {
+    if (!isSupplier || !user || user.isAnonymous) return null;
+    return query(
+      collection(firestore, "supplier_notifications"),
+      where("supplierId", "==", user.uid),
+      where("read", "==", false),
+    );
+  }, [isSupplier, user, firestore]);
+  const { data: supplierNotifs } = useCollection<SupplierNotification>(supplierNotifsQuery);
+  const supplierUnreadCount = supplierNotifs?.length ?? 0;
+
+  const handleSwitchToSupplier = () => {
+    localStorage.setItem("simpliplan_active_role", "supplier");
+    router.push("/suppliers/dashboard");
+  };
 
   const handleLogout = async () => {
     if (!auth) return;
@@ -182,12 +210,31 @@ export default function PageHeader() {
           </nav>
           {!isUserLoading && user && !user.isAnonymous ? (
             <div className="flex items-center gap-2 md:gap-3">
+              {isSupplier && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden md:inline-flex text-xs"
+                  onClick={handleSwitchToSupplier}
+                >
+                  Switch to Supplier
+                </Button>
+              )}
               <div className="hidden md:block">
                 <DropdownMenu onOpenChange={(open) => { if (open) markAllRead(); }}>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="relative">
                       <Bell className="h-5 w-5" />
                       {unreadCount > 0 && <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">{unreadCount}</span>}
+                      {supplierUnreadCount > 0 && (
+                        <span
+                          onClick={(e) => { e.stopPropagation(); handleSwitchToSupplier(); }}
+                          className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-[#1D9E75] text-white text-[9px] flex items-center justify-center font-bold cursor-pointer"
+                          title="Unread supplier notifications"
+                        >
+                          S
+                        </span>
+                      )}
                     </Button>
                   </DropdownMenuTrigger>
                   <NotifContent />
@@ -221,6 +268,15 @@ export default function PageHeader() {
                   <div className="relative">
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-bold">{unreadCount}</span>}
+                    {supplierUnreadCount > 0 && (
+                      <span
+                        onClick={(e) => { e.stopPropagation(); handleSwitchToSupplier(); }}
+                        className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-[#1D9E75] text-white text-[8px] flex items-center justify-center font-bold cursor-pointer"
+                        title="Unread supplier notifications"
+                      >
+                        S
+                      </span>
+                    )}
                   </div>
                   <span className="text-[10px] font-medium">Alerts</span>
                 </button>

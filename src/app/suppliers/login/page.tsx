@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
-import { useFirebase } from "@/firebase";
+import { useFirebase, useUser } from "@/firebase";
 import { PhoneOtpForm } from "@/components/suppliers/phone-otp-form";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -15,11 +15,20 @@ import Link from "next/link";
 
 function LoginPageInner() {
   const { auth, firestore } = useFirebase();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
 
   const [isChecking, setIsChecking] = useState(false);
   const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [error, setError] = useState("");
+
+  // Redirect already-authenticated suppliers directly to dashboard
+  useEffect(() => {
+    if (isUserLoading || !user || user.isAnonymous) return;
+    getDoc(doc(firestore, "suppliers", user.uid)).then((snap) => {
+      if (snap.exists()) router.push("/suppliers/dashboard");
+    });
+  }, [isUserLoading, user, firestore, router]);
 
   const handleVerified = async (_mobileNumber: string) => {
     if (!auth.currentUser) return;
