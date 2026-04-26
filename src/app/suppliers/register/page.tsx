@@ -76,6 +76,7 @@ function RegisterFormInner() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedirectChecking, setIsRedirectChecking] = useState(true);
   const autocompleteRef = useRef<any>(null);
+  const justRegistered = useRef(false);
 
   const { isLoaded: mapsLoaded } = useJsApiLoader({
     id: "google-map-script",
@@ -93,12 +94,14 @@ function RegisterFormInner() {
 
   // Redirect if already registered as supplier
   useEffect(() => {
+    if (justRegistered.current) return;
     if (isUserLoading) return;
     if (!user || user.isAnonymous) {
       setIsRedirectChecking(false);
       return;
     }
     getDoc(doc(firestore, "suppliers", user.uid)).then((snap) => {
+      if (justRegistered.current) return;
       if (snap.exists()) {
         router.push("/suppliers/dashboard");
       } else {
@@ -191,6 +194,7 @@ function RegisterFormInner() {
       });
 
       await batch.commit();
+      justRegistered.current = true;
       router.push("/suppliers/success");
     } catch (e) {
       console.error("Registration error:", e);
