@@ -193,6 +193,7 @@ function RegisterFormInner() {
       await batch.commit();
       router.push("/suppliers/success");
     } catch (e) {
+      console.error("Registration error:", e);
       toast({
         variant: "destructive",
         title: "Registration failed",
