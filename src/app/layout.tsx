@@ -4,7 +4,7 @@ import "./globals.css";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 import { Toaster } from "@/components/ui/toaster";
 import Script from "next/script";
-import GlobalFooter from "@/components/global-footer";
+import { ConditionalFooter } from "@/components/conditional-footer";
 
 const ptSans = PT_Sans({ subsets: ["latin"], weight: ["400", "700"] });
 
@@ -41,7 +41,7 @@ export default function RootLayout({
             <div className="flex-grow">
               {children}
             </div>
-            <GlobalFooter />
+            <ConditionalFooter />
           </div>
           <Toaster />
         </FirebaseClientProvider>

@@ -48,5 +48,43 @@ service cloud.firestore {
     match /{path=**}/budgets/{budgetId} {
       allow read: if isAdmin();
     }
+
+    // ── Supplier Portal Collections ───────────────────────────────────────────
+    match /suppliers/{userId} {
+      allow read: if isAdmin() ||
+        (request.auth != null && request.auth.uid == userId);
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /supplier_opportunities/{opportunityId} {
+      allow read: if isAdmin() || (
+        request.auth != null &&
+        resource.data.targetedSupplierIds != null &&
+        request.auth.uid in resource.data.targetedSupplierIds
+      );
+      allow update: if request.auth != null &&
+        resource.data.targetedSupplierIds != null &&
+        request.auth.uid in resource.data.targetedSupplierIds;
+      allow create, delete: if isAdmin();
+    }
+
+    match /supplier_credits/{ledgerId} {
+      allow read: if isAdmin() || (
+        request.auth != null &&
+        resource.data.supplierId == request.auth.uid
+      );
+      allow create: if request.auth != null &&
+        request.resource.data.supplierId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /supplier_notifications/{notificationId} {
+      allow read: if isAdmin() || (
+        request.auth != null &&
+        resource.data.supplierId == request.auth.uid
+      );
+      allow write: if request.auth != null &&
+        request.resource.data.supplierId == request.auth.uid;
+    }
   }
 }

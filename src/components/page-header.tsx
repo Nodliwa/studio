@@ -161,6 +161,9 @@ export default function PageHeader() {
         <RandIcon />
         <span className="text-[10px] font-medium">Pricing</span>
       </Link>
+      <Link href="/suppliers" className="flex flex-col items-center justify-center px-3 py-1 rounded-lg text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+        <span className="text-[10px] font-medium">Suppliers</span>
+      </Link>
     </>
   );
 
@@ -175,6 +178,7 @@ export default function PageHeader() {
             <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>Home</Link>
             <Link href="/my-plans" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/my-plans" ? "text-foreground" : "text-foreground/60")}>MyPlans</Link>
             <Link href="/pricing" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/pricing" ? "text-foreground" : "text-foreground/60")}>Pricing</Link>
+            <Link href="/suppliers" className="text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors font-normal">Suppliers</Link>
           </nav>
           {!isUserLoading && user && !user.isAnonymous ? (
             <div className="flex items-center gap-2 md:gap-3">
