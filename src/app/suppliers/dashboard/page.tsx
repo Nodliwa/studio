@@ -24,8 +24,10 @@ export default function SupplierDashboardPage() {
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!isUserLoading && (!user || user.isAnonymous)) {
-      router.push("/suppliers/login");
+    if (isUserLoading) return;
+    if (!user || user.isAnonymous) {
+      const timer = setTimeout(() => router.push("/suppliers/login"), 200);
+      return () => clearTimeout(timer);
     }
   }, [user, isUserLoading, router]);
 

@@ -12,12 +12,14 @@ export default function SupplierSuccessPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isUserLoading && (!user || user.isAnonymous)) {
-      router.push("/suppliers/register");
+    if (isUserLoading) return;
+    if (!user || user.isAnonymous) {
+      const timer = setTimeout(() => router.push("/suppliers/register"), 200);
+      return () => clearTimeout(timer);
     }
   }, [user, isUserLoading, router]);
 
-  if (isUserLoading) {
+  if (isUserLoading || !user || user.isAnonymous) {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
