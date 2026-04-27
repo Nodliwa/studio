@@ -14,10 +14,10 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import type { ElementType } from "react";
-import type { Budget, BudgetCategory, BirthdayMeta } from "@/lib/types";
-import { getAgeGroup, isMilestoneBirthday } from "@/lib/utils";
+import type { Budget, BudgetCategory, BirthdayMeta, MustDo } from "@/lib/types";
+import { getAgeGroup, isMilestoneBirthday, cn } from "@/lib/utils";
 import PageHeader from "@/components/page-header";
 import {
   Card,
@@ -25,7 +25,6 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Greeter from "@/components/greeter";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,6 +67,14 @@ import {
   Bell,
   Lightbulb,
   ClipboardCheck,
+  CheckSquare,
+  Clock,
+  ChevronRight,
+  PartyPopper,
+  Heart,
+  Cake,
+  Flower,
+  Star,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -164,6 +171,14 @@ const POPULAR_PLANS = [
   },
 ];
 
+const NEW_PLAN_PILLS = [
+  { type: "birthday", label: "Birthday",  icon: Cake    },
+  { type: "wedding",  label: "Wedding",   icon: Heart   },
+  { type: "funeral",  label: "Funeral",   icon: Flower  },
+  { type: "umemulo",  label: "Ceremony",  icon: Star    },
+  { type: "umgidi",   label: "Gathering", icon: Users   },
+] as const;
+
 // ── Static illustration components ───────────────────────────────────────────
 
 function HeroIllustration() {
@@ -248,6 +263,21 @@ function TipChecklistSVG() {
   );
 }
 
+function SparklineSVG({ color }: { color: string }) {
+  return (
+    <svg width="48" height="20" viewBox="0 0 48 20" fill="none" aria-hidden="true">
+      <polyline
+        points="0,15 8,10 16,13 24,6 32,9 40,4 48,7"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity="0.6"
+      />
+    </svg>
+  );
+}
+
 // ── Form schema ───────────────────────────────────────────────────────────────
 
 const planSchema = z.object({
@@ -289,27 +319,31 @@ function calculateInitialTotal(categories: BudgetCategory[]): number {
 function PlanCard({
   budget,
   onDelete,
+  isShared = false,
 }: {
   budget: Budget;
   onDelete: (id: string) => void;
+  isShared?: boolean;
 }) {
   const router = useRouter();
 
   const imageUrl = budget.backgroundImageUrl || (budget.eventType ? eventTypeImages[budget.eventType.toLowerCase()] : undefined);
-
   const formattedDate = budget.eventDate
-    ? new Date(budget.eventDate).toLocaleDateString("en-ZA", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+    ? new Date(budget.eventDate).toLocaleDateString("en-ZA", { year: "numeric", month: "long", day: "numeric" })
     : null;
+  const isActive = !isShared && (budget.grandTotal ?? 0) > 0;
 
   return (
     <Card
-      className="overflow-hidden group relative flex flex-col bg-card shadow-sm transition-shadow duration-300 hover:shadow-xl cursor-pointer"
+      className={cn(
+        "overflow-hidden group relative flex flex-col shadow-sm transition-shadow duration-300 hover:shadow-xl cursor-pointer",
+        isShared
+          ? "bg-indigo-50/60 border-indigo-200 dark:bg-indigo-950/20 dark:border-indigo-800"
+          : "bg-card",
+      )}
       onClick={() => router.push(`/planner/${budget.id}`)}
     >
+      {/* ── Photo ── */}
       <div className="relative w-full aspect-[4/3]">
         {imageUrl ? (
           <>
@@ -317,16 +351,47 @@ function PlanCard({
               src={imageUrl}
               alt={budget.name}
               fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className={cn(
+                "object-cover transition-transform duration-300 group-hover:scale-105",
+                isShared && "opacity-85",
+              )}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/10" />
+            <div
+              className={cn(
+                "absolute inset-0 bg-gradient-to-t",
+                isShared
+                  ? "from-indigo-950/80 via-indigo-900/50 to-indigo-800/10"
+                  : "from-black/80 via-black/50 to-black/10",
+              )}
+            />
           </>
         ) : (
-          <div className="h-full w-full bg-gradient-to-t from-primary/80 to-primary/40" />
+          <div className={cn(
+            "h-full w-full bg-gradient-to-t",
+            isShared ? "from-indigo-700/80 to-indigo-500/40" : "from-primary/80 to-primary/40",
+          )} />
         )}
 
+        {/* Status badge */}
+        <div className="absolute top-3 left-3 z-10">
+          {isShared ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-indigo-600 text-white px-2 py-0.5 rounded-full shadow-sm">
+              <Share2 className="h-2.5 w-2.5" /> Shared
+            </span>
+          ) : isActive ? (
+            <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider bg-[#1D9E75] text-white px-2 py-0.5 rounded-full shadow-sm">
+              In Progress
+            </span>
+          ) : (
+            <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider bg-gray-500/80 text-white px-2 py-0.5 rounded-full shadow-sm">
+              New
+            </span>
+          )}
+        </div>
+
+        {/* Info overlay */}
         <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
-          <div className="space-y-2">
+          <div className="space-y-2 mt-6">
             <h3 className="text-xl font-bold truncate text-shadow" title={budget.name}>
               {budget.name}
             </h3>
@@ -335,15 +400,15 @@ function PlanCard({
                 <CalendarDays className="h-4 w-4 shrink-0" /> {formattedDate || "No date set"}
               </p>
               <p className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 shrink-0" /> <span className="truncate">{budget.eventLocation || "No location set"}</span>
+                <MapPin className="h-4 w-4 shrink-0" />
+                <span className="truncate">{budget.eventLocation || "No location set"}</span>
               </p>
               <p className="flex items-center gap-2">
                 <Users className="h-4 w-4 shrink-0" /> {budget.expectedGuests || 0} guests
               </p>
             </div>
           </div>
-
-          <div className="flex items-start gap-2 text-2xl font-bold text-white text-shadow mt-3 self-end">
+          <div className="flex items-start gap-2 text-2xl font-bold text-white text-shadow self-end">
             <Wallet className="inline-block h-6 w-6 mt-1 shrink-0" />
             {new Intl.NumberFormat("en-ZA", {
               style: "currency",
@@ -355,49 +420,108 @@ function PlanCard({
         </div>
       </div>
 
-      <AlertDialog>
-        <div className="absolute top-2 right-2 z-30" onClick={(e) => e.stopPropagation()}>
+      {/* ── Progress / collaborators row ── */}
+      <div className="px-4 pt-3 pb-2">
+        {isShared ? (
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex -space-x-1.5">
+              {(budget.collaborators ?? []).slice(0, 4).map((c, i) => (
+                <div
+                  key={i}
+                  className="h-6 w-6 rounded-full bg-indigo-100 border-2 border-white dark:border-indigo-900 flex items-center justify-center text-[9px] font-bold text-indigo-700 uppercase"
+                >
+                  {c.name?.charAt(0) ?? "?"}
+                </div>
+              ))}
+              {(budget.collaborators?.length ?? 0) === 0 && (
+                <div className="h-6 w-6 rounded-full bg-indigo-100 border-2 border-white flex items-center justify-center">
+                  <Users className="h-3 w-3 text-indigo-500" />
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {budget.collaborators?.length ?? 0} collaborator{(budget.collaborators?.length ?? 0) !== 1 ? "s" : ""}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{ width: isActive ? "30%" : "0%", background: "#1D9E75" }}
+              />
+            </div>
+            <div className="flex items-center justify-between mt-1.5">
+              <span className="text-xs text-muted-foreground">
+                {isActive ? "In progress" : "Not started"}
+              </span>
+              <span className="text-[10px] text-muted-foreground/60 italic">Full tracking — Phase 2</span>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ── 3-dot menu ── */}
+      <div className="absolute top-2 right-2 z-30" onClick={(e) => e.stopPropagation()}>
+        {isShared ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative h-8 w-8 hover:bg-white/20 text-white">
+              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/20 text-white">
                 <Menu className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => router.push(`/planner/${budget.id}`)}>Edit Plan</DropdownMenuItem>
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-              </AlertDialogTrigger>
+              <DropdownMenuItem onClick={() => router.push(`/planner/${budget.id}`)}>Open Plan</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your plan and all associated data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => onDelete(budget.id)} className="bg-destructive hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        ) : (
+          <AlertDialog>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/20 text-white">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => router.push(`/planner/${budget.id}`)}>Edit Plan</DropdownMenuItem>
+                <AlertDialogTrigger asChild>
+                  <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                </AlertDialogTrigger>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete your plan and all associated data.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(budget.id)} className="bg-destructive hover:bg-destructive/90">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </div>
 
-      <CardFooter className="p-0 border-t bg-card">
+      {/* ── Footer: Open Plan ── */}
+      <CardFooter
+        className={cn("p-3 border-t mt-auto", isShared && "border-indigo-200/60 bg-indigo-50/40")}
+      >
         <Button
-          variant="default"
-          className="w-full rounded-t-none text-lg font-bold py-4 z-10"
-          onClick={(e) => {
-            e.stopPropagation();
-            router.push(`/planner/${budget.id}/must-dos`);
-          }}
+          variant="outline"
+          className={cn(
+            "w-full font-semibold text-sm",
+            isShared
+              ? "border-indigo-400 text-indigo-600 hover:bg-indigo-50"
+              : "border-[#1D9E75] text-[#1D9E75] hover:bg-[#1D9E75]/5",
+          )}
+          onClick={(e) => { e.stopPropagation(); router.push(`/planner/${budget.id}`); }}
         >
-          <ListChecks className="mr-2 h-4 w-4" />
-          Must-Do&apos;s
+          Open Plan <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
         </Button>
       </CardFooter>
     </Card>
@@ -415,6 +539,7 @@ export default function MyPlansPage() {
   const [isQuickStartLoading, setIsQuickStartLoading] = useState(false);
   const [sharedPlans, setSharedPlans] = useState<Budget[]>([]);
   const [sharedPlansLoading, setSharedPlansLoading] = useState(false);
+  const [allMustDos, setAllMustDos] = useState<MustDo[]>([]);
 
   const budgetsCollection = useMemoFirebase(
     () => (user && !user.isAnonymous ? collection(firestore, "users", user.uid, "budgets") : null),
@@ -489,6 +614,37 @@ export default function MyPlansPage() {
     };
     fetchSharedPlans();
   }, [user, firestore]);
+
+  // ── Load all incomplete must-dos across the user's plans ─────────────────────
+  const budgetIdsCacheKey = useMemo(
+    () => budgets?.map(b => b.id).sort().join(",") ?? "",
+    [budgets],
+  );
+  useEffect(() => {
+    if (!user || user.isAnonymous || !firestore || !budgets || budgets.length === 0) {
+      setAllMustDos([]);
+      return;
+    }
+    (async () => {
+      try {
+        const snaps = await Promise.all(
+          budgets.map(b =>
+            getDocs(
+              firestoreQuery(
+                collection(firestore, "users", user.uid, "budgets", b.id, "mustDos"),
+                firestoreWhere("status", "==", "todo"),
+              )
+            )
+          )
+        );
+        const items: MustDo[] = [];
+        snaps.forEach(snap => snap.docs.forEach(d => items.push({ id: d.id, ...d.data() } as MustDo)));
+        setAllMustDos(items);
+      } catch (e) {
+        console.error("Error fetching must-dos:", e);
+      }
+    })();
+  }, [user, firestore, budgetIdsCacheKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDeletePlan = async (budgetId: string) => {
     if (!user || !firestore) return;
@@ -606,63 +762,45 @@ export default function MyPlansPage() {
     setIsDialogOpen(true);
   };
 
-  // First name for empty-state greeting
   const firstName =
     user?.displayName?.split(" ")[0] ||
     user?.email?.split("@")[0] ||
     "there";
 
-  // Show Greeter + top buttons when plans exist or while loading
-  const showPlansChrome = budgetsLoading || !budgets || budgets.length > 0;
+  // ── Computed values for has-plans dashboard (no new Firestore reads) ─────────
+  const now = new Date();
+  const daysFromNow = (dateStr: string) =>
+    Math.ceil((new Date(dateStr).getTime() - now.getTime()) / 86_400_000);
+
+  const nextEvent = useMemo(() =>
+    [...(budgets ?? [])]
+      .filter(b => b.eventDate && new Date(b.eventDate) > now)
+      .sort((a, b) => new Date(a.eventDate!).getTime() - new Date(b.eventDate!).getTime())[0] ?? null,
+    [budgets], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const daysUntilNext = nextEvent
+    ? Math.max(1, Math.ceil((new Date(nextEvent.eventDate!).getTime() - now.getTime()) / 86_400_000))
+    : null;
+
+  const activePlansCount       = budgets?.filter(b => (b.grandTotal ?? 0) > 0).length ?? 0;
+  const upcomingThisMonthCount = budgets?.filter(b => {
+    if (!b.eventDate) return false;
+    const d = new Date(b.eventDate);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d > now;
+  }).length ?? 0;
+  const sharedPlansCount = sharedPlans.length;
+
+  const mustDosDueCount   = allMustDos.length;
+  const mustDosRedCount   = allMustDos.filter(m => m.deadline && daysFromNow(m.deadline) <= 30).length;
+  const mustDosAmberCount = allMustDos.filter(m => m.deadline && daysFromNow(m.deadline) > 30 && daysFromNow(m.deadline) <= 60).length;
+  const mustDosGreenCount = allMustDos.filter(m => m.deadline && daysFromNow(m.deadline) > 60).length;
+  const mustDosGrayCount  = allMustDos.filter(m => !m.deadline).length;
 
   return (
     <div className="min-h-screen bg-secondary flex flex-col">
       <div className="bg-background shadow-2xl container mx-auto flex flex-col flex-grow">
         <PageHeader />
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
-
-          {/* ── Plans state: Greeter + action buttons ── */}
-          {showPlansChrome && (
-            <>
-              <Greeter />
-              <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="space-y-1 text-center md:text-left flex-1">
-                  <h3 className="text-xl font-bold font-headline">
-                    {budgets
-                      ? budgets.length > 0
-                        ? `You have ${budgets.length} active celebration plan(s).`
-                        : "You have no active plans yet."
-                      : "Updating plans..."}
-                  </h3>
-                  <p className="text-muted-foreground">Manage your celebrations or start a new one.</p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-                  <Button
-                    size="lg"
-                    className="font-bold"
-                    onClick={() => setIsDialogOpen(true)}
-                  >
-                    <Plus className="mr-2 h-5 w-5" />
-                    Add New Plan
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="font-bold border-pink-400 text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-950"
-                    onClick={handleQuickStartBirthday}
-                    disabled={isQuickStartLoading}
-                  >
-                    {isQuickStartLoading ? (
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    ) : (
-                      <Zap className="mr-2 h-5 w-5" />
-                    )}
-                    Create Birthday Plan in 10 seconds
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
 
           {/* ── Dialog — always mounted so empty-state CTAs can open it ── */}
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) reset(); }}>
@@ -815,16 +953,209 @@ export default function MyPlansPage() {
             </div>
 
           ) : budgets && budgets.length > 0 ? (
-            /* ── Has plans: existing grid (unchanged) ── */
-            <div className="mt-8">
-              <h3 className="text-xl font-bold font-headline mb-2">My Plans</h3>
-              <p className="text-muted-foreground text-sm mb-4">Plans you have created</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {budgets.map((budget) => (
-                  <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} />
-                ))}
-              </div>
+            /* ══════════════════════════════════════════════════════════════
+               HAS PLANS DASHBOARD
+               ══════════════════════════════════════════════════════════════ */
+            <div className="flex-1 pb-8">
+
+              {/* ── Section 1: Welcome header + countdown ── */}
+              <section className="pt-8 pb-6">
+                <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
+                  {/* Left: greeting + CTAs */}
+                  <div className="space-y-3">
+                    <div>
+                      <h1 className="text-2xl md:text-3xl font-bold">Welcome back, {firstName}! 👋</h1>
+                      <p className="text-muted-foreground text-sm mt-1">Let&apos;s keep your celebrations unforgettable.</p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button
+                        size="lg"
+                        className="font-bold text-white"
+                        style={{ backgroundColor: "#1D9E75" }}
+                        onClick={() => setIsDialogOpen(true)}
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> Add New Plan
+                      </Button>
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="font-bold border-pink-400 text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-950"
+                        onClick={handleQuickStartBirthday}
+                        disabled={isQuickStartLoading}
+                      >
+                        {isQuickStartLoading ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Zap className="mr-2 h-4 w-4" />
+                        )}
+                        ⚡ Create Birthday Plan in 10 Seconds
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Perfect for surprise parties &amp; milestone birthdays.</p>
+                  </div>
+
+                  {/* Right: countdown card */}
+                  {daysUntilNext !== null && nextEvent && (
+                    <div
+                      className="rounded-2xl p-5 min-w-[220px] text-white shrink-0 w-full lg:w-auto"
+                      style={{ background: "linear-gradient(135deg, #1D9E75 0%, #0e6b4e 100%)" }}
+                    >
+                      <p className="text-xs font-medium opacity-80 uppercase tracking-wider">Your next event is in</p>
+                      <p className="text-6xl font-bold tabular-nums leading-none mt-1">{daysUntilNext}</p>
+                      <p className="text-sm font-semibold opacity-70">days</p>
+                      <div className="mt-3 pt-3 border-t border-white/20">
+                        <p className="font-semibold text-sm truncate">{nextEvent.name}</p>
+                        <p className="text-xs opacity-70">
+                          {new Date(nextEvent.eventDate!).toLocaleDateString("en-ZA", {
+                            year: "numeric", month: "long", day: "numeric",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* ── Section 2: Stats row ── */}
+              <section className="-mx-4 px-4 py-6 bg-secondary/30">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Active Plans */}
+                  <div className="bg-card rounded-xl p-4 border">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="h-10 w-10 rounded-full flex items-center justify-center" style={{ background: "rgba(29,158,117,0.1)" }}>
+                        <CalendarDays className="h-5 w-5" style={{ color: "#1D9E75" }} />
+                      </div>
+                      <SparklineSVG color="#1D9E75" />
+                    </div>
+                    <p className="text-3xl font-bold tabular-nums">{activePlansCount}</p>
+                    <p className="text-sm font-medium">Active Plans</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Keep planning</p>
+                  </div>
+
+                  {/* Upcoming This Month */}
+                  <div className="bg-card rounded-xl p-4 border">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="h-10 w-10 rounded-full flex items-center justify-center" style={{ background: "rgba(245,158,11,0.1)" }}>
+                        <Clock className="h-5 w-5" style={{ color: "#f59e0b" }} />
+                      </div>
+                      <SparklineSVG color="#f59e0b" />
+                    </div>
+                    <p className="text-3xl font-bold tabular-nums">{upcomingThisMonthCount}</p>
+                    <p className="text-sm font-medium">Upcoming This Month</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Stay prepared</p>
+                  </div>
+
+                  {/* Must-Dos Due */}
+                  <div className="bg-card rounded-xl p-4 border">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="h-10 w-10 rounded-full flex items-center justify-center" style={{ background: "rgba(124,58,237,0.1)" }}>
+                        <CheckSquare className="h-5 w-5" style={{ color: "#7c3aed" }} />
+                      </div>
+                      <SparklineSVG color="#7c3aed" />
+                    </div>
+                    <p className="text-3xl font-bold tabular-nums">{mustDosDueCount}</p>
+                    <p className="text-sm font-medium">Must-Dos Due</p>
+                    {mustDosDueCount > 0 ? (
+                      <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1">
+                        {mustDosRedCount   > 0 && <span className="text-[10px] font-semibold text-red-600">🔴 {mustDosRedCount}</span>}
+                        {mustDosAmberCount > 0 && <span className="text-[10px] font-semibold text-amber-600">🟡 {mustDosAmberCount}</span>}
+                        {mustDosGreenCount > 0 && <span className="text-[10px] font-semibold text-green-600">🟢 {mustDosGreenCount}</span>}
+                        {mustDosGrayCount  > 0 && <span className="text-[10px] font-semibold text-gray-500">⚪ {mustDosGrayCount}</span>}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground mt-0.5">Across all your plans</p>
+                    )}
+                  </div>
+
+                  {/* Shared Plans */}
+                  <div className="bg-card rounded-xl p-4 border">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="h-10 w-10 rounded-full flex items-center justify-center" style={{ background: "rgba(16,185,129,0.1)" }}>
+                        <Users className="h-5 w-5" style={{ color: "#10b981" }} />
+                      </div>
+                      <SparklineSVG color="#10b981" />
+                    </div>
+                    <p className="text-3xl font-bold tabular-nums">{sharedPlansCount}</p>
+                    <p className="text-sm font-medium">Shared Plans</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Collaborating</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* ── Section 3: Continue Planning ── */}
+              <section className="py-6">
+                <div className="flex items-end justify-between mb-4 gap-4">
+                  <div>
+                    <h2 className="text-xl font-bold">Continue Planning</h2>
+                    <p className="text-sm text-muted-foreground mt-0.5">Pick up where you left off.</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="text-sm font-semibold hover:underline underline-offset-2 shrink-0 hidden sm:flex items-center gap-1"
+                    style={{ color: "#1D9E75" }}
+                  >
+                    View all plans <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {budgets.map((budget) => (
+                    <PlanCard key={budget.id} budget={budget} onDelete={handleDeletePlan} />
+                  ))}
+                </div>
+              </section>
+
+              {/* ── Section 5: Start Something New ── */}
+              <section
+                className="-mx-4 px-6 py-8"
+                style={{ backgroundColor: "rgba(29,158,117,0.06)" }}
+              >
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="text-center md:text-left">
+                    <div className="flex items-center gap-2 justify-center md:justify-start">
+                      <PartyPopper className="h-5 w-5 shrink-0" style={{ color: "#1D9E75" }} />
+                      <p className="font-bold text-foreground">Ready to plan something important?</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-0.5">Start a new celebration in minutes.</p>
+                    <p className="text-xs italic mt-1" style={{ color: "#1D9E75" }}>We&apos;ve got you! ✓</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-center md:justify-end">
+                    {NEW_PLAN_PILLS.map((pill) => (
+                      <button
+                        key={pill.type}
+                        type="button"
+                        onClick={() => handleOpenDialogWithType(pill.type)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-sm font-medium hover:border-[#1D9E75] hover:text-[#1D9E75] transition-colors"
+                      >
+                        <pill.icon className="h-3.5 w-3.5" />
+                        {pill.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              {/* ── Section 6: Planning Tip bar ── */}
+              <section className="-mx-4 px-6 py-4 border-t bg-muted/20">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4 shrink-0" style={{ color: "#1D9E75" }} />
+                    <p className="text-sm text-muted-foreground">
+                      Tip: Add your budget, guest list and tasks to stay organised and stress-free.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 text-xs"
+                    onClick={() => toast({ title: "Coming soon", description: "Planning tips are on their way." })}
+                  >
+                    View Planning Tips →
+                  </Button>
+                </div>
+              </section>
+
             </div>
+            /* ══ end has-plans dashboard ══════════════════════════════════════ */
 
           ) : (
             /* ══════════════════════════════════════════════════════════════
@@ -1038,14 +1369,24 @@ export default function MyPlansPage() {
             /* ══ end empty state ══════════════════════════════════════════ */
           )}
 
-          {/* ── Shared plans (always shown if present) ── */}
+          {/* ── Section 4: Shared With Me (always shown if present) ── */}
           {sharedPlans.length > 0 && (
-            <div className="mt-10">
-              <h3 className="text-xl font-bold font-headline mb-2">Shared with me</h3>
-              <p className="text-muted-foreground text-sm mb-4">Plans others have invited you to collaborate on</p>
+            <div className="mt-10 mb-8">
+              <div className="flex items-end justify-between mb-4 gap-4">
+                <div>
+                  <h2 className="text-xl font-bold">Shared With Me</h2>
+                  <p className="text-sm text-muted-foreground mt-0.5">Plans others have invited you to collaborate on.</p>
+                </div>
+                <button
+                  type="button"
+                  className="text-sm font-semibold hover:underline underline-offset-2 shrink-0 hidden sm:flex items-center gap-1 text-indigo-600"
+                >
+                  View all shared <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {sharedPlans.map((budget) => (
-                  <PlanCard key={budget.id} budget={budget} onDelete={() => {}} />
+                  <PlanCard key={budget.id} budget={budget} onDelete={() => {}} isShared />
                 ))}
               </div>
             </div>
