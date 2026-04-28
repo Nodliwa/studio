@@ -57,15 +57,19 @@ service cloud.firestore {
     }
 
     match /supplier_opportunities/{opportunityId} {
-      allow read: if isAdmin() || (
-        request.auth != null &&
-        resource.data.targetedSupplierIds != null &&
-        request.auth.uid in resource.data.targetedSupplierIds
-      );
-      allow update: if request.auth != null &&
-        resource.data.targetedSupplierIds != null &&
-        request.auth.uid in resource.data.targetedSupplierIds;
-      allow create, delete: if isAdmin();
+      allow read: if isAdmin() ||
+        (request.auth != null && resource.data.plannerId == request.auth.uid) ||
+        (request.auth != null &&
+          resource.data.targetedSupplierIds != null &&
+          request.auth.uid in resource.data.targetedSupplierIds);
+      allow create: if request.auth != null &&
+        request.resource.data.plannerId == request.auth.uid;
+      allow update: if isAdmin() ||
+        (request.auth != null && resource.data.plannerId == request.auth.uid) ||
+        (request.auth != null &&
+          resource.data.targetedSupplierIds != null &&
+          request.auth.uid in resource.data.targetedSupplierIds);
+      allow delete: if isAdmin();
     }
 
     match /supplier_credits/{ledgerId} {
@@ -83,8 +87,14 @@ service cloud.firestore {
         request.auth != null &&
         resource.data.supplierId == request.auth.uid
       );
-      allow write: if request.auth != null &&
-        request.resource.data.supplierId == request.auth.uid;
+      allow create: if request.auth != null && (
+        request.resource.data.supplierId == request.auth.uid ||
+        request.resource.data.type == "opportunity_filled"
+      );
+      allow update, delete: if isAdmin() || (
+        request.auth != null &&
+        resource.data.supplierId == request.auth.uid
+      );
     }
   }
 }

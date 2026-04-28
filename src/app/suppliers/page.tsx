@@ -88,31 +88,31 @@ interface TrustItem {
 const WHY_JOIN: WhyJoinItem[] = [
   {
     icon: Users,
-    title: "Get More Customers",
-    body: "Receive relevant opportunities from people actively planning events in your area.",
+    title: "Be Found",
+    body: "Get discovered by people actively planning birthdays, weddings, funerals, uMgidi, uMemulo & other events.",
     bgClass: "bg-blue-50",
     iconClass: "text-blue-600",
   },
   {
+    icon: MapPin,
+    title: "Grow Locally",
+    body: "Reach customers in your kasi, town, city, or surrounding areas.",
+    bgClass: "bg-[#1D9E75]/10",
+    iconClass: "text-[#1D9E75]",
+  },
+  {
     icon: Clock,
     title: "Save Time",
-    body: "Stop chasing leads. Get matched with real demand that fits what you do best.",
+    body: "Stop chasing leads. Get matched with real demand for what you do best.",
     bgClass: "bg-orange-50",
     iconClass: "text-orange-600",
   },
   {
     icon: ShieldCheck,
-    title: "Build Trust",
-    body: "Create a professional profile, showcase your work and build customer confidence.",
+    title: "Build Presence",
+    body: "Turn your side hustle into a business customers can trust.",
     bgClass: "bg-purple-50",
     iconClass: "text-purple-600",
-  },
-  {
-    icon: MapPin,
-    title: "Work Locally",
-    body: "We connect you with planners near your business so you can grow in your community.",
-    bgClass: "bg-[#1D9E75]/10",
-    iconClass: "text-[#1D9E75]",
   },
 ];
 
@@ -224,7 +224,6 @@ function LandingNav() {
             priority
           />
           <span className="text-[9px] text-muted-foreground font-medium tracking-widest uppercase mt-0.5">
-            Celebrating People
           </span>
         </Link>
 
@@ -236,34 +235,6 @@ function LandingNav() {
           <a href="#how-it-works" className={cn(linkBase, "text-foreground/70 hover:text-foreground")}>
             How It Works
           </a>
-          <Link href="/pricing" className={cn(linkBase, "text-foreground/70 hover:text-foreground")}>
-            Pricing
-          </Link>
-          <Link
-            href="/suppliers"
-            className={cn(
-              linkBase,
-              pathname === "/suppliers"
-                ? "text-[#1D9E75] font-semibold underline underline-offset-4 decoration-[#1D9E75]/60"
-                : "text-foreground/70 hover:text-foreground",
-            )}
-          >
-            Suppliers
-          </Link>
-          <button
-            type="button"
-            onClick={handleComingSoon}
-            className={cn(linkBase, "text-foreground/70 hover:text-foreground cursor-pointer")}
-          >
-            About Us
-          </button>
-          <button
-            type="button"
-            onClick={handleComingSoon}
-            className={cn(linkBase, "text-foreground/70 hover:text-foreground cursor-pointer")}
-          >
-            Contact
-          </button>
         </nav>
 
         {/* Right: login + hamburger */}
@@ -307,34 +278,6 @@ function LandingNav() {
           >
             How It Works
           </a>
-          <Link
-            href="/pricing"
-            onClick={() => setOpen(false)}
-            className="block text-sm px-3 py-2 rounded-md text-foreground/70 hover:bg-muted"
-          >
-            Pricing
-          </Link>
-          <Link
-            href="/suppliers"
-            onClick={() => setOpen(false)}
-            className="block text-sm px-3 py-2 rounded-md font-semibold text-[#1D9E75] bg-[#1D9E75]/5"
-          >
-            Suppliers
-          </Link>
-          <button
-            type="button"
-            onClick={handleComingSoon}
-            className="w-full text-left text-sm px-3 py-2 rounded-md text-foreground/70 hover:bg-muted"
-          >
-            About Us
-          </button>
-          <button
-            type="button"
-            onClick={handleComingSoon}
-            className="w-full text-left text-sm px-3 py-2 rounded-md text-foreground/70 hover:bg-muted"
-          >
-            Contact
-          </button>
           <div className="pt-2 pb-1">
             <Button
               asChild
@@ -470,17 +413,21 @@ export default function SupplierLandingPage() {
       <LandingNav />
 
       {/* ── Section 1: Hero ──────────────────────────────────────────────── */}
-      <section className="py-16 md:py-24 px-4 overflow-hidden bg-white">
+      <section className="pt-6 pb-16 md:pt-16 md:pb-24 px-4 overflow-hidden bg-white">
         <div className="container mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left */}
           <div className="space-y-6 text-center lg:text-left">
+            <div className="flex justify-center lg:justify-start">
+              <span className="bg-yellow-500 text-white text-xs font-semibold px-3 py-1 rounded-full tracking-wide">
+                Built for Mzansi
+              </span>
+            </div>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight text-gray-900">
               Grow Your Event Business with{" "}
               <span style={{ color: "#1D9E75" }}>SimpliPlan</span>
             </h1>
             <p className="text-base md:text-lg text-gray-600 leading-relaxed max-w-lg mx-auto lg:mx-0">
-              Join a trusted network of suppliers and connect with people planning birthdays,
-              weddings, funerals, uMgidi, uMemulo and other important events near you.
+              Whether you run a side hustle, home business or community service, SimpliPlan helps you get discovered by people planning events near you.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
               <Button
@@ -540,6 +487,9 @@ export default function SupplierLandingPage() {
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
               More Opportunities. More Growth.
             </h2>
+            <p className="text-sm text-gray-500 mt-3">
+              To connect with people actively planning events in your area.
+            </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {WHY_JOIN.map((item) => (
@@ -638,6 +588,9 @@ export default function SupplierLandingPage() {
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
               If You Provide a Service, You Belong Here.
             </h2>
+            <p className="text-sm text-gray-500 mt-3">
+              From side hustles to home businesses to community services, SimpliPlan helps you get discovered.
+            </p>
           </div>
 
           {/* Mobile: horizontal scroll. Desktop: 6-col grid */}

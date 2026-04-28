@@ -5,7 +5,7 @@ export type OpportunityStrength = "high" | "medium" | "low";
 export type OpportunityStatus = "active" | "expired";
 export type SupplierStatus = "active" | "suspended";
 export type CreditReason = "signup_bonus" | "opportunity_unlock" | "top_up" | "admin_adjustment";
-export type SupplierNotificationType = "opportunity_viewed" | "new_opportunity" | "system";
+export type SupplierNotificationType = "opportunity_viewed" | "new_opportunity" | "system" | "opportunity_cancelled";
 
 export interface ServiceOffering {
   serviceId: string;
@@ -13,6 +13,9 @@ export interface ServiceOffering {
   pricingType: PricingType;
   price: number | null;
   customQuoteAvailable: boolean;
+  status?: "active" | "paused";
+  startingPrice?: number;
+  averagePrice?: number;
 }
 
 export interface Supplier {
@@ -20,6 +23,7 @@ export interface Supplier {
   tradingAs: string;
   contactPerson: string;
   mobileNumber: string;
+  email?: string;
   services: ServiceOffering[];
   cityRegion: string;
   cityPlaceId: string;
@@ -90,4 +94,28 @@ export interface SupplierNotification {
   opportunityId: string | null;
   read: boolean;
   createdAt: Timestamp;
+}
+
+export interface SupplierLead {
+  id: string;
+  planId: string;
+  plannerId: string;
+  itemId: string;
+  itemName: string;
+  mappedCategory: string;
+  eventType: string;
+  eventDate?: string;
+  location: string;
+  locationPlaceId?: string;
+  budgetMin: number;
+  budgetMax: number;
+  notes: string;
+  contactPreference: 'share_details' | 'profile_first' | 'both';
+  status: 'open' | 'closed' | 'expired' | 'unmatched';
+  matchedSupplierCount: number;
+  unlockedBy: string[];
+  createdAt: any;
+  expiresAt: any;
+  closedAt?: any;
+  requestCount: number;
 }

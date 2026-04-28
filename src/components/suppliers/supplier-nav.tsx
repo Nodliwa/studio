@@ -52,7 +52,7 @@ export function SupplierNav() {
           >
             <Home className="h-5 w-5" />
           </Link>
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/suppliers" className="flex items-center gap-2">
             <Image
               src="/images/brand2.png"
               alt="SimpliPlan"
@@ -62,7 +62,7 @@ export function SupplierNav() {
               priority
             />
             <span className="hidden md:inline text-xs text-muted-foreground border-l pl-2 ml-1">
-              Supplier Portal
+              Supplier Home
             </span>
           </Link>
         </div>

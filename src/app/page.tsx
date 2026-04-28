@@ -172,7 +172,7 @@ export default function Home() {
       <main>
 
         {/* ── Hero ──────────────────────────────────────────── */}
-        <section className="pt-10 pb-8 md:pt-14 md:pb-10 px-4 text-center">
+        <section className="pt-4 pb-8 md:pt-10 md:pb-10 px-4 text-center">
           <div className="flex justify-center mb-4">
             <span className="bg-yellow-500 text-white text-xs font-semibold px-3 py-1 rounded-full tracking-wide">
               Built for Mzansi
@@ -232,6 +232,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
+            <p className="md:hidden text-xs text-muted-foreground text-center mt-2">← swipe →</p>
           </div>
         </section>
 

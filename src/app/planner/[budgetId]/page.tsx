@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { BudgetItem, BudgetCategory, Budget, MustDo, RSVP } from "@/lib/types";
+import type { SupplierLead } from "@/lib/supplier-types";
 import { budgetTemplates } from "@/lib/data";
 import PageHeader from "@/components/page-header";
 import { BudgetSummary } from "@/components/budget-summary";
@@ -21,6 +22,8 @@ import {
   query,
   orderBy,
   setDoc,
+  getDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import {
   DndContext,
@@ -38,7 +41,21 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import Greeter from "@/components/greeter";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ChevronDown, Tag, CheckCircle2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Lazy load heavy components not needed on initial render
 const BudgetAccordion = lazy(() =>
@@ -52,6 +69,9 @@ const RsvpManager = lazy(() =>
 );
 const MustDosSummary = lazy(() =>
   import("@/components/must-dos-summary").then((m) => ({ default: m.MustDosSummary }))
+);
+const FindSupplierModal = lazy(() =>
+  import("@/components/find-supplier-modal").then((m) => ({ default: m.FindSupplierModal }))
 );
 
 // Fallback spinner for lazy loaded components
@@ -99,10 +119,137 @@ export default function PlannerPage({
   const firestore = useFirestore();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { toast } = useToast();
   const [budgetData, setBudgetData] = useState<BudgetCategory[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
   const [showQuickStartBanner, setShowQuickStartBanner] = useState(false);
   const isTemplateMode = budgetId === "template";
+
+  const [findSupplierOpen, setFindSupplierOpen] = useState(false);
+  const [findSupplierItem, setFindSupplierItem] = useState<{ item: BudgetItem; itemTotal: number } | null>(null);
+  const [markAsFoundPending, setMarkAsFoundPending] = useState<{ itemId: string; leadId: string } | null>(null);
+  const [markAsFoundLoading, setMarkAsFoundLoading] = useState(false);
+  const [leadDetails, setLeadDetails] = useState<Record<string, SupplierLead>>({});
+  const [leadDetailsLoading, setLeadDetailsLoading] = useState(false);
+  const [requestsSectionOpen, setRequestsSectionOpen] = useState(true);
+  const [cancelRequestPending, setCancelRequestPending] = useState<{ itemId: string; leadId: string } | null>(null);
+  const [cancelRequestLoading, setCancelRequestLoading] = useState(false);
+  const fetchedLeadIdsRef = useRef<Set<string>>(new Set());
+
+  const handleFindSupplier = useCallback((item: BudgetItem, itemTotal: number) => {
+    setFindSupplierItem({ item, itemTotal });
+    setFindSupplierOpen(true);
+  }, []);
+
+  const handleMarkAsFound = useCallback((itemId: string, leadId: string) => {
+    setMarkAsFoundPending({ itemId, leadId });
+  }, []);
+
+  const handleMarkAsFoundConfirm = async () => {
+    if (!markAsFoundPending || !user || !budgetDocRef) return;
+    setMarkAsFoundLoading(true);
+    const { itemId, leadId } = markAsFoundPending;
+    try {
+      const leadRef = doc(firestore, "supplier_opportunities", leadId);
+      const leadSnap = await getDoc(leadRef);
+      const lead = leadSnap.data() as SupplierLead | undefined;
+
+      const batch = writeBatch(firestore);
+
+      batch.update(leadRef, { status: "closed", closedAt: serverTimestamp() });
+
+      batch.set(
+        budgetDocRef,
+        {
+          supplierRequests: {
+            ...(budget?.supplierRequests ?? {}),
+            [itemId]: {
+              ...(budget?.supplierRequests?.[itemId] ?? {}),
+              status: "closed",
+            },
+          },
+        },
+        { merge: true }
+      );
+
+      for (const supplierUid of lead?.unlockedBy ?? []) {
+        const notifRef = doc(collection(firestore, "supplier_notifications"));
+        batch.set(notifRef, {
+          supplierId: supplierUid,
+          type: "opportunity_filled",
+          title: "Opportunity Filled",
+          message: "A planner has found a supplier for this request.",
+          opportunityId: leadId,
+          read: false,
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
+      toast({ title: "Marked as found.", description: "Suppliers have been notified." });
+    } catch (e) {
+      console.error(e);
+      toast({ variant: "destructive", title: "Something went wrong.", description: "Please try again." });
+    } finally {
+      setMarkAsFoundLoading(false);
+      setMarkAsFoundPending(null);
+    }
+  };
+
+  const handleCancelRequest = useCallback((itemId: string, leadId: string) => {
+    setCancelRequestPending({ itemId, leadId });
+  }, []);
+
+  const handleCancelRequestConfirm = async () => {
+    if (!cancelRequestPending || !user || !budgetDocRef) return;
+    setCancelRequestLoading(true);
+    const { itemId, leadId } = cancelRequestPending;
+    try {
+      const leadRef = doc(firestore, "supplier_opportunities", leadId);
+      const leadSnap = await getDoc(leadRef);
+      const lead = leadSnap.data() as SupplierLead | undefined;
+
+      const batch = writeBatch(firestore);
+
+      batch.update(leadRef, { status: "closed", closedAt: serverTimestamp() });
+
+      batch.set(
+        budgetDocRef,
+        {
+          supplierRequests: {
+            ...(budget?.supplierRequests ?? {}),
+            [itemId]: {
+              ...(budget?.supplierRequests?.[itemId] ?? {}),
+              status: "closed",
+            },
+          },
+        },
+        { merge: true }
+      );
+
+      for (const supplierUid of lead?.unlockedBy ?? []) {
+        const notifRef = doc(collection(firestore, "supplier_notifications"));
+        batch.set(notifRef, {
+          supplierId: supplierUid,
+          type: "opportunity_cancelled",
+          title: "Request Cancelled",
+          message: "A planner has cancelled this supplier request.",
+          opportunityId: leadId,
+          read: false,
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
+      toast({ title: "Request cancelled.", description: "Suppliers have been notified." });
+    } catch (e) {
+      console.error(e);
+      toast({ variant: "destructive", title: "Something went wrong.", description: "Please try again." });
+    } finally {
+      setCancelRequestLoading(false);
+      setCancelRequestPending(null);
+    }
+  };
 
   const budgetDocRef = useMemoFirebase(
     () =>
@@ -164,6 +311,35 @@ export default function PlannerPage({
     return diffDays === 0 ? "Today!" : `${diffDays} days`;
   }, [budget?.eventDate]);
 
+  const supplierRequestLeadIds = useMemo(
+    () =>
+      Object.values(budget?.supplierRequests ?? {})
+        .map((r) => r.leadId)
+        .sort()
+        .join(","),
+    [budget?.supplierRequests]
+  );
+
+  const openRequestCount = useMemo(
+    () =>
+      Object.values(budget?.supplierRequests ?? {}).filter(
+        (r) => r.status === "open"
+      ).length,
+    [budget?.supplierRequests]
+  );
+
+  const allRequestsSettled = useMemo(() => {
+    const entries = Object.entries(budget?.supplierRequests ?? {});
+    return (
+      entries.length > 0 &&
+      entries.every(
+        ([, req]) =>
+          req.status === "closed" ||
+          leadDetails[req.leadId]?.status === "expired"
+      )
+    );
+  }, [budget?.supplierRequests, leadDetails]);
+
   useEffect(() => {
     if (!isUserLoading && !user && !isTemplateMode) {
       router.push("/auth");
@@ -192,6 +368,35 @@ export default function PlannerPage({
       setGrandTotal(grandTotal);
     }
   }, [isTemplateMode, searchParams, fetchedCategories]);
+
+  useEffect(() => {
+    if (isTemplateMode || !budget?.supplierRequests) return;
+    const missing = Object.values(budget.supplierRequests).filter(
+      (r) => !fetchedLeadIdsRef.current.has(r.leadId)
+    );
+    if (missing.length === 0) return;
+    missing.forEach((r) => fetchedLeadIdsRef.current.add(r.leadId));
+    setLeadDetailsLoading(true);
+    Promise.all(
+      missing.map((r) =>
+        getDoc(doc(firestore, "supplier_opportunities", r.leadId))
+      )
+    )
+      .then((snaps) => {
+        setLeadDetails((prev) => {
+          const next = { ...prev };
+          snaps.forEach((snap) => {
+            if (snap.exists()) {
+              next[snap.id] = { id: snap.id, ...snap.data() } as SupplierLead;
+            }
+          });
+          return next;
+        });
+      })
+      .catch(console.error)
+      .finally(() => setLeadDetailsLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supplierRequestLeadIds, isTemplateMode, firestore]);
 
   const handleItemChange = (categoryPath: string[], itemIndex: number, field: keyof BudgetItem, value: string | number) => {
     const updated = JSON.parse(JSON.stringify(budgetData));
@@ -408,6 +613,139 @@ export default function PlannerPage({
             </div>
           )}
 
+          {!isTemplateMode &&
+            budget?.supplierRequests &&
+            Object.keys(budget.supplierRequests).length > 0 && (
+            <Collapsible
+              open={requestsSectionOpen}
+              onOpenChange={setRequestsSectionOpen}
+              className="mt-6"
+            >
+              <CollapsibleTrigger className="flex w-full items-center justify-between py-2">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold">My Supplier Requests</h3>
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                    {Object.keys(budget.supplierRequests).length}
+                  </span>
+                  {openRequestCount > 0 && (
+                    <span className="rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-700 dark:bg-teal-900 dark:text-teal-300">
+                      {openRequestCount} active
+                    </span>
+                  )}
+                  {allRequestsSettled && (
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  )}
+                </div>
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 text-muted-foreground transition-transform",
+                    requestsSectionOpen && "rotate-180"
+                  )}
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 pt-2">
+                {leadDetailsLoading && (
+                  <p className="text-xs text-muted-foreground">Loading details…</p>
+                )}
+                {Object.entries(budget.supplierRequests).map(([itemId, req]) => {
+                  const lead = leadDetails[req.leadId];
+                  const isOpenReq = req.status === "open";
+                  const isClosed = req.status === "closed";
+                  const isUnmatched = !isClosed && lead?.status === "unmatched";
+                  const isExpired = !isClosed && lead?.status === "expired";
+
+                  let statusBadge;
+                  if (isClosed) {
+                    statusBadge = (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
+                        <CheckCircle2 className="h-3 w-3" /> Found
+                      </span>
+                    );
+                  } else if (isUnmatched) {
+                    statusBadge = (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                        No matches yet
+                      </span>
+                    );
+                  } else if (isExpired) {
+                    statusBadge = (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                        Expired
+                      </span>
+                    );
+                  } else {
+                    statusBadge = (
+                      <span className="rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-700 dark:bg-teal-900 dark:text-teal-300">
+                        Active
+                      </span>
+                    );
+                  }
+
+                  const matchedCount = req.matchedCount ?? lead?.matchedSupplierCount ?? 0;
+                  const interestedCount = lead?.unlockedBy?.length ?? 0;
+                  const submittedAt = lead?.createdAt;
+                  const contactLabel =
+                    lead?.contactPreference === "share_details"
+                      ? "Sharing my details"
+                      : lead?.contactPreference === "profile_first"
+                      ? "Reviewing profiles first"
+                      : "Open to either";
+
+                  return (
+                    <div key={itemId} className="rounded-lg border bg-background p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2 min-w-0">
+                          <Tag className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium leading-tight truncate">
+                              {lead?.itemName ?? itemId}
+                            </p>
+                            {lead?.mappedCategory && lead.mappedCategory !== lead.itemName && (
+                              <p className="text-xs text-muted-foreground">{lead.mappedCategory}</p>
+                            )}
+                          </div>
+                        </div>
+                        {statusBadge}
+                      </div>
+
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        {submittedAt && (
+                          <span>
+                            Submitted{" "}
+                            {formatDistanceToNow(
+                              submittedAt.toDate ? submittedAt.toDate() : new Date(submittedAt),
+                              { addSuffix: true }
+                            )}
+                          </span>
+                        )}
+                        <span>{matchedCount} matched</span>
+                        {interestedCount > 0 && <span>{interestedCount} interested</span>}
+                        {lead?.contactPreference && <span>{contactLabel}</span>}
+                      </div>
+
+                      {isOpenReq && (
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            onClick={() => handleMarkAsFound(itemId, req.leadId)}
+                            className="rounded-md border border-green-600 px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-50 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-950"
+                          >
+                            Mark as Found
+                          </button>
+                          <button
+                            onClick={() => handleCancelRequest(itemId, req.leadId)}
+                            className="rounded-md border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted"
+                          >
+                            Cancel Request
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
           <div className="mt-8">
             <Suspense fallback={<ComponentLoader />}>
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -418,6 +756,9 @@ export default function PlannerPage({
                     onAddItem={handleAddItem}
                     onDeleteItem={handleDeleteItem}
                     onDeleteCategory={handleDeleteCategory}
+                    supplierRequests={!isTemplateMode ? budget?.supplierRequests : undefined}
+                    onFindSupplier={!isTemplateMode ? handleFindSupplier : undefined}
+                    onMarkAsFound={!isTemplateMode ? handleMarkAsFound : undefined}
                   />
                 </SortableContext>
               </DndContext>
@@ -445,6 +786,60 @@ export default function PlannerPage({
           )}
         </main>
       </div>
+
+      {!isTemplateMode && findSupplierItem && budget && user && (
+        <Suspense fallback={null}>
+          <FindSupplierModal
+            open={findSupplierOpen}
+            onOpenChange={setFindSupplierOpen}
+            item={findSupplierItem.item}
+            itemTotal={findSupplierItem.itemTotal}
+            budget={budget}
+            budgetId={budgetId}
+            userId={user.uid}
+          />
+        </Suspense>
+      )}
+
+      <AlertDialog
+        open={!!markAsFoundPending}
+        onOpenChange={(open) => { if (!open) setMarkAsFoundPending(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark this request as filled?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Suppliers who unlocked this lead will be notified that the opportunity has been filled.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={markAsFoundLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleMarkAsFoundConfirm} disabled={markAsFoundLoading}>
+              {markAsFoundLoading ? "Saving…" : "Confirm"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!cancelRequestPending}
+        onOpenChange={(open) => { if (!open) setCancelRequestPending(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this request?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Any suppliers who unlocked this lead will be notified that the request has been cancelled.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelRequestLoading}>Keep Request</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCancelRequestConfirm} disabled={cancelRequestLoading}>
+              {cancelRequestLoading ? "Cancelling…" : "Cancel Request"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

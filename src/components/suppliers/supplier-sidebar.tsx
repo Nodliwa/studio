@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Briefcase,
@@ -42,13 +42,14 @@ export function SupplierSidebar({
   newOppsCount,
 }: SupplierSidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const navItems: NavItem[] = [
     { label: "Dashboard",            icon: LayoutDashboard, view: "dashboard" },
     { label: "Opportunities",        icon: Briefcase,       view: "opportunities", badge: newOppsCount },
     { label: "History",              icon: Clock,           view: "history" },
     { label: "Profile",              icon: User,            href: "/suppliers/profile" },
-    { label: "Products & Services",  icon: Package,         view: "coming-soon", comingSoon: true },
+    { label: "Products & Services",  icon: Package,         href: "/suppliers/products" },
     { label: "Credits & Billing",    icon: Wallet,          view: "credits" },
     { label: "Reviews & Feedback",   icon: Star,            view: "coming-soon", comingSoon: true },
     { label: "Settings",             icon: Settings,        view: "coming-soon", comingSoon: true },
@@ -85,7 +86,9 @@ export function SupplierSidebar({
       {/* Nav items */}
       <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
-          const isActive = !!item.view && item.view === activeView && !item.href;
+          const isActive =
+            (!!item.view && item.view === activeView && !item.href) ||
+            (!!item.href && pathname === item.href);
           return (
             <button
               key={item.label}

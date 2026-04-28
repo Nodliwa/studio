@@ -25,6 +25,10 @@ const MAPS_LIBS: "places"[] = ["places"];
 const schema = z.object({
   tradingAs: z.string().min(2, "Trading name is required"),
   contactPerson: z.string().min(2, "Contact person name is required"),
+  email: z
+    .string()
+    .optional()
+    .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Enter a valid email"),
   areasServed: z.string().optional(),
   shortDescription: z.string().optional(),
   instagram: z.string().optional(),
@@ -97,6 +101,7 @@ function ProfilePageInner() {
     reset({
       tradingAs: supplier.tradingAs,
       contactPerson: supplier.contactPerson,
+      email: supplier.email ?? "",
       areasServed: supplier.areasServed,
       shortDescription: supplier.shortDescription,
       instagram: supplier.instagram,
@@ -127,6 +132,7 @@ function ProfilePageInner() {
       await updateDoc(doc(firestore, "suppliers", uid), {
         tradingAs: data.tradingAs,
         contactPerson: data.contactPerson,
+        email: data.email || "",
         services,
         cityRegion,
         cityPlaceId,
@@ -207,6 +213,19 @@ function ProfilePageInner() {
                 <Input id="contactPerson" {...register("contactPerson")} />
                 {errors.contactPerson && (
                   <p className="text-xs text-destructive">{errors.contactPerson.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  {...register("email")}
+                />
+                {errors.email && (
+                  <p className="text-xs text-destructive">{errors.email.message}</p>
                 )}
               </div>
             </div>

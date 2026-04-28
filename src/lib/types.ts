@@ -63,6 +63,7 @@ export interface Budget {
   collaborators?: Collaborator[];
   collaboratorEmails?: string[];
   birthdayMeta?: BirthdayMeta;
+  supplierRequests?: { [itemId: string]: { leadId: string; status: 'open' | 'closed'; matchedCount: number } };
 }
 
 export interface User {
