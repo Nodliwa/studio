@@ -8,7 +8,7 @@ import { z } from "zod";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { useFirebase, useUser } from "@/firebase";
 import { useSupplierProfile } from "@/firebase/supplier-hooks";
-import { Autocomplete, useJsApiLoader } from "@react-google-maps/api";
+import { Autocomplete, useLoadScript } from "@react-google-maps/api";
 import { PlacesAutocompleteProvider } from "@/components/places-autocomplete-provider";
 import { ServiceSelector } from "@/components/suppliers/service-selector";
 import { PhoneUpdateForm } from "@/components/suppliers/phone-update-form";
@@ -78,8 +78,7 @@ function ProfilePageInner() {
   const [initialized, setInitialized] = useState(false);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
-  const { isLoaded: mapsLoaded } = useJsApiLoader({
-    id: "google-map-script",
+  const { isLoaded: mapsLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     libraries: MAPS_LIBS,
   });
@@ -119,8 +118,12 @@ function ProfilePageInner() {
   const onPlaceChanged = () => {
     if (autocompleteRef.current) {
       const place = autocompleteRef.current.getPlace();
-      setCityRegion(place.formatted_address || place.name || "");
-      setCityPlaceId(place.place_id || "");
+      const value = place.formatted_address || place.name || "";
+      const id = place.place_id || "";
+      setTimeout(() => {
+        setCityRegion(value);
+        setCityPlaceId(id);
+      }, 0);
     }
   };
 

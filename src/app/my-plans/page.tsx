@@ -628,11 +628,12 @@ export default function MyPlansPage() {
   const { data: budgets, isLoading: budgetsLoading } = useCollection<Budget>(budgetsCollection);
 
   const {
+    init: initPlaces,
     ready,
     suggestions: { status, data: autocompleteData },
     setValue: setAutocompleteValue,
     clearSuggestions,
-  } = usePlacesAutocomplete({ debounce: 300 });
+  } = usePlacesAutocomplete({ debounce: 300, initOnMount: false });
 
   const { control, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<PlanFormValues>({
     resolver: zodResolver(planSchema) as any,
@@ -882,7 +883,7 @@ export default function MyPlansPage() {
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
 
           {/* ── Dialog — always mounted so empty-state CTAs can open it ── */}
-          <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) reset(); }}>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (open) initPlaces(); if (!open) { reset(); clearSuggestions(); } }}>
             <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Start a New Celebration</DialogTitle>

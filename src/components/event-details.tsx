@@ -87,6 +87,7 @@ export function EventDetails({
   const effectiveEventType = eventType || budget?.eventType || "";
 
   const {
+    init,
     ready,
     suggestions: { status, data: autocompleteData },
     setValue: setAutocompleteValue,
@@ -98,6 +99,7 @@ export function EventDetails({
 
   useEffect(() => {
     if (isEditing) {
+      init();
       setAutocompleteValue('', false);
     } else {
       clearSuggestions();
@@ -109,7 +111,6 @@ export function EventDetails({
     handleSubmit,
     reset,
     setValue: setFormValue,
-    watch,
     formState: { isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema) as any,
@@ -121,8 +122,6 @@ export function EventDetails({
       birthdayAge: undefined,
     },
   });
-
-  const eventLocationValue = watch("eventLocation");
 
   const daysLeftText = useMemo(() => {
     if (!budget?.eventDate) return null;
@@ -141,12 +140,6 @@ export function EventDetails({
     if (!effectiveEventType) return "Event Details";
     return `${effectiveEventType.charAt(0).toUpperCase() + effectiveEventType.slice(1)} Details`;
   }, [effectiveEventType]);
-
-  useEffect(() => {
-    if (eventLocationValue) {
-      setAutocompleteValue(eventLocationValue);
-    }
-  }, [eventLocationValue, setAutocompleteValue]);
 
   useEffect(() => {
     if (budget) {
@@ -380,7 +373,11 @@ export function EventDetails({
                         <Input
                           id="eventLocation"
                           {...field}
-                          disabled={!isEditing || !ready}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            setAutocompleteValue(e.target.value);
+                          }}
+                          disabled={!isEditing}
                           placeholder={ready ? "Start typing your address..." : "Loading location..."}
                           autoComplete="off"
                         />
@@ -397,6 +394,7 @@ export function EventDetails({
                               return (
                                 <Button
                                   key={place_id}
+                                  type="button"
                                   variant="ghost"
                                   className="justify-start h-auto text-left"
                                   onClick={() => handleLocationSelect(description)}
