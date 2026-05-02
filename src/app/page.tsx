@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import Image from "next/image";
 import PageHeader from "@/components/page-header";
 import LandingFooter from "@/components/landing-footer";
 import { ListChecks, Wallet, Users, Zap } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const eventCategories = [
   {
@@ -165,6 +166,77 @@ function FlipCard({ cat }: { cat: (typeof eventCategories)[number] }) {
   );
 }
 
+function EventCarousel() {
+  const [current, setCurrent] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const touchStartX = useRef(0);
+  const count = eventCategories.length;
+
+  const startTimer = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setCurrent((c) => (c + 1) % count);
+    }, 2000);
+  }, [count]);
+
+  useEffect(() => {
+    startTimer();
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [startTimer]);
+
+  const goTo = useCallback((index: number) => {
+    setCurrent((index + count) % count);
+    startTimer();
+  }, [count, startTimer]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) {
+      goTo(current + (diff > 0 ? 1 : -1));
+    }
+  };
+
+  return (
+    <div>
+      <div
+        className="relative overflow-hidden rounded-xl"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div
+          className="flex transition-transform duration-300 ease-in-out"
+          style={{ transform: `translateX(-${current * 100}%)` }}
+        >
+          {eventCategories.map((cat) => (
+            <div key={cat.name} className="w-full flex-shrink-0">
+              <FlipCard cat={cat} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Dot indicators */}
+      <div className="flex justify-center gap-2 mt-3">
+        {eventCategories.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goTo(i)}
+            aria-label={`Go to slide ${i + 1}`}
+            className={cn(
+              "h-2 rounded-full transition-all duration-300",
+              i === current ? "w-6 bg-primary" : "w-2 bg-muted-foreground/30"
+            )}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-secondary">
@@ -190,7 +262,7 @@ export default function Home() {
 
           <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button asChild size="lg" className="px-8 h-12 text-base font-bold w-full sm:w-auto">
-              <Link href="#categories">Plan your Event</Link>
+              <Link href="#categories">Plan Event 👇🏾</Link>
             </Button>
             <Button
               asChild
@@ -215,24 +287,19 @@ export default function Home() {
         {/* ── Event Type Cards ──────────────────────────────── */}
         <section id="categories" className="px-4 pb-10 md:pb-14">
           <div className="container mx-auto max-w-6xl">
-            {/*
-              Mobile:  horizontal scroll-snap carousel (80vw cards, CSS only)
-              Desktop: 5-column grid
-            */}
-            <div
-              className="flex md:grid md:grid-cols-5 gap-4 overflow-x-auto md:overflow-visible pb-2 md:pb-0 snap-x snap-mandatory"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
-            >
+
+            {/* Mobile: auto-sliding carousel */}
+            <div className="md:hidden">
+              <EventCarousel />
+            </div>
+
+            {/* Desktop: 5-column grid */}
+            <div className="hidden md:grid md:grid-cols-5 gap-4">
               {eventCategories.map((cat) => (
-                <div
-                  key={cat.name}
-                  className="snap-start flex-shrink-0 w-[80vw] md:w-auto"
-                >
-                  <FlipCard cat={cat} />
-                </div>
+                <FlipCard key={cat.name} cat={cat} />
               ))}
             </div>
-            <p className="md:hidden text-xs text-muted-foreground text-center mt-2">← swipe →</p>
+
           </div>
         </section>
 

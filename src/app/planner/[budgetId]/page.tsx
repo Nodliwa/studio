@@ -607,11 +607,7 @@ export default function PlannerPage({
             />
           </div>
 
-          {!isTemplateMode && budget?.eventType === 'birthday' && budget.birthdayMeta && (
-            <div className="mt-4 text-sm text-muted-foreground">
-              {`🎂 Age: ${budget.birthdayMeta.birthdayAge} · ${budget.birthdayMeta.isMilestone ? '🎉 Milestone · ' : ''}${budget.birthdayMeta.ageGroup.charAt(0).toUpperCase() + budget.birthdayMeta.ageGroup.slice(1)} Birthday`}
-            </div>
-          )}
+
 
           {!isTemplateMode &&
             budget?.supplierRequests &&

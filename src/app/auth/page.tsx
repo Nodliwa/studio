@@ -210,6 +210,13 @@ function AuthPageInner() {
     }
   };
 
+  useEffect(() => {
+    if (step === "otp" && otp.length === 6 && !isLoading) {
+      handleVerifyOTP();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otp, step]);
+
   const handleCompleteRegistration = async () => {
     if (!auth?.currentUser) return;
     setError("");
