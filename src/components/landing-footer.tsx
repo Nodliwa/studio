@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,6 @@ const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-// This component will only render on the client side
 function ClientOnlyForm() {
   const [isPending, startTransition] = useTransition();
   const [formState, setFormState] = useState<{
@@ -144,7 +144,7 @@ export default function LandingFooter() {
   }, []);
 
   return (
-    <footer className="w-full mt-24 py-8 bg-[hsl(210,30%,88%)] border-t border-[hsl(210,35%,80%)]">
+    <footer className="w-full mt-24 py-12 bg-[hsl(210,30%,88%)] border-t border-[hsl(210,35%,80%)]">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto items-start">
           <div>
@@ -154,49 +154,39 @@ export default function LandingFooter() {
               <Card className="h-[268px] animate-pulse bg-muted/50"></Card>
             )}
           </div>
-          <div className="text-center md:text-center">
+          <div className="text-center">
             <h3 className="text-2xl font-headline font-bold">
               Connect with Us
             </h3>
-            <div className="flex justify-center items-center gap-6 mt-4">
+            <div className="flex justify-center items-center gap-6 mt-6">
               <Link
                 href="https://www.facebook.com/SimpliPlanApp"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-colors"
+                className="text-muted-foreground hover:text-primary transition-colors p-2 rounded-full hover:bg-primary/10"
               >
-                <Facebook className="h-7 w-7" />
+                <Facebook className="h-8 w-8" />
               </Link>
               <Link
                 href="https://x.com/PlanSimpli21515"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-colors"
+                className="text-muted-foreground hover:text-primary transition-colors p-2 rounded-full hover:bg-primary/10"
               >
-                <XIcon className="h-7 w-7" />
+                <XIcon className="h-8 w-8" />
               </Link>
               <Link
                 href="https://www.tiktok.com/@simpli_plan"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-colors"
+                className="text-muted-foreground hover:text-primary transition-colors p-2 rounded-full hover:bg-primary/10"
               >
-                <TikTokIcon className="h-7 w-7" />
+                <TikTokIcon className="h-8 w-8" />
               </Link>
             </div>
-          </div>
-        </div>
-        <div className="mt-12 text-center text-muted-foreground text-sm">
-          <p>
-            &copy; {new Date().getFullYear()} SimpliPlan. All rights reserved.
-          </p>
-          <div className="flex justify-center gap-4 mt-2">
-            <Link href="/terms" className="hover:text-primary underline">
-              Terms of Service
-            </Link>
-            <Link href="/privacy" className="hover:text-primary underline">
-              Privacy Policy
-            </Link>
+            <p className="mt-8 text-sm text-muted-foreground max-w-xs mx-auto">
+              Follow our social channels for tips, inspiration, and updates on making your next celebration simple and stress-free.
+            </p>
           </div>
         </div>
       </div>

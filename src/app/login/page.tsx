@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { setUserData, useFirebase, useUser } from "@/firebase";
 import { FirebaseError } from "firebase/app";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import PageHeader from "@/components/page-header";
 import {
@@ -27,9 +27,10 @@ import {
 import { doc, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { initiateGoogleSignIn, initiateFacebookSignIn } from "@/firebase/auth-operations";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2, Info } from "lucide-react";
 import Script from "next/script";
 import { verifyRecaptcha } from "@/app/actions";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -50,42 +51,25 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 48 48"
-    width="24px"
-    height="24px"
-    {...props}
-  >
-    <path
-      fill="#FFC107"
-      d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
-    />
-    <path
-      fill="#FF3D00"
-      d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
-    />
-    <path
-      fill="#4CAF50"
-      d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.612-3.512-11.284-8.285l-6.571,4.819C9.656,39.663,16.318,44,24,44z"
-    />
-    <path
-      fill="#1976D2"
-      d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.99,34.551,44,29.869,44,24C44,22.659,43.862,21.35,43.611,20.083z"
-    />
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
+    <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+    <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+    <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.612-3.512-11.284-8.285l-6.571,4.819C9.656,39.663,16.318,44,24,44z"/>
+    <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.99,34.551,44,29.869,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
   </svg>
 );
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || "";
 
-export default function LoginPage() {
+function LoginPageInner() {
   const { auth, firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
-  // Start false — only set true while actively processing a redirect result
-  const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] =
-    useState(false);
+  const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
+  const [resetSentTo, setResetSentTo] = useState<string | null>(null);
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
@@ -114,12 +98,12 @@ export default function LoginPage() {
     }
   };
 
-  // Redirect already-logged-in users
   useEffect(() => {
     if (!isUserLoading && user && !user.isAnonymous) {
-      router.push("/my-plans");
+      const redirect = searchParams.get("redirect") || "/my-plans";
+      router.push(redirect);
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, searchParams]);
 
   const renderEnterpriseRecaptcha = () => {
     if (!RECAPTCHA_SITE_KEY || !recaptchaContainerRef.current) return;
@@ -137,10 +121,9 @@ export default function LoginPage() {
     });
   };
 
-  // Handles SPA navigation case where script is already loaded
   useEffect(() => {
     renderEnterpriseRecaptcha();
-  }, []); // valid: all deps are stable refs/setters/constants
+  }, []);
 
   const onEmailSubmit = async (data: LoginFormValues) => {
     if (!auth) return;
@@ -163,7 +146,6 @@ export default function LoginPage() {
           return;
         }
       }
-
       await signInWithEmailAndPassword(auth, data.email, data.password);
     } catch (error) {
       if (error instanceof FirebaseError) {
@@ -223,39 +205,42 @@ export default function LoginPage() {
   const handlePasswordReset = async () => {
     if (!auth) return;
     setFirebaseError(null);
+    setResetSentTo(null);
     const email = getValues("email");
-    if (!email) {
-      setFirebaseError(
-        "Please enter your email address to reset your password.",
-      );
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      setFirebaseError("Please enter your full email address in the field above to receive a reset link.");
       return;
     }
-
+    setIsSendingReset(true);
     try {
       await sendPasswordResetEmail(auth, email);
+      setResetSentTo(email);
       toast({
-        title: "Password Reset Email Sent",
-        description: `If an account exists for ${email}, a password reset link has been sent to it.`,
+        title: "Reset Link Sent",
+        description: `Check your inbox (${email}) for a reset link. Note: There is no numeric code; simply click the link in the email.`,
       });
     } catch (error) {
+      console.error("Password reset error:", error);
       if (error instanceof FirebaseError) {
-        setFirebaseError(error.message);
+        const friendlyMessages: Record<string, string> = {
+          'auth/user-not-found': 'No account found with this email address.',
+          'auth/invalid-email': 'Please enter a valid email address.',
+          'auth/too-many-requests': 'Too many requests. Please wait a moment.',
+        };
+        setFirebaseError(friendlyMessages[error.code] || error.message);
       } else {
-        setFirebaseError(
-          "An unexpected error occurred while sending the password reset email.",
-        );
+        setFirebaseError("An unexpected error occurred while sending the password reset email.");
       }
+    } finally {
+      setIsSendingReset(false);
     }
   };
 
-  if (
-    isUserLoading ||
-    isProcessingSocialSignIn ||
-    (user && !user.isAnonymous)
-  ) {
+  if (isUserLoading || isProcessingSocialSignIn || (user && !user.isAnonymous)) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
-        <p>Loading...</p>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -279,7 +264,7 @@ export default function LoginPage() {
                     size="icon"
                     className="rounded-full"
                     onClick={handleGoogleSignIn}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isSendingReset}
                   >
                     <GoogleIcon />
                   </Button>
@@ -289,7 +274,7 @@ export default function LoginPage() {
                     size="icon"
                     className="rounded-full"
                     onClick={handleFacebookSignIn}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isSendingReset}
                   >
                     <FacebookIcon />
                   </Button>
@@ -300,24 +285,27 @@ export default function LoginPage() {
                     <span className="w-full border-t" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">
-                      Or continue with
-                    </span>
+                    <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
                   </div>
                 </div>
 
-                <form
-                  onSubmit={handleSubmit(onEmailSubmit)}
-                  className="space-y-4"
-                >
+                {resetSentTo && (
+                  <Alert className="bg-primary/10 border-primary/20">
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>Check your email</AlertTitle>
+                    <AlertDescription className="text-xs">
+                      We've sent a reset link to <strong>{resetSentTo}</strong>.{" "}
+                      Please click the link in that email to choose a new password.{" "}
+                      <strong>Check your Spam folder</strong> if you don't see it within 2 minutes.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <form onSubmit={handleSubmit(onEmailSubmit)} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" {...register("email")} />
-                    {errors.email && (
-                      <p className="text-destructive text-sm">
-                        {errors.email.message}
-                      </p>
-                    )}
+                    <Input id="email" type="email" {...register("email")} placeholder="your@email.com" />
+                    {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -327,8 +315,9 @@ export default function LoginPage() {
                         variant="link"
                         className="h-auto p-0 text-xs"
                         onClick={handlePasswordReset}
+                        disabled={isSendingReset}
                       >
-                        Forgot Password?
+                        {isSendingReset ? "Sending..." : "Forgot Password?"}
                       </Button>
                     </div>
                     <div className="relative">
@@ -344,18 +333,10 @@ export default function LoginPage() {
                         className="absolute top-0 right-0 h-full px-3"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
                     </div>
-                    {errors.password && (
-                      <p className="text-destructive text-sm">
-                        {errors.password.message}
-                      </p>
-                    )}
+                    {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
                   </div>
 
                   {RECAPTCHA_SITE_KEY && (
@@ -370,39 +351,26 @@ export default function LoginPage() {
                   )}
 
                   {firebaseError && (
-                    <p className="text-destructive text-sm">{firebaseError}</p>
+                    <p className="text-destructive text-sm font-medium border border-destructive/20 p-2 rounded bg-destructive/5">{firebaseError}</p>
                   )}
 
-                  <div className="pb-6 pt-2 px-6">
+                  <div className="pb-6 pt-2">
                     <Button
                       type="submit"
-                      className="w-full"
-                      disabled={isSubmitting || (!!RECAPTCHA_SITE_KEY && !recaptchaToken)}
+                      className="w-full font-bold"
+                      disabled={isSubmitting || isSendingReset || (!!RECAPTCHA_SITE_KEY && !recaptchaToken)}
                     >
                       {isSubmitting ? "Logging in..." : "Login"}
                     </Button>
                     <p className="mt-4 text-center text-sm">
                       Don't have an account?{" "}
-                      <Link href="/register" className="underline">
-                        Sign up
-                      </Link>
+                      <Link href="/auth" className="underline font-bold">Sign up</Link>
                     </p>
                     <p className="mt-6 text-center text-xs text-muted-foreground">
                       By continuing, you agree to our{" "}
-                      <Link
-                        href="/terms"
-                        className="underline hover:text-primary"
-                      >
-                        Terms of Service
-                      </Link>{" "}
+                      <Link href="/terms" className="underline hover:text-primary">Terms of Service</Link>{" "}
                       and{" "}
-                      <Link
-                        href="/privacy"
-                        className="underline hover:text-primary"
-                      >
-                        Privacy Policy
-                      </Link>
-                      .
+                      <Link href="/privacy" className="underline hover:text-primary">Privacy Policy</Link>.
                     </p>
                   </div>
                 </form>
@@ -412,5 +380,12 @@ export default function LoginPage() {
         </main>
       </div>
     </div>
+  );
+}
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen w-full bg-background flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+      <LoginPageInner />
+    </Suspense>
   );
 }

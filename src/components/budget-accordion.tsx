@@ -1,6 +1,6 @@
 "use client";
 
-import type { BudgetItem, BudgetCategory } from "@/lib/types";
+import type { BudgetItem, BudgetCategory, Budget } from "@/lib/types";
 import { formatCurrency, cn } from "@/lib/utils";
 import {
   Accordion,
@@ -31,27 +31,29 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "./ui/button";
-import { 
-  PlusCircle, 
-  UtensilsCrossed, 
-  Wheat, 
-  Carrot, 
-  Apple, 
-  Coffee, 
-  Handshake, 
-  Truck, 
-  Gem, 
-  Cake, 
-  Shirt, 
-  Drama, 
-  Hammer, 
-  Zap, 
-  CrossIcon, 
-  User, 
-  Users, 
+import {
+  PlusCircle,
+  UtensilsCrossed,
+  Wheat,
+  Carrot,
+  Apple,
+  Coffee,
+  Handshake,
+  Truck,
+  Gem,
+  Cake,
+  Shirt,
+  Drama,
+  Hammer,
+  Zap,
+  CrossIcon,
+  User,
+  Users,
   Heart,
   X,
-  ChevronRight
+  ChevronRight,
+  Search,
+  CheckCircle2,
 } from "lucide-react";
 import React from "react";
 import { useSortable } from '@dnd-kit/sortable';
@@ -64,6 +66,9 @@ interface BudgetAccordionProps {
   onDeleteItem: (categoryPath: string[], itemIndex: number) => void;
   onDeleteCategory: (categoryPath: string[]) => void;
   categoryPath?: string[];
+  supplierRequests?: Budget['supplierRequests'];
+  onFindSupplier?: (item: BudgetItem, itemTotal: number) => void;
+  onMarkAsFound?: (itemId: string, leadId: string) => void;
 }
 
 const iconMap: { [key: string]: React.ElementType } = {
@@ -119,13 +124,16 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 
-const SortableCategory = ({ 
-  category, 
-  onItemChange, 
-  onAddItem, 
+const SortableCategory = ({
+  category,
+  onItemChange,
+  onAddItem,
   onDeleteItem,
   onDeleteCategory,
-  categoryPath = [] 
+  categoryPath = [],
+  supplierRequests,
+  onFindSupplier,
+  onMarkAsFound,
 }: { category: BudgetCategory } & Omit<BudgetAccordionProps, 'categories'>) => {
   const {
     setNodeRef,
@@ -201,6 +209,7 @@ const SortableCategory = ({
                         <TableHead>Unit Price</TableHead>
                         <TableHead>Total</TableHead>
                         <TableHead className="w-1/3">Comments</TableHead>
+                        {onFindSupplier && <TableHead className="w-44"></TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -273,6 +282,51 @@ const SortableCategory = ({
                                 className="min-h-[38px] text-sm"
                             />
                             </TableCell>
+                            {onFindSupplier && (
+                              <TableCell className="whitespace-nowrap">
+                                {(() => {
+                                  if (!item.name) return null;
+                                  const req = supplierRequests?.[item.id];
+                                  if (!req) {
+                                    return (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-xs h-7 border-teal-600 text-teal-700 hover:bg-teal-50"
+                                        onClick={() => onFindSupplier(item, item.total)}
+                                      >
+                                        <Search className="h-3 w-3 mr-1" />
+                                        Find Supplier
+                                      </Button>
+                                    );
+                                  }
+                                  if (req.status === 'closed') {
+                                    return (
+                                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1">
+                                        <CheckCircle2 className="h-3 w-3" />
+                                        Supplier Found
+                                      </span>
+                                    );
+                                  }
+                                  return (
+                                    <div className="flex flex-col gap-1.5">
+                                      <span className="inline-flex items-center gap-1 rounded-full bg-teal-100 text-teal-800 text-xs font-medium px-2.5 py-1">
+                                        <Search className="h-3 w-3" />
+                                        Requested &middot; {req.matchedCount} notified
+                                      </span>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-xs h-6 text-muted-foreground hover:text-foreground px-2"
+                                        onClick={() => onMarkAsFound?.(item.id, req.leadId)}
+                                      >
+                                        Mark as Found
+                                      </Button>
+                                    </div>
+                                  );
+                                })()}
+                              </TableCell>
+                            )}
                         </TableRow>
                         ))}
                     </TableBody>
@@ -292,13 +346,16 @@ const SortableCategory = ({
 
           {category.subCategories && category.subCategories.length > 0 && (
             <div className="px-6 pb-4">
-              <BudgetAccordion 
+              <BudgetAccordion
                 categories={category.subCategories}
                 onItemChange={onItemChange}
                 onAddItem={onAddItem}
                 onDeleteItem={onDeleteItem}
                 onDeleteCategory={onDeleteCategory}
                 categoryPath={currentPath}
+                supplierRequests={supplierRequests}
+                onFindSupplier={onFindSupplier}
+                onMarkAsFound={onMarkAsFound}
               />
             </div>
           )}
@@ -308,25 +365,31 @@ const SortableCategory = ({
   );
 };
 
-export function BudgetAccordion({ 
-  categories, 
-  onItemChange, 
-  onAddItem, 
+export function BudgetAccordion({
+  categories,
+  onItemChange,
+  onAddItem,
   onDeleteItem,
   onDeleteCategory,
-  categoryPath = [] 
+  categoryPath = [],
+  supplierRequests,
+  onFindSupplier,
+  onMarkAsFound,
 }: BudgetAccordionProps) {
   return (
     <Accordion type="multiple" className="w-full space-y-4">
       {categories.map((category) => (
-        <SortableCategory 
-          key={category.id} 
-          category={category} 
-          onItemChange={onItemChange} 
-          onAddItem={onAddItem} 
+        <SortableCategory
+          key={category.id}
+          category={category}
+          onItemChange={onItemChange}
+          onAddItem={onAddItem}
           onDeleteItem={onDeleteItem}
           onDeleteCategory={onDeleteCategory}
           categoryPath={categoryPath}
+          supplierRequests={supplierRequests}
+          onFindSupplier={onFindSupplier}
+          onMarkAsFound={onMarkAsFound}
         />
       ))}
     </Accordion>

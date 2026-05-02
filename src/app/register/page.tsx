@@ -42,8 +42,8 @@ const emailRegisterSchema = z.object({
   email: z.string().email("Invalid email address"),
   cellphone: z.string().optional(),
   password: z.string().min(6, "Password must be at least 6 characters long"),
-  consent: z.literal(true, {
-    error: "You must accept the terms and conditions.",
+  consent: z.boolean().refine((val) => val === true, {
+    message: "You must accept the terms and conditions.",
   }),
 });
 
@@ -116,9 +116,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
   const isMobile = useIsMobile();
-  // Start false — only set true while actively processing a redirect result
-  const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] =
-    useState(false);
+  const [isProcessingSocialSignIn, setIsProcessingSocialSignIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
@@ -130,7 +128,7 @@ export default function RegisterPage() {
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
-    resolver: zodResolver(emailRegisterSchema),
+    resolver: zodResolver(emailRegisterSchema) as any,
     defaultValues: {
       consent: false,
     },
@@ -146,7 +144,6 @@ export default function RegisterPage() {
     );
   };
 
-  // Redirect already-logged-in users
   useEffect(() => {
     if (!isUserLoading && user && !user.isAnonymous) {
       router.push("/my-plans");
@@ -169,10 +166,9 @@ export default function RegisterPage() {
     });
   };
 
-  // Handles SPA navigation case where script is already loaded
   useEffect(() => {
     renderEnterpriseRecaptcha();
-  }, []); // valid: all deps are stable refs/setters/constants
+  }, []);
 
   const onSubmit = async (data: RegisterFormValues) => {
     if (!auth || !firestore) return;
@@ -216,10 +212,10 @@ export default function RegisterPage() {
     } catch (error) {
       if (error instanceof FirebaseError) {
         const friendlyMessages: Record<string, string> = {
-          'auth/email-already-in-use': 'An account with this email already exists. Try logging in instead.',
-          'auth/invalid-email': 'Please enter a valid email address.',
-          'auth/weak-password': 'Password is too weak. Please use at least 6 characters.',
-          'auth/too-many-requests': 'Too many attempts. Please wait a moment and try again.',
+          "auth/email-already-in-use": "An account with this email already exists. Try logging in instead.",
+          "auth/invalid-email": "Please enter a valid email address.",
+          "auth/weak-password": "Password is too weak. Please use at least 6 characters.",
+          "auth/too-many-requests": "Too many attempts. Please wait a moment and try again.",
         };
         setFirebaseError(friendlyMessages[error.code] || error.message);
       } else {
@@ -245,7 +241,6 @@ export default function RegisterPage() {
       }
       if (userCredential) {
         await processSocialUser(userCredential);
-        // onAuthStateChanged fires → redirects to /my-plans
       }
     } catch (error) {
       console.error(`${provider} sign-in error:`, error);
@@ -255,11 +250,7 @@ export default function RegisterPage() {
     }
   };
 
-  if (
-    isUserLoading ||
-    isProcessingSocialSignIn ||
-    (user && !user.isAnonymous)
-  ) {
+  if (isUserLoading || isProcessingSocialSignIn || (user && !user.isAnonymous)) {
     return (
       <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center">
         <p>Loading...</p>
@@ -279,7 +270,7 @@ export default function RegisterPage() {
                   Create Account
                 </h2>
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/login" className="font-bold">
+                  <Link href="/auth" className="font-bold">
                     Login
                   </Link>
                 </Button>
@@ -324,7 +315,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Input
@@ -460,7 +451,7 @@ export default function RegisterPage() {
               </div>
               <p className="mt-4 text-center text-sm">
                 Already have an account?{" "}
-                <Link href="/login" className="underline">
+                <Link href="/auth" className="underline">
                   Login
                 </Link>
               </p>

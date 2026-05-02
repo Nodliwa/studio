@@ -1,5 +1,5 @@
 
-'use server';
+
 /**
  * @fileoverview This file initializes the Genkit AI instance with necessary plugins.
  * It is configured to use Google's Generative AI models. The `ai` object exported
@@ -8,12 +8,12 @@
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
-// Initialize the Genkit AI instance.
+// Initialize the Genkit AI insatance.
 // It is crucial to configure plugins here. The googleAI plugin enables
 // the use of Google's AI models (e.g., Gemini).
 export const ai = genkit({
   plugins: [
-    googleAI(), // Enables Google's generative AI models like Gemini.
+    googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY }), // Enables Google's generative AI models like Gemini.
   ],
 });
 

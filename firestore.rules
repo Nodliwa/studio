@@ -1,42 +1,100 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper to check if the user is the owner or an authorized collaborator
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+    }
     function canAccessBudget(userId, budgetId) {
       let budget = get(/databases/$(database)/documents/users/$(userId)/budgets/$(budgetId)).data;
       return request.auth != null && (
-        request.auth.uid == userId || 
+        request.auth.uid == userId ||
         (budget.collaboratorEmails != null && request.auth.token.email in budget.collaboratorEmails)
       );
     }
-
+    match /admins/{email} {
+      allow read: if request.auth != null && request.auth.token.email == email;
+      allow write: if false;
+    }
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
+      allow read: if isAdmin() ||
+        (request.auth != null && request.auth.uid == userId) ||
+        request.auth == null;
+      allow write: if request.auth != null && request.auth.uid == userId;
       match /budgets/{budgetId} {
-        // Owner and collaborator rules
-        allow read: if request.auth != null && (
-          request.auth.uid == userId || 
+        allow read: if isAdmin() || (request.auth != null && (
+          request.auth.uid == userId ||
           (resource != null && resource.data.collaboratorEmails != null && request.auth.token.email in resource.data.collaboratorEmails)
-        );
+        ));
         allow write: if request.auth != null && (
-          request.auth.uid == userId || 
+          request.auth.uid == userId ||
           (resource != null && resource.data.collaboratorEmails != null && request.auth.token.email in resource.data.collaboratorEmails) ||
           (request.resource != null && request.resource.data.collaboratorEmails != null && request.auth.token.email in request.resource.data.collaboratorEmails)
         );
-
         match /categories/{categoryId} {
-          allow read, write: if canAccessBudget(userId, budgetId);
+          allow read: if isAdmin() || canAccessBudget(userId, budgetId);
+          allow write: if canAccessBudget(userId, budgetId);
           match /items/{itemId} {
-            allow read, write: if canAccessBudget(userId, budgetId);
+            allow read: if isAdmin() || canAccessBudget(userId, budgetId);
+            allow write: if canAccessBudget(userId, budgetId);
           }
         }
-
         match /mustDos/{mustDoId} {
-          allow read, write: if canAccessBudget(userId, budgetId);
+          allow read: if isAdmin() || canAccessBudget(userId, budgetId);
+          allow write: if canAccessBudget(userId, budgetId);
         }
       }
+    }
+    match /{path=**}/budgets/{budgetId} {
+      allow read: if isAdmin();
+    }
+
+    // ── Supplier Portal Collections ───────────────────────────────────────────
+    match /suppliers/{userId} {
+      allow read: if isAdmin() ||
+        (request.auth != null && request.auth.uid == userId);
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /supplier_opportunities/{opportunityId} {
+      allow read: if isAdmin() ||
+        (request.auth != null && resource.data.plannerId == request.auth.uid) ||
+        (request.auth != null &&
+          resource.data.targetedSupplierIds != null &&
+          request.auth.uid in resource.data.targetedSupplierIds);
+      allow create: if request.auth != null &&
+        request.resource.data.plannerId == request.auth.uid;
+      allow update: if isAdmin() ||
+        (request.auth != null && resource.data.plannerId == request.auth.uid) ||
+        (request.auth != null &&
+          resource.data.targetedSupplierIds != null &&
+          request.auth.uid in resource.data.targetedSupplierIds);
+      allow delete: if isAdmin();
+    }
+
+    match /supplier_credits/{ledgerId} {
+      allow read: if isAdmin() || (
+        request.auth != null &&
+        resource.data.supplierId == request.auth.uid
+      );
+      allow create: if request.auth != null &&
+        request.resource.data.supplierId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /supplier_notifications/{notificationId} {
+      allow read: if isAdmin() || (
+        request.auth != null &&
+        resource.data.supplierId == request.auth.uid
+      );
+      allow create: if request.auth != null && (
+        request.resource.data.supplierId == request.auth.uid ||
+        request.resource.data.type == "opportunity_filled"
+      );
+      allow update, delete: if isAdmin() || (
+        request.auth != null &&
+        resource.data.supplierId == request.auth.uid
+      );
     }
   }
 }

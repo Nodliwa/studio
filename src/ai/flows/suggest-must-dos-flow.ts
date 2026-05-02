@@ -1,73 +1,88 @@
-
 'use server';
-/**
- * @fileOverview Robust AI flow for suggesting "must-do" tasks for event planning.
- * Optimized for South African event contexts and Genkit 1.x.
- */
 
-import { ai } from '@/ai/genkit';
-import { z } from 'zod';
+import OpenAI from 'openai';
 
-// ✅ Input Schema
-export const SuggestMustDosInputSchema = z.object({
-  eventType: z.string().describe('The type of event, e.g., "Wedding", "Funeral", "uMemulo", "uMgidi".'),
-  existingTitles: z.array(z.string()).describe('Titles of tasks that already exist, to avoid duplicates.'),
-});
-export type SuggestMustDosInput = z.infer<typeof SuggestMustDosInputSchema>;
+export type SuggestMustDosInput = {
+  eventType: string;
+  existingTitles: string[];
+  birthdayMeta?: {
+    birthdayAge: number;
+    ageGroup: string;
+    isMilestone: boolean;
+  };
+};
 
-// ✅ Suggestion Schema
-const SuggestionSchema = z.object({
-  title: z.string().describe('Short, actionable title (e.g., "Book photographer").'),
-  note: z.string().describe('Brief helpful note (e.g., "Get quotes from 3 vendors.").'),
-  priority: z.enum(['low', 'medium', 'high']).describe('Suggested priority.'),
-});
-
-// ✅ Output Schema
-export const SuggestMustDosOutputSchema = z.object({
-  suggestions: z.array(SuggestionSchema).describe('Array of 5 suggested must-do items.'),
-});
-export type SuggestMustDosOutput = z.infer<typeof SuggestMustDosOutputSchema>;
-
-// ✅ Refined Prompt
-const suggestMustDosPrompt = ai.definePrompt({
-  name: 'suggestMustDosPrompt',
-  model: 'googleai/gemini-1.5-flash',
-  input: { schema: SuggestMustDosInputSchema },
-  output: { schema: SuggestMustDosOutputSchema },
-  prompt: `
-You are an expert event planner specializing in South African celebrations. 
-For a {{eventType}}, suggest exactly 5 critical, non-budgetary tasks that are essential for success.
-
-Follow these rules strictly:
-1. Do NOT suggest tasks that are already in this list: {{#each existingTitles}}- {{this}} {{/each}}.
-2. If the event is traditional (like uMemulo or uMgidi), suggest tasks related to cultural protocols, attire, or community announcements.
-3. Assign priority:
-   - "high": Critical early-stage tasks.
-   - "medium": Important logistics.
-   - "low": Final touches.
-4. Your response MUST be valid JSON matching the schema.
-`,
-});
-
-// ✅ Main Flow
-const suggestMustDosFlow = ai.defineFlow(
-  {
-    name: 'suggestMustDosFlow',
-    inputSchema: SuggestMustDosInputSchema,
-    outputSchema: SuggestMustDosOutputSchema,
-  },
-  async (input) => {
-    try {
-      const { output } = await suggestMustDosPrompt(input);
-      if (!output) return { suggestions: [] };
-      return output;
-    } catch (error) {
-      console.error('SuggestMustDosFlow Error:', error);
-      return { suggestions: [] };
-    }
-  }
-);
+export type SuggestMustDosOutput = {
+  suggestions: Array<{
+    title: string;
+    note: string;
+    priority: 'low' | 'medium' | 'high';
+  }>;
+};
 
 export async function suggestMustDos(input: SuggestMustDosInput): Promise<SuggestMustDosOutput> {
-  return await suggestMustDosFlow(input);
+  try {
+    console.log('Generating AI suggestions for:', input.eventType);
+
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    const existingList = input.existingTitles.length > 0
+      ? 'Do NOT suggest any of these existing tasks: ' + input.existingTitles.join(', ')
+      : '';
+
+    let eventContext = `${input.eventType} event`;
+    let birthdayFocus = '';
+
+    if (input.eventType === 'birthday' && input.birthdayMeta) {
+      const { birthdayAge, ageGroup, isMilestone } = input.birthdayMeta;
+      eventContext = `birthday celebration for a ${ageGroup} turning ${birthdayAge}${isMilestone ? '. This is a milestone birthday' : ''}`;
+      const focusByGroup: Record<string, string> = {
+        child: 'Focus on: jumping castle booking, themed cake order, party pack preparation, sending invitations to parents.',
+        teen: 'Focus on: sound system or DJ setup, photo booth booking, ensuring non-alcoholic drinks, venue setup coordination.',
+        adult: isMilestone
+          ? 'Focus on: photographer booking, sending invitations early, creating a memory book, ordering a premium cake.'
+          : 'Focus on: venue confirmation, catering coordination, entertainment booking, guest list management.',
+        senior: 'Focus on: arranging shuttle for elderly guests, live band booking, preparing a family slideshow, confirming formal seating plan.',
+      };
+      birthdayFocus = focusByGroup[ageGroup] ?? '';
+    }
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert event planner specializing in South African celebrations. Always respond with valid JSON only, no markdown, no explanation.'
+        },
+        {
+          role: 'user',
+          content: `For a ${eventContext}, suggest exactly 5 critical non-budgetary planning tasks.
+${existingList}
+${birthdayFocus}
+Consider cultural protocols if the event is traditional (uMemulo, uMgidi, etc).
+Focus on actionable planning steps.
+
+Respond with ONLY this JSON format:
+{"suggestions":[{"title":"task title","note":"brief helpful note","priority":"high"},{"title":"task title","note":"brief helpful note","priority":"medium"},{"title":"task title","note":"brief helpful note","priority":"high"},{"title":"task title","note":"brief helpful note","priority":"low"},{"title":"task title","note":"brief helpful note","priority":"medium"}]}`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 500,
+    });
+
+    const text = response.choices[0]?.message?.content || '';
+    console.log('Raw AI response:', text);
+
+    const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+
+    if (!parsed.suggestions || !Array.isArray(parsed.suggestions)) {
+      return { suggestions: [] };
+    }
+
+    return { suggestions: parsed.suggestions.slice(0, 5) };
+  } catch (error: any) {
+    console.error('SuggestMustDos Error:', error.message);
+    return { suggestions: [] };
+  }
 }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, useMemo, useRef } from "react";
@@ -62,7 +61,16 @@ export function EventDetails({
     clearSuggestions,
   } = usePlacesAutocomplete({
     debounce: 300,
+    initOnMount: false,
   });
+
+  useEffect(() => {
+    if (isEditing) {
+      setAutocompleteValue('', false);
+    } else {
+      clearSuggestions();
+    }
+  }, [isEditing]);
 
   const {
     control,
@@ -72,7 +80,7 @@ export function EventDetails({
     watch,
     formState: { isSubmitting },
   } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       name: "",
       eventLocation: "",
@@ -87,7 +95,7 @@ export function EventDetails({
     if (!budget?.eventDate) return null;
     const eventDate = new Date(budget.eventDate);
     const today = new Date();
-    today.setHours(0, 0, 0, 0); 
+    today.setHours(0, 0, 0, 0);
     const diffTime = eventDate.getTime() - today.getTime();
     if (diffTime < 0) return "The event has passed.";
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -123,7 +131,7 @@ export function EventDetails({
 
   const onSubmit = (data: FormData) => {
     if (isTemplateMode) {
-      router.push("/register");
+      router.push("/auth");
       return;
     }
     if (!budgetRef) return;
@@ -152,16 +160,16 @@ export function EventDetails({
     const storageRef = ref(storage, `budgets/${budget.id}/background`);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
-    uploadTask.on('state_changed', 
+    uploadTask.on('state_changed',
       (snapshot) => {
         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         setUploadProgress(progress);
-      }, 
+      },
       (error) => {
         console.error("Upload failed:", error);
         setUploadProgress(null);
         toast({ variant: 'destructive', title: 'Upload Failed', description: 'Could not upload your image.' });
-      }, 
+      },
       async () => {
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
         setDocumentNonBlocking(budgetRef, { backgroundImageUrl: downloadURL }, { merge: true });
@@ -173,7 +181,7 @@ export function EventDetails({
 
   return (
     <Card className="shadow-lg h-full card-glass">
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit as any)}>
         <CardHeader className="flex flex-row items-start justify-between p-4 pb-0">
           <div className="space-y-1">
             <CardTitle className="font-headline text-2xl">
@@ -182,7 +190,7 @@ export function EventDetails({
             <p className="text-sm font-semibold text-primary">{daysLeftText}</p>
           </div>
           {isTemplateMode ? (
-            <Button onClick={() => router.push("/register")} size="sm">
+            <Button onClick={() => router.push("/auth")} size="sm">
               Sign Up to Save
             </Button>
           ) : (
@@ -280,20 +288,14 @@ export function EventDetails({
                 control={control}
                 render={({ field }) => (
                   <Popover
-                    open={
-                      ready && status === "OK" && autocompleteData.length > 0
-                    }
+                    open={ready && status === "OK" && autocompleteData.length > 0}
                   >
                     <PopoverAnchor>
                       <Input
                         id="eventLocation"
                         {...field}
                         disabled={!isEditing || !ready}
-                        placeholder={
-                          ready
-                            ? "Start typing your address..."
-                            : "Loading location..."
-                        }
+                        placeholder={ready ? "Start typing your address..." : "Loading location..."}
                         autoComplete="off"
                       />
                     </PopoverAnchor>
@@ -303,10 +305,7 @@ export function EventDetails({
                           {autocompleteData.map((suggestion) => {
                             const {
                               place_id,
-                              structured_formatting: {
-                                main_text,
-                                secondary_text,
-                              },
+                              structured_formatting: { main_text, secondary_text },
                               description,
                             } = suggestion;
                             return (
@@ -314,9 +313,7 @@ export function EventDetails({
                                 key={place_id}
                                 variant="ghost"
                                 className="justify-start h-auto text-left"
-                                onClick={() =>
-                                  handleLocationSelect(description)
-                                }
+                                onClick={() => handleLocationSelect(description)}
                               >
                                 <div>
                                   <strong>{main_text}</strong>

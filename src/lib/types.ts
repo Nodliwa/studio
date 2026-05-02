@@ -29,6 +29,27 @@ export interface Collaborator {
   rights: 'read' | 'read/write';
 }
 
+export type AgeGroup = 'child' | 'teen' | 'adult' | 'senior';
+
+export type BirthdayCelebrationType =
+  | 'simple_home'
+  | 'venue_party'
+  | 'surprise_party'
+  | 'family_braai'
+  | 'luxury_dinner'
+  | 'kids_themed'
+  | 'milestone'
+  | 'outdoor_picnic'
+  | 'club_lounge'
+  | 'cultural_family';
+
+export interface BirthdayMeta {
+  birthdayAge: number;
+  ageGroup: AgeGroup;
+  celebrationType?: BirthdayCelebrationType;
+  isMilestone: boolean;
+}
+
 export interface Budget {
   id:string;
   name: string;
@@ -41,6 +62,8 @@ export interface Budget {
   backgroundImageUrl?: string;
   collaborators?: Collaborator[];
   collaboratorEmails?: string[];
+  birthdayMeta?: BirthdayMeta;
+  supplierRequests?: { [itemId: string]: { leadId: string; status: 'open' | 'closed'; matchedCount: number } };
 }
 
 export interface User {
@@ -49,6 +72,7 @@ export interface User {
     displayName: string;
     knownAs?: string;
     photoURL?: string;
+    phoneNumber?: string;
 }
 
 export interface MustDo {
@@ -63,4 +87,42 @@ export interface MustDo {
   createdAt: any; // Firestore Timestamp
   reminderType: 'none' | 'email' | 'sms' | 'whatsapp';
   reminderDaysBefore: number;
+}
+
+export interface RSVP {
+  id: string;
+  budgetId: string;
+  name: string;
+  email: string;
+  attending: 'yes' | 'no' | 'maybe';
+  guests: number;
+  dietaryRequirements?: string;
+  createdAt: any; // Firestore Timestamp
+}
+
+export interface InviteToken {
+  id: string;
+  budgetId: string;
+  budgetName: string;
+  ownerId: string;
+  createdAt: any;
+  expiresAt: any;
+  used: boolean;
+  usedAt?: any;
+  usedBy?: string;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: 'collaborator_request' | 'collaborator_approved' | 'collaborator_rejected';
+  budgetId: string;
+  budgetName: string;
+  inviteeName: string;
+  inviteeContact: string;
+  inviteeUid: string;
+  token: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: any;
+  read: boolean;
 }

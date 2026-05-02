@@ -292,7 +292,6 @@ const funeralBudgetData: BudgetCategory[] = [
         ],
       },
     ],
-    items: [],
   },
   {
     id: "cat-6",
@@ -2343,10 +2342,457 @@ const umemuloBudgetData: BudgetCategory[] = [
 
 const otherBudgetData: BudgetCategory[] = [];
 
+// ─── Birthday: Adult (ages 18–59) ────────────────────────────────────────────
+const birthdayAdultBudgetData: BudgetCategory[] = [
+  {
+    id: "b-venue",
+    name: "Venue",
+    total: 0,
+    order: 1,
+    items: [
+      { id: "b-v-1", name: "Venue / Hall Hire", metric: "flat fee", quantity: 1, unitPrice: 3000, total: 0, comment: "" },
+      { id: "b-v-2", name: "Tables & Chairs Hire", metric: "flat fee", quantity: 1, unitPrice: 1500, total: 0, comment: "" },
+      { id: "b-v-3", name: "Tent / Marquee", metric: "flat fee", quantity: 1, unitPrice: 2500, total: 0, comment: "" },
+      { id: "b-v-4", name: "Mobile Toilets", metric: "per unit", quantity: 2, unitPrice: 500, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "b-catering",
+    name: "Catering",
+    total: 0,
+    order: 2,
+    items: [],
+    subCategories: [
+      {
+        id: "b-cat-meat",
+        name: "Meat",
+        total: 0,
+        order: 1,
+        items: [
+          { id: "b-m-1", name: "Chicken", metric: "per kg", quantity: 10, unitPrice: 65, total: 0, comment: "" },
+          { id: "b-m-2", name: "Boerewors", metric: "per kg", quantity: 5, unitPrice: 90, total: 0, comment: "" },
+          { id: "b-m-3", name: "Beef / Steak", metric: "per kg", quantity: 5, unitPrice: 160, total: 0, comment: "" },
+        ],
+      },
+      {
+        id: "b-cat-starch",
+        name: "Starch & Sides",
+        total: 0,
+        order: 2,
+        items: [
+          { id: "b-s-1", name: "Rolls / Bread", metric: "per pack", quantity: 5, unitPrice: 30, total: 0, comment: "" },
+          { id: "b-s-2", name: "Rice", metric: "per kg", quantity: 5, unitPrice: 30, total: 0, comment: "" },
+          { id: "b-s-3", name: "Potato Salad", metric: "per kg", quantity: 3, unitPrice: 55, total: 0, comment: "" },
+          { id: "b-s-4", name: "Green Salad", metric: "per kg", quantity: 2, unitPrice: 40, total: 0, comment: "" },
+        ],
+      },
+      {
+        id: "b-cat-desserts",
+        name: "Desserts",
+        total: 0,
+        order: 3,
+        items: [
+          { id: "b-d-1", name: "Birthday Cake", metric: "item", quantity: 1, unitPrice: 800, total: 0, comment: "" },
+          { id: "b-d-2", name: "Cupcakes", metric: "per dozen", quantity: 3, unitPrice: 200, total: 0, comment: "" },
+        ],
+      },
+      {
+        id: "b-cat-drinks",
+        name: "Drinks & Refreshments",
+        total: 0,
+        order: 4,
+        items: [
+          { id: "b-dr-1", name: "Soft Drinks (2L)", metric: "per bottle", quantity: 10, unitPrice: 25, total: 0, comment: "" },
+          { id: "b-dr-2", name: "Juice (2L)", metric: "per bottle", quantity: 6, unitPrice: 30, total: 0, comment: "" },
+          { id: "b-dr-3", name: "Water (750ml)", metric: "per bottle", quantity: 24, unitPrice: 10, total: 0, comment: "" },
+          { id: "b-dr-4", name: "Beer / Cider (6-pack)", metric: "per pack", quantity: 5, unitPrice: 100, total: 0, comment: "" },
+          { id: "b-dr-5", name: "Wine (750ml)", metric: "per bottle", quantity: 4, unitPrice: 120, total: 0, comment: "" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "b-decor",
+    name: "Décor & Setup",
+    total: 0,
+    order: 3,
+    items: [
+      { id: "b-dc-1", name: "Balloons & Decorations", metric: "flat fee", quantity: 1, unitPrice: 600, total: 0, comment: "" },
+      { id: "b-dc-2", name: "Table Centrepieces", metric: "per table", quantity: 5, unitPrice: 150, total: 0, comment: "" },
+      { id: "b-dc-3", name: "Backdrop / Draping", metric: "flat fee", quantity: 1, unitPrice: 900, total: 0, comment: "" },
+      { id: "b-dc-4", name: "Lighting", metric: "flat fee", quantity: 1, unitPrice: 700, total: 0, comment: "" },
+      { id: "b-dc-5", name: "Serviettes & Cutlery", metric: "per set", quantity: 50, unitPrice: 15, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "b-entertainment",
+    name: "Entertainment",
+    total: 0,
+    order: 4,
+    items: [
+      { id: "b-en-1", name: "DJ / Music", metric: "per event", quantity: 1, unitPrice: 2500, total: 0, comment: "" },
+      { id: "b-en-2", name: "MC", metric: "per event", quantity: 1, unitPrice: 1500, total: 0, comment: "" },
+      { id: "b-en-3", name: "Photo Booth", metric: "per event", quantity: 1, unitPrice: 1800, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "b-service",
+    name: "Service",
+    total: 0,
+    order: 5,
+    items: [
+      { id: "b-sv-1", name: "Photographer", metric: "per event", quantity: 1, unitPrice: 3000, total: 0, comment: "" },
+      { id: "b-sv-2", name: "Catering Staff / Waiters", metric: "per person", quantity: 3, unitPrice: 500, total: 0, comment: "" },
+      { id: "b-sv-3", name: "Security", metric: "per person", quantity: 2, unitPrice: 600, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "b-logistics",
+    name: "Logistics",
+    total: 0,
+    order: 6,
+    items: [
+      { id: "b-lg-1", name: "Transport / Shuttle", metric: "flat fee", quantity: 1, unitPrice: 1500, total: 0, comment: "" },
+      { id: "b-lg-2", name: "Invitations / Printing", metric: "flat fee", quantity: 1, unitPrice: 300, total: 0, comment: "" },
+      { id: "b-lg-3", name: "Party Favours", metric: "per person", quantity: 20, unitPrice: 50, total: 0, comment: "" },
+      { id: "b-lg-4", name: "Cleanup", metric: "flat fee", quantity: 1, unitPrice: 500, total: 0, comment: "" },
+    ],
+  },
+];
+
+// ─── Birthday: Kids (ages 1–12) ───────────────────────────────────────────────
+const birthdayKidsBudgetData: BudgetCategory[] = [
+  {
+    id: "bk-venue",
+    name: "Venue",
+    total: 0,
+    order: 1,
+    items: [
+      { id: "bk-v-1", name: "Backyard / Garden Setup", metric: "flat fee", quantity: 1, unitPrice: 500, total: 0, comment: "" },
+      { id: "bk-v-2", name: "Tables & Chairs Hire (kids)", metric: "flat fee", quantity: 1, unitPrice: 800, total: 0, comment: "" },
+      { id: "bk-v-3", name: "Tent / Shade Sail", metric: "flat fee", quantity: 1, unitPrice: 1200, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "bk-catering",
+    name: "Catering",
+    total: 0,
+    order: 2,
+    items: [],
+    subCategories: [
+      {
+        id: "bk-cat-food",
+        name: "Finger Foods & Snacks",
+        total: 0,
+        order: 1,
+        items: [
+          { id: "bk-f-1", name: "Mini Sandwiches", metric: "per dozen", quantity: 5, unitPrice: 80, total: 0, comment: "" },
+          { id: "bk-f-2", name: "Pizza (small)", metric: "per pizza", quantity: 5, unitPrice: 120, total: 0, comment: "" },
+          { id: "bk-f-3", name: "Hot Dogs / Sausage Rolls", metric: "per dozen", quantity: 3, unitPrice: 80, total: 0, comment: "" },
+          { id: "bk-f-4", name: "Chips & Crisps", metric: "per bag", quantity: 10, unitPrice: 25, total: 0, comment: "" },
+        ],
+      },
+      {
+        id: "bk-cat-desserts",
+        name: "Desserts",
+        total: 0,
+        order: 2,
+        items: [
+          { id: "bk-d-1", name: "Birthday Cake (themed)", metric: "item", quantity: 1, unitPrice: 600, total: 0, comment: "" },
+          { id: "bk-d-2", name: "Cupcakes", metric: "per dozen", quantity: 2, unitPrice: 180, total: 0, comment: "" },
+          { id: "bk-d-3", name: "Sweets / Candy Bar", metric: "flat fee", quantity: 1, unitPrice: 400, total: 0, comment: "" },
+        ],
+      },
+      {
+        id: "bk-cat-drinks",
+        name: "Juice Bar",
+        total: 0,
+        order: 3,
+        items: [
+          { id: "bk-dr-1", name: "Juice Boxes", metric: "per box", quantity: 30, unitPrice: 8, total: 0, comment: "" },
+          { id: "bk-dr-2", name: "Soft Drinks (1L)", metric: "per bottle", quantity: 8, unitPrice: 18, total: 0, comment: "" },
+          { id: "bk-dr-3", name: "Water (500ml)", metric: "per bottle", quantity: 20, unitPrice: 8, total: 0, comment: "" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "bk-decor",
+    name: "Décor & Setup",
+    total: 0,
+    order: 3,
+    items: [
+      { id: "bk-dc-1", name: "Themed Balloons & Decorations", metric: "flat fee", quantity: 1, unitPrice: 700, total: 0, comment: "" },
+      { id: "bk-dc-2", name: "Table Centrepieces (kids)", metric: "per table", quantity: 4, unitPrice: 80, total: 0, comment: "" },
+      { id: "bk-dc-3", name: "Themed Backdrop / Banner", metric: "flat fee", quantity: 1, unitPrice: 500, total: 0, comment: "" },
+      { id: "bk-dc-4", name: "Party Tableware (plates, cups)", metric: "per set", quantity: 30, unitPrice: 12, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "bk-entertainment",
+    name: "Entertainment",
+    total: 0,
+    order: 4,
+    items: [
+      { id: "bk-en-1", name: "Jumping Castle", metric: "per day", quantity: 1, unitPrice: 900, total: 0, comment: "" },
+      { id: "bk-en-2", name: "Face Painter", metric: "per event", quantity: 1, unitPrice: 800, total: 0, comment: "" },
+      { id: "bk-en-3", name: "Magician / Entertainer", metric: "per event", quantity: 1, unitPrice: 1200, total: 0, comment: "" },
+      { id: "bk-en-4", name: "Party Games Prize Pack", metric: "flat fee", quantity: 1, unitPrice: 300, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "bk-service",
+    name: "Service",
+    total: 0,
+    order: 5,
+    items: [
+      { id: "bk-sv-1", name: "Photographer", metric: "per event", quantity: 1, unitPrice: 1500, total: 0, comment: "" },
+      { id: "bk-sv-2", name: "Adult Helpers", metric: "per person", quantity: 2, unitPrice: 200, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "bk-logistics",
+    name: "Logistics",
+    total: 0,
+    order: 6,
+    items: [
+      { id: "bk-lg-1", name: "Party Packs (per child)", metric: "per child", quantity: 20, unitPrice: 50, total: 0, comment: "" },
+      { id: "bk-lg-2", name: "Invitations / Printing", metric: "flat fee", quantity: 1, unitPrice: 200, total: 0, comment: "" },
+      { id: "bk-lg-3", name: "Cleanup", metric: "flat fee", quantity: 1, unitPrice: 300, total: 0, comment: "" },
+    ],
+  },
+];
+
+// ─── Birthday: Teen (ages 13–17) ──────────────────────────────────────────────
+const birthdayTeenBudgetData: BudgetCategory[] = [
+  {
+    id: "bt-venue",
+    name: "Venue",
+    total: 0,
+    order: 1,
+    items: [
+      { id: "bt-v-1", name: "Backyard / Outdoor Setup", metric: "flat fee", quantity: 1, unitPrice: 1500, total: 0, comment: "" },
+      { id: "bt-v-2", name: "Tables & Chairs Hire", metric: "flat fee", quantity: 1, unitPrice: 1200, total: 0, comment: "" },
+      { id: "bt-v-3", name: "Tent / Gazebo", metric: "flat fee", quantity: 1, unitPrice: 1500, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "bt-catering",
+    name: "Catering",
+    total: 0,
+    order: 2,
+    items: [],
+    subCategories: [
+      {
+        id: "bt-cat-food",
+        name: "Food",
+        total: 0,
+        order: 1,
+        items: [
+          { id: "bt-f-1", name: "Pizza (large)", metric: "per pizza", quantity: 5, unitPrice: 150, total: 0, comment: "" },
+          { id: "bt-f-2", name: "Burgers / Hot Dogs", metric: "per dozen", quantity: 3, unitPrice: 120, total: 0, comment: "" },
+          { id: "bt-f-3", name: "Snacks & Chips", metric: "flat fee", quantity: 1, unitPrice: 400, total: 0, comment: "" },
+          { id: "bt-f-4", name: "Salads", metric: "per kg", quantity: 2, unitPrice: 45, total: 0, comment: "" },
+        ],
+      },
+      {
+        id: "bt-cat-drinks",
+        name: "Drinks (Non-Alcoholic)",
+        total: 0,
+        order: 2,
+        items: [
+          { id: "bt-dr-1", name: "Soft Drinks (2L)", metric: "per bottle", quantity: 10, unitPrice: 25, total: 0, comment: "" },
+          { id: "bt-dr-2", name: "Juice (2L)", metric: "per bottle", quantity: 6, unitPrice: 30, total: 0, comment: "" },
+          { id: "bt-dr-3", name: "Energy Drinks", metric: "per can", quantity: 12, unitPrice: 20, total: 0, comment: "" },
+          { id: "bt-dr-4", name: "Water (750ml)", metric: "per bottle", quantity: 24, unitPrice: 10, total: 0, comment: "" },
+        ],
+      },
+      {
+        id: "bt-cat-desserts",
+        name: "Desserts",
+        total: 0,
+        order: 3,
+        items: [
+          { id: "bt-d-1", name: "Birthday Cake", metric: "item", quantity: 1, unitPrice: 700, total: 0, comment: "" },
+          { id: "bt-d-2", name: "Cupcakes", metric: "per dozen", quantity: 2, unitPrice: 200, total: 0, comment: "" },
+          { id: "bt-d-3", name: "Sweets & Treats", metric: "flat fee", quantity: 1, unitPrice: 300, total: 0, comment: "" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "bt-decor",
+    name: "Décor & Setup",
+    total: 0,
+    order: 3,
+    items: [
+      { id: "bt-dc-1", name: "Themed Balloons & Decorations", metric: "flat fee", quantity: 1, unitPrice: 500, total: 0, comment: "" },
+      { id: "bt-dc-2", name: "Table Centrepieces", metric: "per table", quantity: 4, unitPrice: 100, total: 0, comment: "" },
+      { id: "bt-dc-3", name: "Backdrop / Banner", metric: "flat fee", quantity: 1, unitPrice: 600, total: 0, comment: "" },
+      { id: "bt-dc-4", name: "Fairy Lights / LED Decor", metric: "flat fee", quantity: 1, unitPrice: 400, total: 0, comment: "" },
+      { id: "bt-dc-5", name: "Party Tableware (plates, cups)", metric: "per set", quantity: 30, unitPrice: 12, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "bt-entertainment",
+    name: "Entertainment",
+    total: 0,
+    order: 4,
+    items: [
+      { id: "bt-en-1", name: "DJ / Music Playlist Setup", metric: "per event", quantity: 1, unitPrice: 1500, total: 0, comment: "" },
+      { id: "bt-en-2", name: "Portable Speaker / Sound System", metric: "per event", quantity: 1, unitPrice: 800, total: 0, comment: "" },
+      { id: "bt-en-3", name: "Photo Booth", metric: "per event", quantity: 1, unitPrice: 1500, total: 0, comment: "" },
+      { id: "bt-en-4", name: "Party Games / Activities", metric: "flat fee", quantity: 1, unitPrice: 400, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "bt-service",
+    name: "Service",
+    total: 0,
+    order: 5,
+    items: [
+      { id: "bt-sv-1", name: "Photographer", metric: "per event", quantity: 1, unitPrice: 1800, total: 0, comment: "" },
+      { id: "bt-sv-2", name: "Adult Supervisor / Helper", metric: "per person", quantity: 2, unitPrice: 200, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "bt-logistics",
+    name: "Logistics",
+    total: 0,
+    order: 6,
+    items: [
+      { id: "bt-lg-1", name: "Party Favours", metric: "per person", quantity: 20, unitPrice: 40, total: 0, comment: "" },
+      { id: "bt-lg-2", name: "Invitations / Digital Design", metric: "flat fee", quantity: 1, unitPrice: 150, total: 0, comment: "" },
+      { id: "bt-lg-3", name: "Cleanup", metric: "flat fee", quantity: 1, unitPrice: 300, total: 0, comment: "" },
+    ],
+  },
+];
+
+// ─── Birthday: Senior (ages 60+) ──────────────────────────────────────────────
+const birthdaySeniorBudgetData: BudgetCategory[] = [
+  {
+    id: "bs-venue",
+    name: "Venue",
+    total: 0,
+    order: 1,
+    items: [
+      { id: "bs-v-1", name: "Venue / Restaurant Hire", metric: "flat fee", quantity: 1, unitPrice: 5000, total: 0, comment: "" },
+      { id: "bs-v-2", name: "Tables & Chairs Hire", metric: "flat fee", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
+      { id: "bs-v-3", name: "Linens & Draping", metric: "flat fee", quantity: 1, unitPrice: 1500, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "bs-catering",
+    name: "Catering",
+    total: 0,
+    order: 2,
+    items: [],
+    subCategories: [
+      {
+        id: "bs-cat-starters",
+        name: "Starters",
+        total: 0,
+        order: 1,
+        items: [
+          { id: "bs-st-1", name: "Soup", metric: "per serving", quantity: 40, unitPrice: 45, total: 0, comment: "" },
+          { id: "bs-st-2", name: "Salad", metric: "per kg", quantity: 5, unitPrice: 60, total: 0, comment: "" },
+        ],
+      },
+      {
+        id: "bs-cat-mains",
+        name: "Main Course",
+        total: 0,
+        order: 2,
+        items: [
+          { id: "bs-mc-1", name: "Chicken (plated)", metric: "per serving", quantity: 40, unitPrice: 90, total: 0, comment: "" },
+          { id: "bs-mc-2", name: "Beef / Lamb", metric: "per serving", quantity: 40, unitPrice: 140, total: 0, comment: "" },
+          { id: "bs-mc-3", name: "Vegetarian Option", metric: "per serving", quantity: 10, unitPrice: 70, total: 0, comment: "" },
+          { id: "bs-mc-4", name: "Side Dishes", metric: "flat fee", quantity: 1, unitPrice: 1200, total: 0, comment: "" },
+        ],
+      },
+      {
+        id: "bs-cat-desserts",
+        name: "Desserts",
+        total: 0,
+        order: 3,
+        items: [
+          { id: "bs-d-1", name: "Birthday Cake (elegant)", metric: "item", quantity: 1, unitPrice: 1200, total: 0, comment: "" },
+          { id: "bs-d-2", name: "Dessert Platter", metric: "per person", quantity: 40, unitPrice: 45, total: 0, comment: "" },
+        ],
+      },
+      {
+        id: "bs-cat-drinks",
+        name: "Drinks",
+        total: 0,
+        order: 4,
+        items: [
+          { id: "bs-dr-1", name: "Wine (750ml)", metric: "per bottle", quantity: 6, unitPrice: 150, total: 0, comment: "" },
+          { id: "bs-dr-2", name: "Sparkling Water (750ml)", metric: "per bottle", quantity: 20, unitPrice: 18, total: 0, comment: "" },
+          { id: "bs-dr-3", name: "Juice (2L)", metric: "per bottle", quantity: 6, unitPrice: 30, total: 0, comment: "" },
+          { id: "bs-dr-4", name: "Soft Drinks (2L)", metric: "per bottle", quantity: 6, unitPrice: 25, total: 0, comment: "" },
+          { id: "bs-dr-5", name: "Coffee & Tea Service", metric: "flat fee", quantity: 1, unitPrice: 500, total: 0, comment: "" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "bs-decor",
+    name: "Décor & Setup",
+    total: 0,
+    order: 3,
+    items: [
+      { id: "bs-dc-1", name: "Floral Centrepieces", metric: "per table", quantity: 8, unitPrice: 350, total: 0, comment: "" },
+      { id: "bs-dc-2", name: "Candles & Holders", metric: "per table", quantity: 8, unitPrice: 120, total: 0, comment: "" },
+      { id: "bs-dc-3", name: "Backdrop / Draping", metric: "flat fee", quantity: 1, unitPrice: 1500, total: 0, comment: "" },
+      { id: "bs-dc-4", name: "Elegant Lighting", metric: "flat fee", quantity: 1, unitPrice: 1200, total: 0, comment: "" },
+      { id: "bs-dc-5", name: "Name / Welcome Sign", metric: "item", quantity: 1, unitPrice: 400, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "bs-entertainment",
+    name: "Entertainment",
+    total: 0,
+    order: 4,
+    items: [
+      { id: "bs-en-1", name: "Live Music / Band", metric: "per event", quantity: 1, unitPrice: 5000, total: 0, comment: "" },
+      { id: "bs-en-2", name: "MC", metric: "per event", quantity: 1, unitPrice: 2000, total: 0, comment: "" },
+      { id: "bs-en-3", name: "Slideshow / AV Setup", metric: "flat fee", quantity: 1, unitPrice: 1500, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "bs-service",
+    name: "Service",
+    total: 0,
+    order: 5,
+    items: [
+      { id: "bs-sv-1", name: "Photographer", metric: "per event", quantity: 1, unitPrice: 4000, total: 0, comment: "" },
+      { id: "bs-sv-2", name: "Waiters", metric: "per person", quantity: 4, unitPrice: 700, total: 0, comment: "" },
+      { id: "bs-sv-3", name: "Event Coordinator", metric: "flat fee", quantity: 1, unitPrice: 2500, total: 0, comment: "" },
+    ],
+  },
+  {
+    id: "bs-logistics",
+    name: "Logistics",
+    total: 0,
+    order: 6,
+    items: [
+      { id: "bs-lg-1", name: "Transport / Shuttle", metric: "flat fee", quantity: 1, unitPrice: 2500, total: 0, comment: "" },
+      { id: "bs-lg-2", name: "Printed Invitations", metric: "flat fee", quantity: 1, unitPrice: 600, total: 0, comment: "" },
+      { id: "bs-lg-3", name: "Welcome Floral Arrangement", metric: "flat fee", quantity: 1, unitPrice: 800, total: 0, comment: "" },
+      { id: "bs-lg-4", name: "Cleanup", metric: "flat fee", quantity: 1, unitPrice: 800, total: 0, comment: "" },
+    ],
+  },
+];
+
 export const budgetTemplates = {
   funeral: funeralBudgetData,
   wedding: weddingBudgetData,
   umgidi: umGidiBudgetData,
   umemulo: umemuloBudgetData,
+  birthday_adult: birthdayAdultBudgetData,
+  birthday_kids: birthdayKidsBudgetData,
+  birthday_teen: birthdayTeenBudgetData,
+  birthday_senior: birthdaySeniorBudgetData,
+  birthday: birthdayAdultBudgetData,
   other: otherBudgetData,
 };
