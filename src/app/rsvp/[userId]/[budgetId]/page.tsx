@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useDoc, useFirestore } from '@/firebase';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { Budget } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -33,11 +33,11 @@ export default function PublicRsvpPage({ params: { userId, budgetId } }: { param
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
 
-  const budgetRef = useMemo(() =>
+  const budgetRef = useMemoFirebase(() =>
     userId && budgetId ? doc(firestore, 'users', userId, 'budgets', budgetId) : null,
   [firestore, userId, budgetId]);
 
-  const { data: budget, isLoading: budgetLoading } = useDoc<Budget>(budgetRef as any);
+  const { data: budget, isLoading: budgetLoading } = useDoc<Budget>(budgetRef);
 
   const {
     register,

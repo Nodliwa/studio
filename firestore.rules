@@ -43,6 +43,11 @@ service cloud.firestore {
           allow read: if isAdmin() || canAccessBudget(userId, budgetId);
           allow write: if canAccessBudget(userId, budgetId);
         }
+        match /rsvps/{rsvpId} {
+          allow read: if isAdmin() || canAccessBudget(userId, budgetId);
+          allow create: if true;
+          allow update, delete: if isAdmin() || canAccessBudget(userId, budgetId);
+        }
       }
     }
     match /{path=**}/budgets/{budgetId} {
