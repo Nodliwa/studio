@@ -12,6 +12,8 @@ import {
   writeBatch,
   getDocs,
   setDoc,
+  serverTimestamp,
+  Timestamp,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef, useMemo } from "react";
@@ -75,6 +77,9 @@ import {
   Cake,
   Flower,
   Star,
+  Link2,
+  Copy,
+  MessageCircle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -326,6 +331,35 @@ function PlanCard({
   isShared?: boolean;
 }) {
   const router = useRouter();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  const [shareOpen, setShareOpen] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateLink = async () => {
+    setIsGenerating(true);
+    try {
+      const token = uuidv4();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+      await setDoc(doc(firestore, "invite_tokens", token), {
+        budgetId: budget.id,
+        budgetName: budget.name,
+        ownerId: budget.userId,
+        createdAt: serverTimestamp(),
+        expiresAt: Timestamp.fromDate(expiresAt),
+        used: false,
+        usedAt: null,
+        usedBy: null,
+      });
+      setGeneratedLink(window.location.origin + '/invite/' + token);
+    } catch {
+      toast({ variant: 'destructive', title: 'Could not generate link' });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const imageUrl = budget.backgroundImageUrl || (budget.eventType ? eventTypeImages[budget.eventType.toLowerCase()] : undefined);
   const formattedDate = budget.eventDate
@@ -484,6 +518,9 @@ function PlanCard({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => router.push(`/planner/${budget.id}`)}>Edit Plan</DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setShareOpen(true); }}>
+                  <Link2 className="h-3.5 w-3.5 mr-2" /> Invite Collaborator
+                </DropdownMenuItem>
                 <AlertDialogTrigger asChild>
                   <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                 </AlertDialogTrigger>
@@ -506,6 +543,48 @@ function PlanCard({
           </AlertDialog>
         )}
       </div>
+
+      {/* ── Share / Invite Dialog ── */}
+      <Dialog open={shareOpen} onOpenChange={(open) => { setShareOpen(open); if (!open) setGeneratedLink(''); }}>
+        <DialogContent className="max-w-sm" onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Link2 className="h-5 w-5 text-primary" /> Invite Collaborator
+            </DialogTitle>
+            <DialogDescription>Generate a one-time invite link for <span className="font-semibold">{budget.name}</span>. Valid for 7 days.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-1">
+            {!generatedLink ? (
+              <Button className="w-full gap-2" onClick={handleGenerateLink} disabled={isGenerating}>
+                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+                Generate One-Time Link
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input value={generatedLink} readOnly className="text-xs" />
+                  <Button size="icon" variant="outline" onClick={() => { navigator.clipboard.writeText(generatedLink); toast({ title: 'Link copied!' }); }}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => {
+                      const msg = `Hi! I'd like you to collaborate on my ${budget.name || 'celebration'} plan on SimpliPlan. Use this link to request access (valid for 7 days, one use only): ${generatedLink}`;
+                      window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+                    }}
+                  >
+                    <MessageCircle className="h-4 w-4" /> WhatsApp
+                  </Button>
+                  <Button variant="outline" onClick={() => setGeneratedLink('')}>New Link</Button>
+                </div>
+                <p className="text-xs text-muted-foreground text-center">One-time use · expires in 7 days</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Footer: Open Plan ── */}
       <CardFooter

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collectionGroup, getDocs, doc, getDoc } from "firebase/firestore";
+import { getFirestore, collectionGroup, getDocs, doc, getDoc, collection, getCountFromServer } from "firebase/firestore";
 
 type Role = "admin" | "viewer";
 
@@ -28,6 +28,8 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [role, setRole] = useState<Role | null>(null);
+  const [userCount, setUserCount] = useState(0);
+  const [supplierCount, setSupplierCount] = useState(0);
 
   useEffect(() => {
     const auth = getAuth();
@@ -49,6 +51,14 @@ export default function AdminPage() {
         }
         const userRole = roleDoc.data()?.role as Role;
         setRole(userRole);
+
+        // Load user + supplier counts
+        const [usersCount, suppliersCount] = await Promise.all([
+          getCountFromServer(collection(db, "users")),
+          getCountFromServer(collection(db, "suppliers")),
+        ]);
+        setUserCount(usersCount.data().count);
+        setSupplierCount(suppliersCount.data().count);
 
         // Load plans
         const snap = await getDocs(collectionGroup(db, "budgets"));
@@ -92,7 +102,6 @@ export default function AdminPage() {
     );
   }, [search, typeFilter, plans]);
 
-  const totalGuests = plans.reduce((s, p) => s + (p.expectedGuests || 0), 0);
   const totalBudget = plans.reduce((s, p) => s + (p.grandTotal || 0), 0);
   const withBudget = plans.filter((p) => p.grandTotal > 0).length;
   const collaborated = plans.filter(
@@ -163,10 +172,11 @@ export default function AdminPage() {
           <p className="text-xs text-gray-600">{userEmail} · {plans.length} plans</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           {[
             { label: "Total Plans", value: plans.length, sub: "across all users", color: "text-purple-400" },
-            { label: "Total Guests", value: totalGuests.toLocaleString(), sub: "expected attendance", color: "text-pink-400" },
+            { label: "My-Plans Users", value: userCount.toLocaleString(), sub: "registered planners", color: "text-pink-400" },
+            { label: "Suppliers", value: supplierCount.toLocaleString(), sub: "registered suppliers", color: "text-cyan-400" },
             { label: "Total Budget", value: `R${Math.round(totalBudget / 1000)}k`, sub: `${withBudget} plans budgeted`, color: "text-green-400" },
             { label: "Collaborated", value: collaborated, sub: "shared plans", color: "text-orange-400" },
           ].map((s) => (
