@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
-import { collection, doc, getDoc, updateDoc, deleteDoc, increment, Timestamp } from 'firebase/firestore';
-import { getAuth } from 'firebase-admin/auth';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getAuth } from 'firebase-admin/auth';
 
 function getAdminApp() {
   if (getApps().length > 0) return getApps()[0];
@@ -24,40 +23,40 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email and OTP are required.' }, { status: 400 });
     }
 
-    const { firestore } = initializeFirebase();
-    const otpRef = doc(collection(firestore, 'email_otps'), email.toLowerCase());
-    const otpSnap = await getDoc(otpRef);
+    const adminApp = getAdminApp();
+    const db = getFirestore(adminApp);
+    const otpRef = db.collection('email_otps').doc(email.toLowerCase());
+    const otpSnap = await otpRef.get();
 
-    if (!otpSnap.exists()) {
+    if (!otpSnap.exists) {
       return NextResponse.json({ error: 'OTP not found. Please request a new one.' }, { status: 404 });
     }
 
-    const data = otpSnap.data();
+    const data = otpSnap.data()!;
     const now = Date.now();
     const expiresAt = data.expiresAt?.toMillis() || 0;
     const attempts = data.attempts || 0;
 
     if (attempts >= MAX_ATTEMPTS) {
-      await deleteDoc(otpRef);
+      await otpRef.delete();
       return NextResponse.json({ error: 'Too many incorrect attempts. Please request a new OTP.' }, { status: 429 });
     }
 
     if (now > expiresAt) {
-      await deleteDoc(otpRef);
+      await otpRef.delete();
       return NextResponse.json({ error: 'OTP has expired. Please request a new one.' }, { status: 410 });
     }
 
     if (data.otp !== otp.trim()) {
-      await updateDoc(otpRef, { attempts: increment(1) });
+      await otpRef.update({ attempts: FieldValue.increment(1) });
       const remaining = MAX_ATTEMPTS - attempts - 1;
-      return NextResponse.json({ error: 'Incorrect OTP. ' + remaining + ' attempt' + (remaining === 1 ? '' : 's') + ' remaining.' }, { status: 400 });
+      return NextResponse.json({ error: `Incorrect OTP. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.` }, { status: 400 });
     }
 
-    await deleteDoc(otpRef);
+    await otpRef.delete();
 
-    const adminApp = getAdminApp();
     const adminAuth = getAuth(adminApp);
-    let uid;
+    let uid: string;
     let isNewUser = false;
 
     try {
