@@ -91,6 +91,14 @@ function countAllItems(cats: BudgetCategory[]): number {
   }, 0);
 }
 
+function countTemplateOnlyItems(cats: BudgetCategory[]): number {
+  return cats.reduce((sum, cat) => {
+    const direct = (cat.items || []).filter(item => item.is_template === true).length;
+    const nested = countTemplateOnlyItems(cat.subCategories || []);
+    return sum + direct + nested;
+  }, 0);
+}
+
 function calculateTotals(categories: BudgetCategory[]): {
   categories: BudgetCategory[];
   grandTotal: number;
@@ -489,6 +497,8 @@ export default function PlannerPage({
       if (target) current = target.subCategories || [];
     }
     if (target) {
+      const deletedItem = target.items[itemIndex];
+      const isTemplateItem = deletedItem?.is_template === true;
       target.items.splice(itemIndex, 1);
       const { categories, grandTotal: newGrandTotal } = calculateTotals(updated);
       setBudgetData(categories);
@@ -505,7 +515,7 @@ export default function PlannerPage({
           setDoc(budgetDocRef, {
             grandTotal: newGrandTotal,
             itemCount: countAllItems(categories),
-            removedItemCount: increment(1),
+            ...(isTemplateItem && { removedItemCount: increment(1) }),
             ...planActivityFields(budget?.is_customized),
           }, { merge: true });
         }
@@ -518,7 +528,7 @@ export default function PlannerPage({
     if (categoryPath.length === 1) {
       const catId = categoryPath[0];
       const deletedCat = updated.find((c: BudgetCategory) => c.id === catId);
-      const deletedItemCount = deletedCat ? countAllItems([deletedCat]) : 0;
+      const deletedItemCount = deletedCat ? countTemplateOnlyItems([deletedCat]) : 0;
       const filtered = updated.filter((c: BudgetCategory) => c.id !== catId);
       const { categories, grandTotal: newGrandTotal } = calculateTotals(filtered);
       setBudgetData(categories);
@@ -532,7 +542,7 @@ export default function PlannerPage({
           batch.update(budgetDocRef, {
             grandTotal: newGrandTotal,
             itemCount: countAllItems(categories),
-            removedItemCount: increment(deletedItemCount),
+            ...(deletedItemCount > 0 && { removedItemCount: increment(deletedItemCount) }),
             ...planActivityFields(budget?.is_customized),
           });
         }
@@ -551,7 +561,7 @@ export default function PlannerPage({
 
       if (parent && parent.subCategories) {
         const deletedSub = parent.subCategories.find((c: BudgetCategory) => c.id === targetId);
-        const deletedItemCount = deletedSub ? countAllItems([deletedSub]) : 0;
+        const deletedItemCount = deletedSub ? countTemplateOnlyItems([deletedSub]) : 0;
         parent.subCategories = parent.subCategories.filter((c: BudgetCategory) => c.id !== targetId);
         const { categories, grandTotal: newGrandTotal } = calculateTotals(updated);
         setBudgetData(categories);
@@ -568,7 +578,7 @@ export default function PlannerPage({
             setDoc(budgetDocRef, {
               grandTotal: newGrandTotal,
               itemCount: countAllItems(categories),
-              removedItemCount: increment(deletedItemCount),
+              ...(deletedItemCount > 0 && { removedItemCount: increment(deletedItemCount) }),
               ...planActivityFields(budget?.is_customized),
             }, { merge: true });
           }

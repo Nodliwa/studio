@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { MetricCard } from "@/components/MetricCard";
 import { useRouter } from "next/navigation";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
@@ -31,6 +32,7 @@ interface Plan {
   addedItemCount: number | null;
   removedItemCount: number | null;
   is_customized: boolean | null;
+  customized_at: any;
   plannerLastOpenedAt: any;
 }
 
@@ -40,6 +42,27 @@ interface UserRecord {
   displayName: string;
   phoneNumber: string;
   isTestAccount: boolean;
+}
+
+function FunnelTooltip() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="absolute top-4 right-4">
+      <button
+        onClick={() => setOpen(o => !o)}
+        onMouseLeave={() => setOpen(false)}
+        className="text-gray-600 hover:text-gray-400 text-xs leading-none focus:outline-none"
+        aria-label="Funnel info"
+      >
+        ⓘ
+      </button>
+      {open && (
+        <div className="absolute top-5 right-0 z-20 w-64 bg-gray-900 border border-gray-700 rounded-lg p-3 text-xs text-gray-300 shadow-xl leading-relaxed">
+          Shows how users progress from signing up to actively customizing a plan. All steps count unique users. Helps identify where users drop off.
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function AdminPage() {
@@ -114,6 +137,7 @@ export default function AdminPage() {
             addedItemCount: p.addedItemCount ?? null,
             removedItemCount: p.removedItemCount ?? null,
             is_customized: p.is_customized ?? null,
+            customized_at: p.customized_at || null,
             plannerLastOpenedAt: p.plannerLastOpenedAt || null,
           });
         });
@@ -202,10 +226,27 @@ export default function AdminPage() {
     return d ? d >= sevenDaysAgo : false;
   }).length;
 
+  // ── Avg time to first edit ────────────────────────────────────────────────
+  const plansWithEditTime = trackedPlans.filter(p => p.customized_at && p.createdAt);
+  const avgMsToFirstEdit = plansWithEditTime.length > 0
+    ? plansWithEditTime.reduce((s, p) => {
+        const ca = toDate(p.customized_at)?.getTime() ?? 0;
+        const cr = toDate(p.createdAt)?.getTime() ?? 0;
+        return s + Math.max(0, ca - cr);
+      }, 0) / plansWithEditTime.length
+    : null;
+  const avgTimeDisplay = (() => {
+    if (avgMsToFirstEdit === null) return "—";
+    const hours = avgMsToFirstEdit / (1000 * 60 * 60);
+    return hours < 24 ? `${hours.toFixed(1)} hrs` : `${(hours / 24).toFixed(1)} days`;
+  })();
+
   // ── Funnel ────────────────────────────────────────────────────────────────
   const funnelSignedUp = realUsers.length;
   const funnelCreatedPlan = new Set(trackedPlans.map((p) => p.userId)).size;
-  const funnelCustomized = customizedCount;
+  const funnelCustomizedUsers = new Set(
+    trackedPlans.filter(p => p.is_customized === true).map(p => p.userId)
+  ).size;
 
   const typeCounts: Record<string, number> = {};
   realPlans.forEach((p) => {
@@ -321,18 +362,10 @@ export default function AdminPage() {
 
         {/* Engagement snapshot */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: "Created This Month", value: createdThisMonth, sub: `${realPlans.filter(p => !p.createdAt).length} pre-tracking`, color: "text-violet-400" },
-            { label: "Tracked Plans", value: tn, sub: `${realPlans.length - tn} pre-tracking`, color: "text-sky-400" },
-            { label: "Opened in Planner", value: openedInPlanner, sub: `${realPlans.length - openedInPlanner} never opened`, color: "text-rose-400" },
-            { label: "Active (7d, tracked)", value: activeLast7, sub: pct(activeLast7, tn) + " of tracked plans", color: "text-amber-400" },
-          ].map((s) => (
-            <div key={s.label} style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl p-4">
-              <p className="text-xs text-gray-600 uppercase tracking-widest mb-1">{s.label}</p>
-              <p className={`text-3xl font-bold ${s.color} leading-none mb-1`}>{s.value}</p>
-              <p className="text-xs text-gray-600">{s.sub}</p>
-            </div>
-          ))}
+          <MetricCard label="Created This Month" value={createdThisMonth} sub={`${realPlans.filter(p => !p.createdAt).length} pre-tracking`} color="text-violet-400" tooltip="New plans created in the current calendar month." />
+          <MetricCard label="Tracked Plans" value={tn} sub={`${realPlans.length - tn} pre-tracking`} color="text-sky-400" tooltip="Plans created after behavioural tracking was enabled. All analytics metrics are based on these plans only." />
+          <MetricCard label="Opened in Planner" value={openedInPlanner} sub={`${realPlans.length - openedInPlanner} never opened`} color="text-rose-400" tooltip="Plans that were opened in the planner at least once after creation." />
+          <MetricCard label="Active (7d, tracked)" value={activeLast7} sub={pct(activeLast7, tn) + " of tracked plans"} color="text-amber-400" tooltip="Tracked plans with any recorded activity in the last 7 days." />
         </div>
 
         {/* Behaviour analytics — tracked plans only */}
@@ -342,44 +375,30 @@ export default function AdminPage() {
             <p className="text-xs text-gray-600">{tn} tracked plan{tn !== 1 ? "s" : ""} · excludes pre-launch data</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-            {[
-              { label: "% Customized", value: pct(customizedCount, tn), sub: `${customizedCount} plans edited`, color: "text-purple-400" },
-              { label: "% Added Items", value: pct(withAddedItems, tn), sub: `${withAddedItems} plans`, color: "text-green-400" },
-              { label: "% Removed Items", value: pct(withRemovedItems, tn), sub: `${withRemovedItems} plans`, color: "text-orange-400" },
-              { label: "% Active (7d)", value: pct(activeLast7, tn), sub: `${activeLast7} plans`, color: "text-sky-400" },
-            ].map((s) => (
-              <div key={s.label} style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl p-4">
-                <p className="text-xs text-gray-600 uppercase tracking-widest mb-1">{s.label}</p>
-                <p className={`text-3xl font-bold ${s.color} leading-none mb-1`}>{s.value}</p>
-                <p className="text-xs text-gray-600">{s.sub}</p>
-              </div>
-            ))}
+            <MetricCard label="% Customized" value={pct(customizedCount, tn)} sub={`${customizedCount} plans edited`} color="text-purple-400" tooltip="Percentage of plans where users made at least one meaningful change. Measures activation." />
+            <MetricCard label="% Added Items" value={pct(withAddedItems, tn)} sub={`${withAddedItems} plans`} color="text-green-400" tooltip="Plans where users added new items beyond the template. Indicates expansion." />
+            <MetricCard label="% Removed Items" value={pct(withRemovedItems, tn)} sub={`${withRemovedItems} plans`} color="text-orange-400" tooltip="Plans where users removed template items. Indicates template mismatch." />
+            <MetricCard label="% Active (7d)" value={pct(activeLast7, tn)} sub={`${activeLast7} plans`} color="text-sky-400" tooltip="Plans with any activity in the last 7 days. Measures short-term engagement." />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { label: "Avg. Items Added / Plan", value: avgAdded, sub: "across all tracked plans", color: "text-green-400" },
-              { label: "Avg. Items Removed / Plan", value: avgRemoved, sub: "across all tracked plans", color: "text-orange-400" },
-            ].map((s) => (
-              <div key={s.label} style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl p-4">
-                <p className="text-xs text-gray-600 uppercase tracking-widest mb-1">{s.label}</p>
-                <p className={`text-3xl font-bold ${s.color} leading-none mb-1`}>{s.value}</p>
-                <p className="text-xs text-gray-600">{s.sub}</p>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <MetricCard label="Avg. Items Added / Plan" value={avgAdded} sub="across all tracked plans" color="text-green-400" tooltip="Average number of items users added per plan. Indicates depth of planning." />
+            <MetricCard label="Avg. Items Removed / Plan" value={avgRemoved} sub="across all tracked plans" color="text-orange-400" tooltip="Average template items removed per plan. Indicates template rejection." />
+            <MetricCard label="Avg. Time to First Edit" value={avgTimeDisplay} sub={`${plansWithEditTime.length} plans with edit time`} color="text-violet-400" tooltip="Average time from plan creation to first meaningful change. Measures how quickly users understand the product." />
           </div>
         </div>
 
         {/* Funnel */}
-        <div style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl p-5 mb-8">
+        <div style={{ background: "#12121a" }} className="relative group border border-gray-800 rounded-xl p-5 mb-8">
+          <FunnelTooltip />
           <div className="flex items-center justify-between mb-5">
             <p className="font-bold text-sm">Sign-up → Create → Customize Funnel</p>
-            <p className="text-xs text-gray-600">excl. test accounts</p>
+            <p className="text-xs text-gray-600">excl. test accounts · unique users per step</p>
           </div>
           <div className="flex flex-col md:flex-row items-stretch gap-0">
             {[
               { label: "Sign Up", value: funnelSignedUp, sub: "registered users", prev: null, color: "#7c6aff" },
-              { label: "Create Plan", value: funnelCreatedPlan, sub: "created ≥1 tracked plan", prev: funnelSignedUp, color: "#6affb8" },
-              { label: "Customize Plan", value: funnelCustomized, sub: "edited at least once", prev: funnelCreatedPlan, color: "#ff6a9b" },
+              { label: "Create Plan", value: funnelCreatedPlan, sub: "users with ≥1 tracked plan", prev: funnelSignedUp, color: "#6affb8" },
+              { label: "Customize Plan", value: funnelCustomizedUsers, sub: "users who edited a plan", prev: funnelCreatedPlan, color: "#ff6a9b" },
             ].map((step, i) => (
               <div key={step.label} className="flex md:flex-row flex-col items-center flex-1">
                 <div className="flex-1 px-4 py-3 text-center">
