@@ -173,7 +173,7 @@ function AuthPageInner() {
         // Check Firestore if user profile exists
         const userRef = doc(firestore, "users", result.user.uid);
         const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) {
+        if (!userSnap.data()?.displayName) {
           setStep("register");
         } else {
           const redirect = searchParams.get("redirect") || "/my-plans";

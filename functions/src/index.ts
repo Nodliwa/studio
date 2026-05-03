@@ -1,6 +1,7 @@
 import {setGlobalOptions} from "firebase-functions";
 import * as logger from "firebase-functions/logger";
 import {onDocumentCreated} from "firebase-functions/v2/firestore";
+import {beforeUserCreated} from "firebase-functions/v2/identity";
 import {initializeApp} from "firebase-admin/app";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {CATEGORY_MAP} from "./supplier-category-map.js";
@@ -103,7 +104,30 @@ function computeLocationScore(
   return 0.0;
 }
 
-// Cloud Function
+// Cloud Functions
+
+export const createUserProfile = beforeUserCreated(async (event) => {
+  const user = event.data;
+  if (!user?.uid) return;
+
+  try {
+    await db.collection("users").doc(user.uid).set(
+      {
+        email: user.email || "",
+        displayName: user.displayName || "",
+        knownAs: (user.displayName || "").split(" ")[0],
+        phoneNumber: user.phoneNumber || "",
+        photoURL: user.photoURL || "",
+        createdAt: FieldValue.serverTimestamp(),
+      },
+      {merge: true}
+    );
+    logger.info(`createUserProfile: created users/${user.uid}`);
+  } catch (err) {
+    // Never throw — a thrown error here blocks the user from being created
+    logger.error(`createUserProfile: failed for ${user.uid}`, err);
+  }
+});
 
 export const matchSupplierToLead = onDocumentCreated(
   "supplier_opportunities/{opportunityId}",
