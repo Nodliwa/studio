@@ -64,6 +64,10 @@ export interface Budget {
   collaboratorEmails?: string[];
   birthdayMeta?: BirthdayMeta;
   supplierRequests?: { [itemId: string]: { leadId: string; status: 'open' | 'closed'; matchedCount: number } };
+  createdAt?: any;
+  last_activity_at?: any;
+  itemCount?: number;
+  plannerLastOpenedAt?: any;
 }
 
 export interface User {

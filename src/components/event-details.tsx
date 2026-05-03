@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { DocumentReference, collection, getDocs, doc, writeBatch } from "firebase/firestore";
+import { DocumentReference, collection, getDocs, doc, writeBatch, serverTimestamp } from "firebase/firestore";
 import usePlacesAutocomplete from "use-places-autocomplete";
 import {
   Popover,
@@ -183,7 +183,7 @@ export function EventDetails({
       }
     }
 
-    setDocumentNonBlocking(budgetRef, dataToSave, { merge: true });
+    setDocumentNonBlocking(budgetRef, { ...dataToSave, last_activity_at: serverTimestamp() }, { merge: true });
     setIsEditing(false);
     clearSuggestions();
   };
@@ -208,7 +208,7 @@ export function EventDetails({
         batch.set(catRef, { ...cat, id: catRef.id, order: i, budgetId: budget.id });
       });
 
-      batch.update(budgetRef, { grandTotal: newTotal });
+      batch.update(budgetRef, { grandTotal: newTotal, last_activity_at: serverTimestamp() });
 
       await batch.commit();
       toast({

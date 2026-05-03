@@ -764,6 +764,8 @@ export default function MyPlansPage() {
         ageGroup: getAgeGroup(30),
         isMilestone: isMilestoneBirthday(30),
       },
+      createdAt: serverTimestamp(),
+      itemCount: 0,
     };
     try {
       const batch = writeBatch(firestore);
@@ -814,6 +816,8 @@ export default function MyPlansPage() {
       eventLocation: data.eventLocation,
       expectedGuests: data.expectedGuests,
       ...(birthdayMeta && { birthdayMeta }),
+      createdAt: serverTimestamp(),
+      itemCount: 0,
     };
 
     try {

@@ -81,6 +81,14 @@ const ComponentLoader = () => (
   </div>
 );
 
+function countAllItems(cats: BudgetCategory[]): number {
+  return cats.reduce((sum, cat) => {
+    const direct = (cat.items || []).length;
+    const nested = countAllItems(cat.subCategories || []);
+    return sum + direct + nested;
+  }, 0);
+}
+
 function calculateTotals(categories: BudgetCategory[]): {
   categories: BudgetCategory[];
   grandTotal: number;
@@ -135,6 +143,7 @@ export default function PlannerPage({
   const [cancelRequestPending, setCancelRequestPending] = useState<{ itemId: string; leadId: string } | null>(null);
   const [cancelRequestLoading, setCancelRequestLoading] = useState(false);
   const fetchedLeadIdsRef = useRef<Set<string>>(new Set());
+  const plannerOpenedRef = useRef(false);
 
   const handleFindSupplier = useCallback((item: BudgetItem, itemTotal: number) => {
     setFindSupplierItem({ item, itemTotal });
@@ -398,6 +407,12 @@ export default function PlannerPage({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supplierRequestLeadIds, isTemplateMode, firestore]);
 
+  useEffect(() => {
+    if (isTemplateMode || !budgetDocRef || plannerOpenedRef.current) return;
+    plannerOpenedRef.current = true;
+    setDoc(budgetDocRef, { plannerLastOpenedAt: serverTimestamp() }, { merge: true }).catch(console.error);
+  }, [budgetDocRef, isTemplateMode]);
+
   const handleItemChange = (categoryPath: string[], itemIndex: number, field: keyof BudgetItem, value: string | number) => {
     const updated = JSON.parse(JSON.stringify(budgetData));
     let current = updated;
@@ -424,7 +439,7 @@ export default function PlannerPage({
           setDoc(rootCatRef, rootCat, { merge: true });
         }
         if (budgetDocRef) {
-          setDoc(budgetDocRef, { grandTotal: newGrandTotal }, { merge: true });
+          setDoc(budgetDocRef, { grandTotal: newGrandTotal, last_activity_at: serverTimestamp() }, { merge: true });
         }
       }
     }
@@ -452,6 +467,9 @@ export default function PlannerPage({
           const rootCatRef = doc(firestore, "users", budget.userId, "budgets", budgetId, "categories", rootId);
           setDoc(rootCatRef, rootCat, { merge: true });
         }
+        if (budgetDocRef) {
+          setDoc(budgetDocRef, { itemCount: countAllItems(categories), last_activity_at: serverTimestamp() }, { merge: true });
+        }
       }
     }
   };
@@ -478,7 +496,7 @@ export default function PlannerPage({
           setDoc(rootCatRef, rootCat, { merge: true });
         }
         if (budgetDocRef) {
-          setDoc(budgetDocRef, { grandTotal: newGrandTotal }, { merge: true });
+          setDoc(budgetDocRef, { grandTotal: newGrandTotal, itemCount: countAllItems(categories), last_activity_at: serverTimestamp() }, { merge: true });
         }
       }
     }
@@ -498,7 +516,7 @@ export default function PlannerPage({
         const catRef = doc(firestore, "users", budget.userId, "budgets", budgetId, "categories", catId);
         batch.delete(catRef);
         if (budgetDocRef) {
-          batch.update(budgetDocRef, { grandTotal: newGrandTotal });
+          batch.update(budgetDocRef, { grandTotal: newGrandTotal, itemCount: countAllItems(categories), last_activity_at: serverTimestamp() });
         }
         batch.commit().catch(console.error);
       }
@@ -527,7 +545,7 @@ export default function PlannerPage({
             setDoc(rootCatRef, rootCat, { merge: true });
           }
           if (budgetDocRef) {
-            setDoc(budgetDocRef, { grandTotal: newGrandTotal }, { merge: true });
+            setDoc(budgetDocRef, { grandTotal: newGrandTotal, itemCount: countAllItems(categories), last_activity_at: serverTimestamp() }, { merge: true });
           }
         }
       }

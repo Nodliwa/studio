@@ -16,6 +16,10 @@ interface Plan {
   grandTotal: number;
   collaborators: any[];
   collaboratorEmails: any[];
+  createdAt: any;
+  last_activity_at: any;
+  itemCount: number | null;
+  plannerLastOpenedAt: any;
 }
 
 export default function AdminPage() {
@@ -74,6 +78,10 @@ export default function AdminPage() {
             grandTotal: p.grandTotal || 0,
             collaborators: p.collaborators || [],
             collaboratorEmails: p.collaboratorEmails || [],
+            createdAt: p.createdAt || null,
+            last_activity_at: p.last_activity_at || null,
+            itemCount: p.itemCount ?? null,
+            plannerLastOpenedAt: p.plannerLastOpenedAt || null,
           });
         });
         setPlans(data);
@@ -107,6 +115,27 @@ export default function AdminPage() {
   const collaborated = plans.filter(
     (p) => p.collaborators?.length > 0 || p.collaboratorEmails?.length > 0
   ).length;
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const createdThisMonth = plans.filter((p) => {
+    if (!p.createdAt) return false;
+    try { return (p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt)) >= startOfMonth; } catch { return false; }
+  }).length;
+
+  const activeThisWeek = plans.filter((p) => {
+    if (!p.last_activity_at) return false;
+    try { return (p.last_activity_at.toDate ? p.last_activity_at.toDate() : new Date(p.last_activity_at)) >= sevenDaysAgo; } catch { return false; }
+  }).length;
+
+  const plansWithItemCount = plans.filter((p) => p.itemCount !== null);
+  const avgItems = plansWithItemCount.length > 0
+    ? Math.round(plansWithItemCount.reduce((s, p) => s + (p.itemCount ?? 0), 0) / plansWithItemCount.length)
+    : null;
+
+  const openedInPlanner = plans.filter((p) => !!p.plannerLastOpenedAt).length;
 
   const typeCounts: Record<string, number> = {};
   plans.forEach((p) => {
@@ -179,6 +208,41 @@ export default function AdminPage() {
             { label: "Suppliers", value: supplierCount.toLocaleString(), sub: "registered suppliers", color: "text-cyan-400" },
             { label: "Total Budget", value: `R${Math.round(totalBudget / 1000)}k`, sub: `${withBudget} plans budgeted`, color: "text-green-400" },
             { label: "Collaborated", value: collaborated, sub: "shared plans", color: "text-orange-400" },
+          ].map((s) => (
+            <div key={s.label} style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl p-4">
+              <p className="text-xs text-gray-600 uppercase tracking-widest mb-1">{s.label}</p>
+              <p className={`text-3xl font-bold ${s.color} leading-none mb-1`}>{s.value}</p>
+              <p className="text-xs text-gray-600">{s.sub}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[
+            {
+              label: "Created This Month",
+              value: createdThisMonth,
+              sub: `${plans.filter(p => !p.createdAt).length} plans pre-tracking`,
+              color: "text-violet-400",
+            },
+            {
+              label: "Active (7 days)",
+              value: activeThisWeek,
+              sub: `${plans.filter(p => !p.last_activity_at).length} plans pre-tracking`,
+              color: "text-sky-400",
+            },
+            {
+              label: "Avg. Items / Plan",
+              value: avgItems !== null ? avgItems : "—",
+              sub: `${plansWithItemCount.length} plans tracked`,
+              color: "text-amber-400",
+            },
+            {
+              label: "Opened in Planner",
+              value: openedInPlanner,
+              sub: `${plans.length - openedInPlanner} never opened`,
+              color: "text-rose-400",
+            },
           ].map((s) => (
             <div key={s.label} style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl p-4">
               <p className="text-xs text-gray-600 uppercase tracking-widest mb-1">{s.label}</p>
