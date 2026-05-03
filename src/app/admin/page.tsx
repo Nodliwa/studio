@@ -51,6 +51,7 @@ export default function AdminPage() {
   const [userEmail, setUserEmail] = useState("");
   const [role, setRole] = useState<Role | null>(null);
   const [togglingUserId, setTogglingUserId] = useState<string | null>(null);
+  const [toggleError, setToggleError] = useState<string | null>(null);
 
   useEffect(() => {
     const auth = getAuth();
@@ -220,11 +221,13 @@ export default function AdminPage() {
     try {
       const db = getFirestore();
       await updateDoc(doc(db, "users", userId), { isTestAccount: !current });
+      setToggleError(null);
       setAllUsers((prev) =>
         prev.map((u) => u.id === userId ? { ...u, isTestAccount: !current } : u)
       );
-    } catch (e) {
+    } catch (e: any) {
       console.error("Toggle failed:", e);
+      setToggleError(`Failed to update: ${e?.code || e?.message || "unknown error"}`);
     } finally {
       setTogglingUserId(null);
     }
@@ -438,9 +441,16 @@ export default function AdminPage() {
                   : "No test accounts flagged — all metrics include every user"}
               </p>
             </div>
-            {role !== "admin" && (
-              <span className="text-xs text-gray-600 bg-gray-800 px-2 py-1 rounded">View only</span>
-            )}
+            <div className="flex items-center gap-2">
+              {toggleError && (
+                <span className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded">
+                  {toggleError}
+                </span>
+              )}
+              {role !== "admin" && (
+                <span className="text-xs text-gray-600 bg-gray-800 px-2 py-1 rounded">View only</span>
+              )}
+            </div>
           </div>
 
           <div style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl overflow-hidden">
