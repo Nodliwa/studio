@@ -90,7 +90,7 @@ import * as z from "zod";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { budgetTemplates } from "@/lib/data";
+import { budgetTemplates } from "@/lib/templates";
 import { collectionGroup, query as firestoreQuery, where as firestoreWhere, getDocs as firestoreGetDocs } from "firebase/firestore";
 import usePlacesAutocomplete from "use-places-autocomplete";
 import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";

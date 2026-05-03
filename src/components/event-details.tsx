@@ -34,7 +34,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { getAgeGroup, isMilestoneBirthday } from "@/lib/utils";
-import { budgetTemplates } from "@/lib/data";
+import { budgetTemplates } from "@/lib/templates";
 
 interface EventDetailsProps {
   budget: Budget | null;

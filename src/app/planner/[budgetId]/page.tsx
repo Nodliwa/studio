@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, lazy, Suspense, useRef } fro
 import { useSearchParams, useRouter } from "next/navigation";
 import type { BudgetItem, BudgetCategory, Budget, MustDo, RSVP } from "@/lib/types";
 import type { SupplierLead } from "@/lib/supplier-types";
-import { budgetTemplates } from "@/lib/data";
+import { budgetTemplates } from "@/lib/templates";
 import PageHeader from "@/components/page-header";
 import { BudgetSummary } from "@/components/budget-summary";
 import { EventDetails } from "@/components/event-details";

@@ -1,4 +1,4 @@
-import { budgetTemplates } from "./data";
+import { budgetTemplates } from "./templates";
 import type { BudgetCategory } from "./types";
 
 function extractItemNames(categories: BudgetCategory[]): string[] {
