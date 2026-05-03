@@ -77,6 +77,7 @@ export interface User {
     knownAs?: string;
     photoURL?: string;
     phoneNumber?: string;
+    isTestAccount?: boolean;
 }
 
 export interface MustDo {

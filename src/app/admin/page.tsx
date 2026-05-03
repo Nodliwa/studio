@@ -1,13 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collectionGroup, getDocs, doc, getDoc, collection, getCountFromServer } from "firebase/firestore";
+import {
+  getFirestore,
+  collectionGroup,
+  getDocs,
+  doc,
+  getDoc,
+  collection,
+  updateDoc,
+} from "firebase/firestore";
 
 type Role = "admin" | "viewer";
 
 interface Plan {
+  userId: string;
   name: string;
   eventType: string;
   eventDate: any;
@@ -22,18 +31,26 @@ interface Plan {
   plannerLastOpenedAt: any;
 }
 
+interface UserRecord {
+  id: string;
+  email: string;
+  displayName: string;
+  phoneNumber: string;
+  isTestAccount: boolean;
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [filtered, setFiltered] = useState<Plan[]>([]);
+  const [allPlans, setAllPlans] = useState<Plan[]>([]);
+  const [allUsers, setAllUsers] = useState<UserRecord[]>([]);
+  const [supplierCount, setSupplierCount] = useState(0);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [error, setError] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [role, setRole] = useState<Role | null>(null);
-  const [userCount, setUserCount] = useState(0);
-  const [supplierCount, setSupplierCount] = useState(0);
+  const [togglingUserId, setTogglingUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const auth = getAuth();
@@ -46,30 +63,39 @@ export default function AdminPage() {
       try {
         const db = getFirestore();
 
-        // Check role in Firestore admins collection
         const roleDoc = await getDoc(doc(db, "admins", user.email!));
         if (!roleDoc.exists()) {
-          setError(`Access denied. You do not have dashboard access.`);
+          setError("Access denied. You do not have dashboard access.");
           setLoading(false);
           return;
         }
-        const userRole = roleDoc.data()?.role as Role;
-        setRole(userRole);
+        setRole(roleDoc.data()?.role as Role);
 
-        // Load user + supplier counts
-        const [usersCount, suppliersCount] = await Promise.all([
-          getCountFromServer(collection(db, "users")),
-          getCountFromServer(collection(db, "suppliers")),
+        const [usersSnap, suppliersCount, plansSnap] = await Promise.all([
+          getDocs(collection(db, "users")),
+          getDocs(collection(db, "suppliers")).then((s) => s.size),
+          getDocs(collectionGroup(db, "budgets")),
         ]);
-        setUserCount(usersCount.data().count);
-        setSupplierCount(suppliersCount.data().count);
 
-        // Load plans
-        const snap = await getDocs(collectionGroup(db, "budgets"));
-        const data: Plan[] = [];
-        snap.forEach((d) => {
+        const users: UserRecord[] = [];
+        usersSnap.forEach((d) => {
+          const u = d.data();
+          users.push({
+            id: d.id,
+            email: u.email || "",
+            displayName: u.displayName || "",
+            phoneNumber: u.phoneNumber || "",
+            isTestAccount: u.isTestAccount === true,
+          });
+        });
+        setAllUsers(users);
+        setSupplierCount(suppliersCount);
+
+        const plans: Plan[] = [];
+        plansSnap.forEach((d) => {
           const p = d.data();
-          data.push({
+          plans.push({
+            userId: p.userId || "",
             name: p.name || p.planName || "—",
             eventType: p.eventType || "",
             eventDate: p.eventDate || null,
@@ -84,8 +110,7 @@ export default function AdminPage() {
             plannerLastOpenedAt: p.plannerLastOpenedAt || null,
           });
         });
-        setPlans(data);
-        setFiltered(data);
+        setAllPlans(plans);
       } catch (e: any) {
         console.error("ADMIN ERROR:", e.code, e.message);
         setError(`${e.code}: ${e.message}`);
@@ -96,23 +121,37 @@ export default function AdminPage() {
     return () => unsub();
   }, [router]);
 
-  useEffect(() => {
+  const testAccountIds = useMemo(
+    () => new Set(allUsers.filter((u) => u.isTestAccount).map((u) => u.id)),
+    [allUsers]
+  );
+
+  const realPlans = useMemo(
+    () => allPlans.filter((p) => !testAccountIds.has(p.userId)),
+    [allPlans, testAccountIds]
+  );
+
+  const realUsers = useMemo(
+    () => allUsers.filter((u) => !u.isTestAccount),
+    [allUsers]
+  );
+
+  const filtered = useMemo(() => {
     const s = search.toLowerCase();
     const t = typeFilter.toLowerCase();
-    setFiltered(
-      plans.filter((p) => {
-        const ms = !s || [p.name, p.eventLocation, p.eventType].some((v) =>
-          (v || "").toLowerCase().includes(s)
-        );
-        const mt = !t || (p.eventType || "").toLowerCase() === t;
-        return ms && mt;
-      })
-    );
-  }, [search, typeFilter, plans]);
+    return realPlans.filter((p) => {
+      const ms = !s || [p.name, p.eventLocation, p.eventType].some((v) =>
+        (v || "").toLowerCase().includes(s)
+      );
+      const mt = !t || (p.eventType || "").toLowerCase() === t;
+      return ms && mt;
+    });
+  }, [search, typeFilter, realPlans]);
 
-  const totalBudget = plans.reduce((s, p) => s + (p.grandTotal || 0), 0);
-  const withBudget = plans.filter((p) => p.grandTotal > 0).length;
-  const collaborated = plans.filter(
+  // ── Metrics (all based on realPlans) ──────────────────────────────────────
+  const totalBudget = realPlans.reduce((s, p) => s + (p.grandTotal || 0), 0);
+  const withBudget = realPlans.filter((p) => p.grandTotal > 0).length;
+  const collaborated = realPlans.filter(
     (p) => p.collaborators?.length > 0 || p.collaboratorEmails?.length > 0
   ).length;
 
@@ -120,32 +159,37 @@ export default function AdminPage() {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const createdThisMonth = plans.filter((p) => {
-    if (!p.createdAt) return false;
-    try { return (p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt)) >= startOfMonth; } catch { return false; }
+  const toDate = (v: any): Date | null => {
+    if (!v) return null;
+    try { return v.toDate ? v.toDate() : new Date(v); } catch { return null; }
+  };
+
+  const createdThisMonth = realPlans.filter((p) => {
+    const d = toDate(p.createdAt);
+    return d ? d >= startOfMonth : false;
   }).length;
 
-  const activeThisWeek = plans.filter((p) => {
-    if (!p.last_activity_at) return false;
-    try { return (p.last_activity_at.toDate ? p.last_activity_at.toDate() : new Date(p.last_activity_at)) >= sevenDaysAgo; } catch { return false; }
+  const activeThisWeek = realPlans.filter((p) => {
+    const d = toDate(p.last_activity_at);
+    return d ? d >= sevenDaysAgo : false;
   }).length;
 
-  const plansWithItemCount = plans.filter((p) => p.itemCount !== null);
+  const plansWithItemCount = realPlans.filter((p) => p.itemCount !== null);
   const avgItems = plansWithItemCount.length > 0
     ? Math.round(plansWithItemCount.reduce((s, p) => s + (p.itemCount ?? 0), 0) / plansWithItemCount.length)
     : null;
 
-  const openedInPlanner = plans.filter((p) => !!p.plannerLastOpenedAt).length;
+  const openedInPlanner = realPlans.filter((p) => !!p.plannerLastOpenedAt).length;
 
   const typeCounts: Record<string, number> = {};
-  plans.forEach((p) => {
+  realPlans.forEach((p) => {
     const t = (p.eventType?.trim() || "not set").toLowerCase();
     typeCounts[t] = (typeCounts[t] || 0) + 1;
   });
   const sortedTypes = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]);
 
   const locCounts: Record<string, number> = {};
-  plans.forEach((p) => {
+  realPlans.forEach((p) => {
     if (p.eventLocation) {
       const l = p.eventLocation.split(",")[0].trim();
       if (l) locCounts[l] = (locCounts[l] || 0) + 1;
@@ -153,13 +197,15 @@ export default function AdminPage() {
   });
   const topLocs = Object.entries(locCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
 
+  // ── Helpers ───────────────────────────────────────────────────────────────
   const formatDate = (d: any) => {
-    if (!d) return "—";
-    try {
-      const dt = d.toDate ? d.toDate() : new Date(d);
-      return dt.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
-    } catch { return "—"; }
+    const dt = toDate(d);
+    if (!dt) return "—";
+    return dt.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
   };
+
+  const userLabel = (u: UserRecord) =>
+    u.displayName || u.email || u.phoneNumber || u.id;
 
   const typeColor: Record<string, string> = {
     wedding: "bg-purple-500/20 text-purple-300",
@@ -168,6 +214,23 @@ export default function AdminPage() {
     funeral: "bg-orange-500/20 text-orange-300",
   };
 
+  const handleToggleTestAccount = async (userId: string, current: boolean) => {
+    if (role !== "admin") return;
+    setTogglingUserId(userId);
+    try {
+      const db = getFirestore();
+      await updateDoc(doc(db, "users", userId), { isTestAccount: !current });
+      setAllUsers((prev) =>
+        prev.map((u) => u.id === userId ? { ...u, isTestAccount: !current } : u)
+      );
+    } catch (e) {
+      console.error("Toggle failed:", e);
+    } finally {
+      setTogglingUserId(null);
+    }
+  };
+
+  // ── Render states ─────────────────────────────────────────────────────────
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#0a0a0f", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div className="text-center">
@@ -186,10 +249,13 @@ export default function AdminPage() {
     </div>
   );
 
+  const testCount = testAccountIds.size;
+
   return (
     <div style={{ minHeight: "100vh", background: "#0a0a0f" }} className="text-gray-100 font-mono">
       <div className="max-w-7xl mx-auto px-6 py-8">
 
+        {/* Header */}
         <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-800">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-white">S</div>
@@ -198,13 +264,21 @@ export default function AdminPage() {
               {role === "admin" ? "Admin" : "Viewer"}
             </span>
           </div>
-          <p className="text-xs text-gray-600">{userEmail} · {plans.length} plans</p>
+          <div className="flex items-center gap-4">
+            {testCount > 0 && (
+              <span className="text-xs px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                {testCount} test account{testCount > 1 ? "s" : ""} excluded
+              </span>
+            )}
+            <p className="text-xs text-gray-600">{userEmail} · {realPlans.length} plans</p>
+          </div>
         </div>
 
+        {/* Primary stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           {[
-            { label: "Total Plans", value: plans.length, sub: "across all users", color: "text-purple-400" },
-            { label: "My-Plans Users", value: userCount.toLocaleString(), sub: "registered planners", color: "text-pink-400" },
+            { label: "Total Plans", value: realPlans.length, sub: "excl. test accounts", color: "text-purple-400" },
+            { label: "My-Plans Users", value: realUsers.length.toLocaleString(), sub: "registered planners", color: "text-pink-400" },
             { label: "Suppliers", value: supplierCount.toLocaleString(), sub: "registered suppliers", color: "text-cyan-400" },
             { label: "Total Budget", value: `R${Math.round(totalBudget / 1000)}k`, sub: `${withBudget} plans budgeted`, color: "text-green-400" },
             { label: "Collaborated", value: collaborated, sub: "shared plans", color: "text-orange-400" },
@@ -217,18 +291,19 @@ export default function AdminPage() {
           ))}
         </div>
 
+        {/* Engagement metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
             {
               label: "Created This Month",
               value: createdThisMonth,
-              sub: `${plans.filter(p => !p.createdAt).length} plans pre-tracking`,
+              sub: `${realPlans.filter(p => !p.createdAt).length} plans pre-tracking`,
               color: "text-violet-400",
             },
             {
               label: "Active (7 days)",
               value: activeThisWeek,
-              sub: `${plans.filter(p => !p.last_activity_at).length} plans pre-tracking`,
+              sub: `${realPlans.filter(p => !p.last_activity_at).length} plans pre-tracking`,
               color: "text-sky-400",
             },
             {
@@ -240,7 +315,7 @@ export default function AdminPage() {
             {
               label: "Opened in Planner",
               value: openedInPlanner,
-              sub: `${plans.length - openedInPlanner} never opened`,
+              sub: `${realPlans.length - openedInPlanner} never opened`,
               color: "text-rose-400",
             },
           ].map((s) => (
@@ -252,6 +327,7 @@ export default function AdminPage() {
           ))}
         </div>
 
+        {/* Charts */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <div style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl p-5">
             <div className="flex justify-between mb-4">
@@ -291,6 +367,7 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {/* Plans table */}
         <p className="font-bold text-sm mb-4">All Plans</p>
         <div className="flex gap-3 mb-4 flex-wrap">
           <input
@@ -346,6 +423,70 @@ export default function AdminPage() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Test Accounts Manager */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="font-bold text-sm">Test Accounts</p>
+              <p className="text-xs text-gray-600 mt-0.5">
+                {testCount > 0
+                  ? `${testCount} account${testCount > 1 ? "s" : ""} flagged — their plans are excluded from all metrics above`
+                  : "No test accounts flagged — all metrics include every user"}
+              </p>
+            </div>
+            {role !== "admin" && (
+              <span className="text-xs text-gray-600 bg-gray-800 px-2 py-1 rounded">View only</span>
+            )}
+          </div>
+
+          <div style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl overflow-hidden">
+            {allUsers.length === 0 ? (
+              <p className="text-center py-8 text-gray-600 text-xs">No users found</p>
+            ) : (
+              allUsers
+                .slice()
+                .sort((a, b) => Number(b.isTestAccount) - Number(a.isTestAccount))
+                .map((u) => (
+                  <div
+                    key={u.id}
+                    className={`flex items-center justify-between px-5 py-3 border-b border-gray-800/60 last:border-0 transition-colors ${
+                      u.isTestAccount ? "bg-yellow-500/5" : "hover:bg-gray-800/20"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {u.isTestAccount && (
+                        <span className="shrink-0 text-xs px-1.5 py-0.5 rounded bg-yellow-500/15 text-yellow-400 border border-yellow-500/20">
+                          test
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium truncate">{userLabel(u)}</p>
+                        {u.displayName && u.email && (
+                          <p className="text-xs text-gray-600 truncate">{u.email}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <button
+                      disabled={role !== "admin" || togglingUserId === u.id}
+                      onClick={() => handleToggleTestAccount(u.id, u.isTestAccount)}
+                      className={`shrink-0 ml-4 relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${
+                        u.isTestAccount ? "bg-yellow-500" : "bg-gray-700"
+                      }`}
+                      aria-label={u.isTestAccount ? "Unmark as test account" : "Mark as test account"}
+                    >
+                      <span
+                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                          u.isTestAccount ? "translate-x-4" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                ))
+            )}
+          </div>
         </div>
 
       </div>
