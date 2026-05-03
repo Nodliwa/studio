@@ -388,10 +388,11 @@ export default function AdminPage() {
           </select>
         </div>
 
-        <div style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl overflow-x-auto mb-12">
+        <div className="border border-gray-800 rounded-xl mb-12 overflow-hidden" style={{ background: "#12121a" }}>
+          <div className="overflow-x-auto overflow-y-auto max-h-96">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-gray-800">
+              <tr className="border-b border-gray-800 sticky top-0 z-10" style={{ background: "#12121a" }}>
                 {["Plan Name", "Type", "Date", "Location", "Guests", "Budget", "Collab"].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-gray-600 uppercase tracking-wider font-medium whitespace-nowrap">{h}</th>
                 ))}
@@ -423,6 +424,7 @@ export default function AdminPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Test Accounts Manager */}
@@ -445,7 +447,8 @@ export default function AdminPage() {
             {allUsers.length === 0 ? (
               <p className="text-center py-8 text-gray-600 text-xs">No users found</p>
             ) : (
-              allUsers
+              <div className="max-h-96 overflow-y-auto">
+              {allUsers
                 .slice()
                 .sort((a, b) => Number(b.isTestAccount) - Number(a.isTestAccount))
                 .map((u) => (
@@ -461,10 +464,15 @@ export default function AdminPage() {
                           test
                         </span>
                       )}
+                      {!u.email && u.phoneNumber && (
+                        <span className="shrink-0 text-xs px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 border border-blue-500/20">
+                          phone
+                        </span>
+                      )}
                       <div className="min-w-0">
                         <p className="text-xs font-medium truncate">{userLabel(u)}</p>
-                        {u.displayName && u.email && (
-                          <p className="text-xs text-gray-600 truncate">{u.email}</p>
+                        {u.displayName && (u.email || u.phoneNumber) && (
+                          <p className="text-xs text-gray-600 truncate">{u.email || u.phoneNumber}</p>
                         )}
                       </div>
                     </div>
@@ -485,6 +493,8 @@ export default function AdminPage() {
                     </button>
                   </div>
                 ))
+              }
+              </div>
             )}
           </div>
         </div>
