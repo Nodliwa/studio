@@ -10,6 +10,7 @@ export interface BudgetItem {
   unitPrice: number;
   total: number;
   comment: string;
+  is_template?: boolean;
 }
 
 export interface BudgetCategory {
@@ -67,6 +68,10 @@ export interface Budget {
   createdAt?: any;
   last_activity_at?: any;
   itemCount?: number;
+  addedItemCount?: number;
+  removedItemCount?: number;
+  is_customized?: boolean;
+  customized_at?: any;
   plannerLastOpenedAt?: any;
 }
 

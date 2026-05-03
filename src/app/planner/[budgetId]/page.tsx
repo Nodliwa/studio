@@ -24,7 +24,9 @@ import {
   setDoc,
   getDoc,
   serverTimestamp,
+  increment,
 } from "firebase/firestore";
+import { planActivityFields } from "@/lib/plan-activity";
 import {
   DndContext,
   closestCenter,
@@ -439,7 +441,7 @@ export default function PlannerPage({
           setDoc(rootCatRef, rootCat, { merge: true });
         }
         if (budgetDocRef) {
-          setDoc(budgetDocRef, { grandTotal: newGrandTotal, last_activity_at: serverTimestamp() }, { merge: true });
+          setDoc(budgetDocRef, { grandTotal: newGrandTotal, ...planActivityFields(budget?.is_customized) }, { merge: true });
         }
       }
     }
@@ -454,7 +456,7 @@ export default function PlannerPage({
       if (target) current = target.subCategories || [];
     }
     if (target) {
-      target.items = [...(target.items || []), { id: `${Date.now()}`, name: "", metric: "", quantity: 0, unitPrice: 0, total: 0, comment: "" }];
+      target.items = [...(target.items || []), { id: `${Date.now()}`, name: "", metric: "", quantity: 0, unitPrice: 0, total: 0, comment: "", is_template: false }];
 
       const { categories, grandTotal: newGrandTotal } = calculateTotals(updated);
       setBudgetData(categories);
@@ -468,7 +470,11 @@ export default function PlannerPage({
           setDoc(rootCatRef, rootCat, { merge: true });
         }
         if (budgetDocRef) {
-          setDoc(budgetDocRef, { itemCount: countAllItems(categories), last_activity_at: serverTimestamp() }, { merge: true });
+          setDoc(budgetDocRef, {
+            itemCount: countAllItems(categories),
+            addedItemCount: increment(1),
+            ...planActivityFields(budget?.is_customized),
+          }, { merge: true });
         }
       }
     }
@@ -496,7 +502,12 @@ export default function PlannerPage({
           setDoc(rootCatRef, rootCat, { merge: true });
         }
         if (budgetDocRef) {
-          setDoc(budgetDocRef, { grandTotal: newGrandTotal, itemCount: countAllItems(categories), last_activity_at: serverTimestamp() }, { merge: true });
+          setDoc(budgetDocRef, {
+            grandTotal: newGrandTotal,
+            itemCount: countAllItems(categories),
+            removedItemCount: increment(1),
+            ...planActivityFields(budget?.is_customized),
+          }, { merge: true });
         }
       }
     }
@@ -506,6 +517,8 @@ export default function PlannerPage({
     const updated = JSON.parse(JSON.stringify(budgetData));
     if (categoryPath.length === 1) {
       const catId = categoryPath[0];
+      const deletedCat = updated.find((c: BudgetCategory) => c.id === catId);
+      const deletedItemCount = deletedCat ? countAllItems([deletedCat]) : 0;
       const filtered = updated.filter((c: BudgetCategory) => c.id !== catId);
       const { categories, grandTotal: newGrandTotal } = calculateTotals(filtered);
       setBudgetData(categories);
@@ -516,7 +529,12 @@ export default function PlannerPage({
         const catRef = doc(firestore, "users", budget.userId, "budgets", budgetId, "categories", catId);
         batch.delete(catRef);
         if (budgetDocRef) {
-          batch.update(budgetDocRef, { grandTotal: newGrandTotal, itemCount: countAllItems(categories), last_activity_at: serverTimestamp() });
+          batch.update(budgetDocRef, {
+            grandTotal: newGrandTotal,
+            itemCount: countAllItems(categories),
+            removedItemCount: increment(deletedItemCount),
+            ...planActivityFields(budget?.is_customized),
+          });
         }
         batch.commit().catch(console.error);
       }
@@ -532,6 +550,8 @@ export default function PlannerPage({
       }
 
       if (parent && parent.subCategories) {
+        const deletedSub = parent.subCategories.find((c: BudgetCategory) => c.id === targetId);
+        const deletedItemCount = deletedSub ? countAllItems([deletedSub]) : 0;
         parent.subCategories = parent.subCategories.filter((c: BudgetCategory) => c.id !== targetId);
         const { categories, grandTotal: newGrandTotal } = calculateTotals(updated);
         setBudgetData(categories);
@@ -545,7 +565,12 @@ export default function PlannerPage({
             setDoc(rootCatRef, rootCat, { merge: true });
           }
           if (budgetDocRef) {
-            setDoc(budgetDocRef, { grandTotal: newGrandTotal, itemCount: countAllItems(categories), last_activity_at: serverTimestamp() }, { merge: true });
+            setDoc(budgetDocRef, {
+              grandTotal: newGrandTotal,
+              itemCount: countAllItems(categories),
+              removedItemCount: increment(deletedItemCount),
+              ...planActivityFields(budget?.is_customized),
+            }, { merge: true });
           }
         }
       }

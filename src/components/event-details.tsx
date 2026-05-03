@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { DocumentReference, collection, getDocs, doc, writeBatch, serverTimestamp } from "firebase/firestore";
+import { planActivityFields } from "@/lib/plan-activity";
 import usePlacesAutocomplete from "use-places-autocomplete";
 import {
   Popover,
@@ -183,7 +184,7 @@ export function EventDetails({
       }
     }
 
-    setDocumentNonBlocking(budgetRef, { ...dataToSave, last_activity_at: serverTimestamp() }, { merge: true });
+    setDocumentNonBlocking(budgetRef, { ...dataToSave, ...planActivityFields(budget?.is_customized) }, { merge: true });
     setIsEditing(false);
     clearSuggestions();
   };
@@ -208,7 +209,7 @@ export function EventDetails({
         batch.set(catRef, { ...cat, id: catRef.id, order: i, budgetId: budget.id });
       });
 
-      batch.update(budgetRef, { grandTotal: newTotal, last_activity_at: serverTimestamp() });
+      batch.update(budgetRef, { grandTotal: newTotal, ...planActivityFields(budget?.is_customized) });
 
       await batch.commit();
       toast({

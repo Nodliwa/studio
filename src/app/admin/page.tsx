@@ -28,6 +28,9 @@ interface Plan {
   createdAt: any;
   last_activity_at: any;
   itemCount: number | null;
+  addedItemCount: number | null;
+  removedItemCount: number | null;
+  is_customized: boolean | null;
   plannerLastOpenedAt: any;
 }
 
@@ -108,6 +111,9 @@ export default function AdminPage() {
             createdAt: p.createdAt || null,
             last_activity_at: p.last_activity_at || null,
             itemCount: p.itemCount ?? null,
+            addedItemCount: p.addedItemCount ?? null,
+            removedItemCount: p.removedItemCount ?? null,
+            is_customized: p.is_customized ?? null,
             plannerLastOpenedAt: p.plannerLastOpenedAt || null,
           });
         });
@@ -149,7 +155,16 @@ export default function AdminPage() {
     });
   }, [search, typeFilter, realPlans]);
 
-  // ── Metrics (all based on realPlans) ──────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const toDate = (v: any): Date | null => {
+    if (!v) return null;
+    try { return v.toDate ? v.toDate() : new Date(v); } catch { return null; }
+  };
+
+  const pct = (num: number, den: number) =>
+    den === 0 ? "—" : `${Math.round((num / den) * 100)}%`;
+
+  // ── Base metrics (all realPlans) ──────────────────────────────────────────
   const totalBudget = realPlans.reduce((s, p) => s + (p.grandTotal || 0), 0);
   const withBudget = realPlans.filter((p) => p.grandTotal > 0).length;
   const collaborated = realPlans.filter(
@@ -160,27 +175,37 @@ export default function AdminPage() {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const toDate = (v: any): Date | null => {
-    if (!v) return null;
-    try { return v.toDate ? v.toDate() : new Date(v); } catch { return null; }
-  };
-
   const createdThisMonth = realPlans.filter((p) => {
     const d = toDate(p.createdAt);
     return d ? d >= startOfMonth : false;
   }).length;
 
-  const activeThisWeek = realPlans.filter((p) => {
+  const openedInPlanner = realPlans.filter((p) => !!p.plannerLastOpenedAt).length;
+
+  // ── Tracked plans (createdAt exists) — used for all analytics metrics ─────
+  const trackedPlans = realPlans.filter((p) => !!p.createdAt);
+  const tn = trackedPlans.length;
+
+  const customizedCount = trackedPlans.filter((p) => p.is_customized === true).length;
+  const withAddedItems = trackedPlans.filter((p) => (p.addedItemCount ?? 0) > 0).length;
+  const withRemovedItems = trackedPlans.filter((p) => (p.removedItemCount ?? 0) > 0).length;
+
+  const avgAdded = tn > 0
+    ? (trackedPlans.reduce((s, p) => s + (p.addedItemCount ?? 0), 0) / tn).toFixed(1)
+    : "—";
+  const avgRemoved = tn > 0
+    ? (trackedPlans.reduce((s, p) => s + (p.removedItemCount ?? 0), 0) / tn).toFixed(1)
+    : "—";
+
+  const activeLast7 = trackedPlans.filter((p) => {
     const d = toDate(p.last_activity_at);
     return d ? d >= sevenDaysAgo : false;
   }).length;
 
-  const plansWithItemCount = realPlans.filter((p) => p.itemCount !== null);
-  const avgItems = plansWithItemCount.length > 0
-    ? Math.round(plansWithItemCount.reduce((s, p) => s + (p.itemCount ?? 0), 0) / plansWithItemCount.length)
-    : null;
-
-  const openedInPlanner = realPlans.filter((p) => !!p.plannerLastOpenedAt).length;
+  // ── Funnel ────────────────────────────────────────────────────────────────
+  const funnelSignedUp = realUsers.length;
+  const funnelCreatedPlan = new Set(trackedPlans.map((p) => p.userId)).size;
+  const funnelCustomized = customizedCount;
 
   const typeCounts: Record<string, number> = {};
   realPlans.forEach((p) => {
@@ -294,33 +319,13 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {/* Engagement metrics */}
+        {/* Engagement snapshot */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            {
-              label: "Created This Month",
-              value: createdThisMonth,
-              sub: `${realPlans.filter(p => !p.createdAt).length} plans pre-tracking`,
-              color: "text-violet-400",
-            },
-            {
-              label: "Active (7 days)",
-              value: activeThisWeek,
-              sub: `${realPlans.filter(p => !p.last_activity_at).length} plans pre-tracking`,
-              color: "text-sky-400",
-            },
-            {
-              label: "Avg. Items / Plan",
-              value: avgItems !== null ? avgItems : "—",
-              sub: `${plansWithItemCount.length} plans tracked`,
-              color: "text-amber-400",
-            },
-            {
-              label: "Opened in Planner",
-              value: openedInPlanner,
-              sub: `${realPlans.length - openedInPlanner} never opened`,
-              color: "text-rose-400",
-            },
+            { label: "Created This Month", value: createdThisMonth, sub: `${realPlans.filter(p => !p.createdAt).length} pre-tracking`, color: "text-violet-400" },
+            { label: "Tracked Plans", value: tn, sub: `${realPlans.length - tn} pre-tracking`, color: "text-sky-400" },
+            { label: "Opened in Planner", value: openedInPlanner, sub: `${realPlans.length - openedInPlanner} never opened`, color: "text-rose-400" },
+            { label: "Active (7d, tracked)", value: activeLast7, sub: pct(activeLast7, tn) + " of tracked plans", color: "text-amber-400" },
           ].map((s) => (
             <div key={s.label} style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl p-4">
               <p className="text-xs text-gray-600 uppercase tracking-widest mb-1">{s.label}</p>
@@ -328,6 +333,71 @@ export default function AdminPage() {
               <p className="text-xs text-gray-600">{s.sub}</p>
             </div>
           ))}
+        </div>
+
+        {/* Behaviour analytics — tracked plans only */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <p className="font-bold text-sm">Behaviour Analytics</p>
+            <p className="text-xs text-gray-600">{tn} tracked plan{tn !== 1 ? "s" : ""} · excludes pre-launch data</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+            {[
+              { label: "% Customized", value: pct(customizedCount, tn), sub: `${customizedCount} plans edited`, color: "text-purple-400" },
+              { label: "% Added Items", value: pct(withAddedItems, tn), sub: `${withAddedItems} plans`, color: "text-green-400" },
+              { label: "% Removed Items", value: pct(withRemovedItems, tn), sub: `${withRemovedItems} plans`, color: "text-orange-400" },
+              { label: "% Active (7d)", value: pct(activeLast7, tn), sub: `${activeLast7} plans`, color: "text-sky-400" },
+            ].map((s) => (
+              <div key={s.label} style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl p-4">
+                <p className="text-xs text-gray-600 uppercase tracking-widest mb-1">{s.label}</p>
+                <p className={`text-3xl font-bold ${s.color} leading-none mb-1`}>{s.value}</p>
+                <p className="text-xs text-gray-600">{s.sub}</p>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { label: "Avg. Items Added / Plan", value: avgAdded, sub: "across all tracked plans", color: "text-green-400" },
+              { label: "Avg. Items Removed / Plan", value: avgRemoved, sub: "across all tracked plans", color: "text-orange-400" },
+            ].map((s) => (
+              <div key={s.label} style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl p-4">
+                <p className="text-xs text-gray-600 uppercase tracking-widest mb-1">{s.label}</p>
+                <p className={`text-3xl font-bold ${s.color} leading-none mb-1`}>{s.value}</p>
+                <p className="text-xs text-gray-600">{s.sub}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Funnel */}
+        <div style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl p-5 mb-8">
+          <div className="flex items-center justify-between mb-5">
+            <p className="font-bold text-sm">Sign-up → Create → Customize Funnel</p>
+            <p className="text-xs text-gray-600">excl. test accounts</p>
+          </div>
+          <div className="flex flex-col md:flex-row items-stretch gap-0">
+            {[
+              { label: "Sign Up", value: funnelSignedUp, sub: "registered users", prev: null, color: "#7c6aff" },
+              { label: "Create Plan", value: funnelCreatedPlan, sub: "created ≥1 tracked plan", prev: funnelSignedUp, color: "#6affb8" },
+              { label: "Customize Plan", value: funnelCustomized, sub: "edited at least once", prev: funnelCreatedPlan, color: "#ff6a9b" },
+            ].map((step, i) => (
+              <div key={step.label} className="flex md:flex-row flex-col items-center flex-1">
+                <div className="flex-1 px-4 py-3 text-center">
+                  <p className="text-xs text-gray-600 uppercase tracking-widest mb-1">{step.label}</p>
+                  <p className="text-4xl font-bold leading-none mb-1" style={{ color: step.color }}>{step.value}</p>
+                  <p className="text-xs text-gray-600">{step.sub}</p>
+                  {step.prev !== null && (
+                    <p className="text-xs mt-1" style={{ color: step.color }}>
+                      {pct(step.value, step.prev)} from prev step
+                    </p>
+                  )}
+                </div>
+                {i < 2 && (
+                  <div className="text-gray-700 text-lg px-2 hidden md:block">→</div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Charts */}
@@ -340,7 +410,7 @@ export default function AdminPage() {
             <div className="space-y-3">
               {sortedTypes.map(([type, count], i) => {
                 const colors = ["#7c6aff", "#ff6a9b", "#6affb8", "#ffb86a", "#6ab8ff"];
-                const pct = (count / (sortedTypes[0]?.[1] || 1)) * 100;
+                const barPct = (count / (sortedTypes[0]?.[1] || 1)) * 100;
                 return (
                   <div key={type}>
                     <div className="flex justify-between text-xs mb-1">
@@ -348,7 +418,7 @@ export default function AdminPage() {
                       <span className="text-gray-600">{count} plan{count > 1 ? "s" : ""}</span>
                     </div>
                     <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: colors[i % colors.length] }} />
+                      <div className="h-full rounded-full" style={{ width: `${barPct}%`, background: colors[i % colors.length] }} />
                     </div>
                   </div>
                 );

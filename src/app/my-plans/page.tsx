@@ -319,6 +319,20 @@ function calculateInitialTotal(categories: BudgetCategory[]): number {
   return total;
 }
 
+function countTemplateItems(cats: BudgetCategory[]): number {
+  return cats.reduce((sum, cat) => {
+    return sum + (cat.items?.length || 0) + countTemplateItems(cat.subCategories || []);
+  }, 0);
+}
+
+function markTemplateItems(cat: BudgetCategory): BudgetCategory {
+  return {
+    ...cat,
+    items: (cat.items || []).map(item => ({ ...item, is_template: true })),
+    subCategories: (cat.subCategories || []).map(markTemplateItems),
+  };
+}
+
 // ── PlanCard ──────────────────────────────────────────────────────────────────
 
 function PlanCard({
@@ -765,14 +779,19 @@ export default function MyPlansPage() {
         isMilestone: isMilestoneBirthday(30),
       },
       createdAt: serverTimestamp(),
-      itemCount: 0,
+      last_activity_at: serverTimestamp(),
+      is_customized: false,
+      customized_at: null,
+      itemCount: countTemplateItems(template),
+      addedItemCount: 0,
+      removedItemCount: 0,
     };
     try {
       const batch = writeBatch(firestore);
       batch.set(budgetRef, newBudget);
       template.forEach((category, index) => {
         const catRef = doc(collection(budgetRef, "categories"));
-        batch.set(catRef, { ...category, id: catRef.id, order: index, budgetId: newId });
+        batch.set(catRef, { ...markTemplateItems(category), id: catRef.id, order: index, budgetId: newId });
       });
       await batch.commit();
       router.push(`/planner/${newId}?quickStart=true`);
@@ -817,7 +836,12 @@ export default function MyPlansPage() {
       expectedGuests: data.expectedGuests,
       ...(birthdayMeta && { birthdayMeta }),
       createdAt: serverTimestamp(),
-      itemCount: 0,
+      last_activity_at: serverTimestamp(),
+      is_customized: false,
+      customized_at: null,
+      itemCount: countTemplateItems(template),
+      addedItemCount: 0,
+      removedItemCount: 0,
     };
 
     try {
@@ -826,7 +850,7 @@ export default function MyPlansPage() {
 
       template.forEach((category, index) => {
         const catRef = doc(collection(budgetRef, "categories"));
-        batch.set(catRef, { ...category, id: catRef.id, order: index, budgetId: newId });
+        batch.set(catRef, { ...markTemplateItems(category), id: catRef.id, order: index, budgetId: newId });
       });
 
       await batch.commit();
