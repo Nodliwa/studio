@@ -255,6 +255,23 @@ export default function AdminPage() {
   });
   const sortedTypes = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]);
 
+  // ── Plans per User ────────────────────────────────────────────────────────
+  const avgPlansPerUser = realUsers.length === 0
+    ? "—"
+    : (realPlans.length / realUsers.length).toFixed(1);
+
+  const plansPerUserId: Record<string, number> = {};
+  realPlans.forEach((p) => {
+    if (p.userId) plansPerUserId[p.userId] = (plansPerUserId[p.userId] || 0) + 1;
+  });
+
+  const planDistribution = [
+    { label: "Never activated", sublabel: "0 plans", count: realUsers.filter((u) => !plansPerUserId[u.id]).length, color: "#f43f5e" },
+    { label: "Single use",      sublabel: "1 plan",  count: realUsers.filter((u) => plansPerUserId[u.id] === 1).length, color: "#f59e0b" },
+    { label: "Returning",       sublabel: "2–3 plans", count: realUsers.filter((u) => (plansPerUserId[u.id] ?? 0) >= 2 && (plansPerUserId[u.id] ?? 0) <= 3).length, color: "#0ea5e9" },
+    { label: "Power user",      sublabel: "4+ plans", count: realUsers.filter((u) => (plansPerUserId[u.id] ?? 0) >= 4).length, color: "#22c55e" },
+  ];
+
   const locCounts: Record<string, number> = {};
   realPlans.forEach((p) => {
     if (p.eventLocation) {
@@ -366,6 +383,40 @@ export default function AdminPage() {
           <MetricCard label="Tracked Plans" value={tn} sub={`${realPlans.length - tn} pre-tracking`} color="text-sky-400" tooltip="Plans created after behavioural tracking was enabled. All analytics metrics are based on these plans only." />
           <MetricCard label="Opened in Planner" value={openedInPlanner} sub={`${realPlans.length - openedInPlanner} never opened`} color="text-rose-400" tooltip="Plans that were opened in the planner at least once after creation." />
           <MetricCard label="Active (7d, tracked)" value={activeLast7} sub={pct(activeLast7, tn) + " of tracked plans"} color="text-amber-400" tooltip="Tracked plans with any recorded activity in the last 7 days." />
+        </div>
+
+        {/* Plans per User */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <MetricCard
+            label="Avg Plans per User"
+            value={avgPlansPerUser}
+            sub="across all real users"
+            color="text-purple-400"
+            tooltip="Average number of plans created per registered user. Below 1.0 means most users have not created a plan yet — indicates an activation problem."
+          />
+          <div style={{ background: "#12121a" }} className="border border-gray-800 rounded-xl p-5 md:col-span-2">
+            <div className="flex justify-between mb-4">
+              <p className="font-bold text-sm">User Distribution by Plans</p>
+              <p className="text-xs text-gray-600">{realUsers.length} user{realUsers.length !== 1 ? "s" : ""}</p>
+            </div>
+            <div className="space-y-4">
+              {planDistribution.map((bucket) => {
+                const barPct = realUsers.length > 0 ? (bucket.count / realUsers.length) * 100 : 0;
+                const pctLabel = realUsers.length > 0 ? `${Math.round(barPct)}%` : "—";
+                return (
+                  <div key={bucket.label}>
+                    <div className="flex justify-between text-xs mb-1.5">
+                      <span className="text-gray-200">{bucket.label} <span className="text-gray-600">({bucket.sublabel})</span></span>
+                      <span className="text-gray-500">{bucket.count} · {pctLabel}</span>
+                    </div>
+                    <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${barPct}%`, background: bucket.color }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         {/* Behaviour analytics — tracked plans only */}
