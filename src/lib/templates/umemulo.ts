@@ -27,7 +27,7 @@ export const umemuloBudgetData: BudgetCategory[] = [
       },
       {
         id: "umama",
-        name: "uMama weNtombi",
+        name: "uMama",
         total: 0,
         order: 2,
         items: [
@@ -40,7 +40,7 @@ export const umemuloBudgetData: BudgetCategory[] = [
       },
       {
         id: "ubaba",
-        name: "uBaba weNtombi",
+        name: "uBaba",
         total: 0,
         order: 3,
         items: [
@@ -54,7 +54,7 @@ export const umemuloBudgetData: BudgetCategory[] = [
       },
       {
         id: "abadala",
-        name: "Abadala (uGogo, uMkhulu, etc.)",
+        name: "Abadala",
         total: 0,
         order: 4,
         items: [],
@@ -86,7 +86,7 @@ export const umemuloBudgetData: BudgetCategory[] = [
       },
       {
         id: "amantombazane",
-        name: "AmaNtombazane",
+        name: "iyiNtombi",
         total: 0,
         order: 5,
         items: [

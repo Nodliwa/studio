@@ -10,7 +10,7 @@ export const umGidiBudgetData: BudgetCategory[] = [
     subCategories: [
       {
         id: "umkhwetha",
-        name: "Umkhwetha (The Boy)",
+        name: "Umkhwetha",
         total: 0,
         order: 1,
         items: [
@@ -23,7 +23,7 @@ export const umGidiBudgetData: BudgetCategory[] = [
       },
       {
         id: "ikrwala",
-        name: "iKrwala (The New Man)",
+        name: "iKrwala",
         total: 0,
         order: 2,
         items: [

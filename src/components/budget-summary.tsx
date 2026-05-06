@@ -32,30 +32,30 @@ export function BudgetSummary({ grandTotal, daysLeft, mustDosTotal, mustDosCompl
   
   return (
     <Card className="shadow-lg h-full card-glass">
-      <CardHeader className="p-4 pb-0">
-        <CardTitle className="font-headline text-2xl">Dashboard</CardTitle>
+      <CardHeader className="p-3 pb-0">
+        <CardTitle className="font-headline text-base font-semibold">Dashboard</CardTitle>
       </CardHeader>
-      <CardContent className="p-4 grid gap-1">
-        <div className="flex items-center justify-between p-2 rounded-lg bg-black/5">
-            <div className="flex items-center gap-3">
-                <Wallet className="h-6 w-6 text-primary" />
-                <span className="font-semibold">Grand Total</span>
+      <CardContent className="p-3 grid gap-1">
+        <div className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-black/5">
+            <div className="flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Grand Total</span>
             </div>
-            <span className="font-mono text-lg font-bold">{formatCurrency(grandTotal)}</span>
+            <span className="font-mono text-sm font-semibold">{formatCurrency(grandTotal)}</span>
         </div>
-        <div className="flex items-center justify-between p-2 rounded-lg bg-black/5">
-            <div className="flex items-center gap-3">
-                <CalendarClock className="h-6 w-6 text-primary" />
-                <span className="font-semibold">Days Left</span>
+        <div className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-black/5">
+            <div className="flex items-center gap-2">
+                <CalendarClock className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Days Left</span>
             </div>
-            <span className="font-semibold">{daysLeft ?? 'N/A'}</span>
+            <span className="text-sm font-semibold">{daysLeft ?? 'N/A'}</span>
         </div>
         <MustDoWrapper>
-            <div className="flex items-center gap-3">
-                <ListChecks className="h-6 w-6 text-primary" />
-                <span className="font-semibold">Must-Do's</span>
+            <div className="flex items-center gap-2">
+                <ListChecks className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Must-Do's</span>
             </div>
-            <span className="font-semibold">{`${mustDosCompleted} / ${mustDosTotal}`}</span>
+            <span className="text-sm font-semibold">{`${mustDosCompleted} / ${mustDosTotal}`}</span>
         </MustDoWrapper>
       </CardContent>
     </Card>

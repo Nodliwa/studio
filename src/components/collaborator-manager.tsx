@@ -133,14 +133,13 @@ export function CollaboratorManager({ budget, budgetRef, inviterName }: Collabor
 
   return (
     <Card className="h-full bg-card/50 shadow-lg backdrop-blur-xl border-white/20">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-          <Users className="h-6 w-6 text-primary" />
+      <CardHeader className="p-3 pb-0">
+        <CardTitle className="flex items-center gap-1.5 font-headline text-base font-semibold">
+          <Users className="h-4 w-4 text-primary" />
           Collaborators
         </CardTitle>
-        <CardDescription>Invite others to help manage this celebration.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="p-3 space-y-3">
 
         <div className="bg-muted/40 rounded-lg p-3 space-y-1 text-xs text-muted-foreground border">
           <p className="font-semibold text-foreground flex items-center gap-1"><Info className="h-3 w-3" /> How to invite collaborators</p>

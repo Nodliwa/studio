@@ -64,45 +64,42 @@ export function RsvpManager({ budget, rsvps }: RsvpManagerProps) {
 
   return (
     <Card className="h-full bg-card/50 shadow-lg backdrop-blur-xl border-white/20">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-          <Users className="h-6 w-6 text-primary" />
+      <CardHeader className="p-3 pb-0">
+        <CardTitle className="flex items-center gap-1.5 font-headline text-base font-semibold">
+          <Users className="h-4 w-4 text-primary" />
           Invites & Guest List
         </CardTitle>
-        <CardDescription>
-          Share your celebration and track who's coming.
-        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-muted-foreground">Your Invite Link</h4>
-          <div className="flex gap-2">
-            <Input value={inviteUrl} readOnly className="bg-black/5 border-dashed" />
-            <Button variant="outline" size="icon" onClick={copyLink}>
-              <Copy className="h-4 w-4" />
+      <CardContent className="p-3 space-y-3">
+        <div className="space-y-1">
+          <h4 className="text-xs font-semibold text-muted-foreground">Your Invite Link</h4>
+          <div className="flex gap-1.5">
+            <Input value={inviteUrl} readOnly className="bg-black/5 border-dashed h-7 text-xs" />
+            <Button variant="outline" size="icon" className="h-7 w-7 shrink-0" onClick={copyLink}>
+              <Copy className="h-3 w-3" />
             </Button>
-            <Button variant="outline" size="icon" onClick={openLink}>
-              <ExternalLink className="h-4 w-4" />
+            <Button variant="outline" size="icon" className="h-7 w-7 shrink-0" onClick={openLink}>
+              <ExternalLink className="h-3 w-3" />
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-            <p className="text-xs text-green-600 font-bold uppercase">Going</p>
-            <p className="text-2xl font-bold text-green-700">{stats.confirmed}</p>
+        <div className="grid grid-cols-4 gap-1.5">
+          <div className="py-1.5 px-2 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
+            <p className="text-[9px] text-green-600 font-black uppercase tracking-wider">Going</p>
+            <p className="text-base font-bold text-green-700">{stats.confirmed}</p>
           </div>
-          <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
-            <p className="text-xs text-blue-600 font-bold uppercase">Guests</p>
-            <p className="text-2xl font-bold text-blue-700">{stats.totalGuests}</p>
+          <div className="py-1.5 px-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
+            <p className="text-[9px] text-blue-600 font-black uppercase tracking-wider">Guests</p>
+            <p className="text-base font-bold text-blue-700">{stats.totalGuests}</p>
           </div>
-          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
-            <p className="text-xs text-red-600 font-bold uppercase">No</p>
-            <p className="text-2xl font-bold text-red-700">{stats.declined}</p>
+          <div className="py-1.5 px-2 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
+            <p className="text-[9px] text-red-600 font-black uppercase tracking-wider">No</p>
+            <p className="text-base font-bold text-red-700">{stats.declined}</p>
           </div>
-          <div className="p-3 rounded-lg bg-gray-500/10 border border-gray-500/20 text-center">
-            <p className="text-xs text-gray-600 font-bold uppercase">Maybe</p>
-            <p className="text-2xl font-bold text-gray-700">{stats.maybe}</p>
+          <div className="py-1.5 px-2 rounded-lg bg-gray-500/10 border border-gray-500/20 text-center">
+            <p className="text-[9px] text-gray-600 font-black uppercase tracking-wider">Maybe</p>
+            <p className="text-base font-bold text-gray-700">{stats.maybe}</p>
           </div>
         </div>
 

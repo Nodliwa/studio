@@ -98,73 +98,64 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
   }[item.reminderType || 'none'] || BellOff;
 
   return (
-    <div className="flex flex-col p-3 border-b border-border/20 last:border-b-0">
-      <div className="flex items-start gap-3">
+    <div className="flex flex-col px-2 py-1 border-b border-border/20 last:border-b-0">
+      <div className="flex items-start gap-2">
         <Checkbox
           id={`mustdo-${item.id}`}
           checked={item.status === 'done'}
           onCheckedChange={(checked) => onUpdate(item.id, { status: checked ? 'done' : 'todo' })}
-          className="mt-1 border-foreground/50"
+          className="mt-0.5 border-foreground/50"
         />
-        <div className="flex-1 space-y-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <Input
+        <div className="flex-1 space-y-0.5 min-w-0">
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+            <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onBlur={() => handleBlur('title')}
               className={cn(
-                  "h-auto p-0 border-0 focus-visible:ring-0 text-base bg-transparent flex-grow font-bold placeholder:font-bold placeholder:text-foreground/60 min-w-[120px]",
-                  item.status === 'done' && "line-through text-muted-foreground"
+                "h-auto p-0 border-0 focus-visible:ring-0 text-xs bg-transparent flex-grow font-bold placeholder:font-bold placeholder:text-foreground/60 min-w-[120px]",
+                item.status === 'done' && "line-through text-muted-foreground"
               )}
               readOnly={item.status === 'done'}
               placeholder="New must-do..."
-              />
-              <div className="flex items-center gap-2 text-xs text-muted-foreground ml-auto">
-                  <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-auto w-auto p-1 flex justify-start items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
-                          <PriorityIcon priority={item.priority || 'medium'} />
-                          <span className="w-14 text-left">{PriorityLevels[item.priority || 'medium'].label}</span>
-                      </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                          <DropdownMenuItem onClick={() => onUpdate(item.id, { priority: 'low' })}>
-                              <ArrowDown className="mr-2 h-4 w-4 text-green-500" /> Low
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onUpdate(item.id, { priority: 'medium' })}>
-                              <ArrowRight className="mr-2 h-4 w-4 text-yellow-500" /> Medium
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onUpdate(item.id, { priority: 'high' })}>
-                              <ArrowUp className="mr-2 h-4 w-4 text-red-500" /> High
-                          </DropdownMenuItem>
-                      </DropdownMenuContent>
-                  </DropdownMenu>
+            />
+            <div className="flex items-center gap-1 text-xs text-muted-foreground ml-auto">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-5 px-1 flex items-center gap-1 text-foreground/80 hover:bg-white/10 hover:text-foreground">
+                    <PriorityIcon priority={item.priority || 'medium'} />
+                    <span className="text-xs">{PriorityLevels[item.priority || 'medium'].label}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => onUpdate(item.id, { priority: 'low' })}>
+                    <ArrowDown className="mr-2 h-3 w-3 text-green-500" /> Low
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdate(item.id, { priority: 'medium' })}>
+                    <ArrowRight className="mr-2 h-3 w-3 text-yellow-500" /> Medium
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdate(item.id, { priority: 'high' })}>
+                    <ArrowUp className="mr-2 h-3 w-3 text-red-500" /> High
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-                  <Popover>
-                      <PopoverTrigger asChild>
-                          <Button
-                          variant={"ghost"}
-                          size="sm"
-                          className={cn(
-                              "h-auto p-1 text-foreground/80 hover:bg-white/10 hover:text-foreground",
-                              !deadline && "text-muted-foreground"
-                          )}
-                          >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {deadline ? format(deadline, "dd-MMM-yyyy") : <span>Set deadline</span>}
-                          </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                          <Calendar
-                          mode="single"
-                          selected={deadline}
-                          onSelect={handleDeadlineChange}
-                          initialFocus
-                          />
-                      </PopoverContent>
-                  </Popover>
-
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn("h-5 px-1 text-foreground/80 hover:bg-white/10 hover:text-foreground text-xs gap-1", !deadline && "text-muted-foreground")}
+                  >
+                    <CalendarIcon className="h-3 w-3" />
+                    {deadline ? format(deadline, "dd-MMM") : "Deadline"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar mode="single" selected={deadline} onSelect={handleDeadlineChange} initialFocus />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
           <Textarea
             value={note}
@@ -173,61 +164,55 @@ function MustDoItem({ item, onUpdate, onDelete }: { item: MustDo, onUpdate: (id:
             placeholder="Add a note..."
             rows={1}
             className={cn(
-              "h-auto p-0 border-0 focus-visible:ring-0 text-sm text-muted-foreground min-h-[20px] bg-transparent placeholder:text-foreground/50",
+              "h-auto p-0 border-0 focus-visible:ring-0 text-xs text-muted-foreground min-h-[16px] bg-transparent placeholder:text-foreground/50",
               "read-only:cursor-default read-only:bg-transparent"
             )}
             readOnly={item.status === 'done'}
           />
         </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-foreground/80 hover:bg-white/10 hover:text-foreground" onClick={() => onDelete(item.id)}>
-          <Trash2 className="h-4 w-4" />
+        <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0 text-foreground/80 hover:bg-white/10 hover:text-foreground" onClick={() => onDelete(item.id)}>
+          <Trash2 className="h-2.5 w-2.5" />
         </Button>
       </div>
       {deadline && (
-        <div className="pl-8 pt-2 flex items-center gap-4">
-            <div className="flex items-center space-x-2">
-                <Switch 
-                    id={`reminder-switch-${item.id}`} 
-                    checked={item.reminderType !== 'none'} 
-                    onCheckedChange={handleReminderToggle} 
+        <div className="pl-5 pt-1 flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <Switch
+              id={`reminder-switch-${item.id}`}
+              checked={item.reminderType !== 'none'}
+              onCheckedChange={handleReminderToggle}
+            />
+            <Label htmlFor={`reminder-switch-${item.id}`} className="text-xs text-muted-foreground">Reminders</Label>
+          </div>
+          {item.reminderType !== 'none' && (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-5 w-5">
+                    <ReminderIcon className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="min-w-0 w-auto">
+                  <DropdownMenuItem onClick={() => handleReminderTypeChange('email')}><Mail className="mr-2 h-3 w-3" /> Email</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleReminderTypeChange('sms')}><MessageSquare className="mr-2 h-3 w-3" /> SMS</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleReminderTypeChange('whatsapp')}><WhatsappIcon className="mr-2 h-3 w-3" /> WhatsApp</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <div className="flex items-center gap-1.5">
+                <Input
+                  type="number"
+                  min="1"
+                  value={reminderDays}
+                  onChange={(e) => setReminderDays(parseInt(e.target.value, 10) || 1)}
+                  onBlur={handleReminderDaysBlur}
+                  className="h-5 w-12 text-center text-xs"
                 />
-                <Label htmlFor={`reminder-switch-${item.id}`} className="text-sm text-muted-foreground">Reminders</Label>
-            </div>
-            {item.reminderType !== 'none' && (
-                <>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="icon" className="h-8 w-8">
-                              <ReminderIcon className="h-4 w-4" />
-                          </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="min-w-0 w-auto">
-                          <DropdownMenuItem onClick={() => handleReminderTypeChange('email')}>
-                              <Mail className="mr-2 h-4 w-4" /> Email
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleReminderTypeChange('sms')}>
-                              <MessageSquare className="mr-2 h-4 w-4" /> SMS
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleReminderTypeChange('whatsapp')}>
-                              <WhatsappIcon className="mr-2 h-4 w-4" /> WhatsApp
-                          </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    <div className="flex items-center gap-2">
-                        <Input 
-                            type="number" 
-                            min="1" 
-                            value={reminderDays} 
-                            onChange={(e) => setReminderDays(parseInt(e.target.value, 10) || 1)}
-                            onBlur={handleReminderDaysBlur}
-                            className="h-9 w-16 text-center" />
-                        <Label className="text-sm text-muted-foreground">days before</Label>
-                    </div>
-                </>
-            )}
-            </div>
-        )}
+                <Label className="text-xs text-muted-foreground">days before</Label>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -346,27 +331,26 @@ export function MustDos({ budgetId, budgetRef, isTemplateMode = false, mustDos, 
 
   return (
     <>
-      <Card className="h-full bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
-        <CardHeader className="p-4">
-          <CardTitle className="font-headline text-2xl">Must-Do's</CardTitle>
-          <CardDescription className="text-foreground/80">Critical tasks to ensure your event runs smoothly.</CardDescription>
+      <Card className="bg-card/50 text-card-foreground shadow-lg backdrop-blur-xl border-white/20">
+        <CardHeader className="p-3 pb-0">
+          <div className="flex items-center justify-between">
+            <CardTitle className="font-headline text-base font-semibold">Must-Do's</CardTitle>
+            <span className="text-xs text-muted-foreground">{completedCount}/{items.length} done</span>
+          </div>
+          <Progress value={progress} className="h-1.5 bg-white/20 mt-1" />
         </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 text-sm font-medium text-foreground/90">
-              <span className="shrink-0">{completedCount} of {items.length} completed</span>
-              <Progress value={progress} className="w-full h-2 bg-white/20" />
-            </div>
+        <CardContent className="p-3 pt-2">
+          <div className="space-y-2">
             <div className="border border-border/20 rounded-lg overflow-hidden bg-white/5">
               {items.map(item => ( <MustDoItem key={item.id} item={item} onUpdate={handleUpdateItem} onDelete={handleDeleteItem} /> ))}
-              {items.length === 0 && <p className="text-muted-foreground text-center p-8">Your list is empty.</p>}
+              {items.length === 0 && <p className="text-muted-foreground text-center p-6 text-sm">Your list is empty.</p>}
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={handleAddItem} className="bg-white/10 hover:bg-white/20 border-white/30">
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add Task
+            <div className="flex flex-wrap gap-1.5">
+              <Button variant="outline" size="sm" onClick={handleAddItem} className="h-6 text-xs px-2 gap-1 bg-white/10 hover:bg-white/20 border-white/30">
+                  <PlusCircle className="h-3 w-3" /> Add Task
               </Button>
-              <Button variant="outline" onClick={handleGetSuggestions} disabled={isSuggesting} className="bg-white/10 hover:bg-white/20 border-white/30">
-                  {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              <Button variant="outline" size="sm" onClick={handleGetSuggestions} disabled={isSuggesting} className="h-6 text-xs px-2 gap-1 bg-white/10 hover:bg-white/20 border-white/30">
+                  {isSuggesting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                   Suggest with AI
               </Button>
             </div>

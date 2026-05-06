@@ -20,7 +20,7 @@ export const otherBudgetData: BudgetCategory[] = [
     order: 2,
     items: [
       { id: "other-catering-1", name: "Catering (braai / buffet)", metric: "flat fee", quantity: 1, unitPrice: 5000, total: 0, comment: "", is_template: true },
-      { id: "other-catering-2", name: "Drinks & Refreshments", metric: "flat fee", quantity: 1, unitPrice: 2000, total: 0, comment: "", is_template: true },
+      { id: "other-catering-2", name: "Refreshments", metric: "flat fee", quantity: 1, unitPrice: 2000, total: 0, comment: "", is_template: true },
       { id: "other-catering-3", name: "Desserts / Cake", metric: "flat fee", quantity: 1, unitPrice: 800, total: 0, comment: "", is_template: true },
     ],
   },

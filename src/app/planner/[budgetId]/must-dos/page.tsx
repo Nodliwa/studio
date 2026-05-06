@@ -55,15 +55,15 @@ export default function MustDosPage({ params: { budgetId } }: { params: { budget
     <div className="min-h-screen w-full bg-secondary">
       <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
         <PageHeader />
-        <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
+        <main className="px-4 flex-grow flex flex-col mb-16">
           <Greeter />
-          <div className="mt-8">
-            <Button variant="outline" onClick={() => router.back()}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
+          <div className="mt-3">
+            <Button variant="outline" size="sm" className="h-7 text-xs px-2 gap-1" onClick={() => router.back()}>
+              <ArrowLeft className="h-3 w-3" />
               Back to Plan
             </Button>
           </div>
-          <div className="mt-8">
+          <div className="mt-3">
             {(budgetLoading || mustDosLoading) && !isTemplateMode ? (
               <Skeleton className="w-full h-[400px] rounded-lg" />
             ) : (

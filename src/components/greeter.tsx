@@ -51,12 +51,12 @@ const Greeter = ({ quote }: { quote?: string }) => {
   }, [authUser, userProfile, isAuthUserLoading, isProfileLoading]);
 
   return (
-    <div className="mt-8 text-center">
-      <h2 className="text-3xl font-bold font-headline text-foreground/90">
+    <div className="text-center">
+      <h2 className="text-lg font-bold font-headline text-foreground/90">
         {mainGreeting}
       </h2>
       {subGreeting && (
-        <p className="mt-2 text-muted-foreground font-bold italic">{subGreeting}</p>
+        <p className="mt-1 text-xs text-muted-foreground font-bold italic">{subGreeting}</p>
       )}
       <MotivationalQuote quote={quote} />
     </div>

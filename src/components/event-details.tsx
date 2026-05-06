@@ -261,15 +261,15 @@ export function EventDetails({
     <>
       <Card className="shadow-lg h-full card-glass">
         <form onSubmit={handleSubmit(onSubmit as any)}>
-          <CardHeader className="flex flex-row items-start justify-between p-4 pb-0">
-            <div className="space-y-1">
-              <CardTitle className="font-headline text-2xl">
+          <CardHeader className="flex flex-row items-center justify-between p-3 pb-0">
+            <div className="space-y-0.5">
+              <CardTitle className="font-headline text-base font-semibold">
                 {eventTitle}
               </CardTitle>
-              <p className="text-sm font-semibold text-primary">{daysLeftText}</p>
+              <p className="text-xs font-medium text-primary">{daysLeftText}</p>
             </div>
             {isTemplateMode ? (
-              <Button onClick={() => router.push("/auth")} size="sm">
+              <Button onClick={() => router.push("/auth")} size="sm" className="h-7 text-xs px-2">
                 Sign Up to Save
               </Button>
             ) : (
@@ -285,14 +285,14 @@ export function EventDetails({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="h-7 text-xs px-2 gap-1.5"
                   disabled={uploadProgress !== null}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   {uploadProgress !== null ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
-                    <Camera className="h-4 w-4" />
+                    <Camera className="h-3 w-3" />
                   )}
                   {uploadProgress !== null ? `${Math.round(uploadProgress)}%` : "Background"}
                 </Button>
@@ -302,6 +302,7 @@ export function EventDetails({
                       type="button"
                       variant="ghost"
                       size="sm"
+                      className="h-7 text-xs px-2"
                       onClick={() => {
                         if (budget) {
                           reset({
@@ -318,7 +319,7 @@ export function EventDetails({
                     >
                       Cancel
                     </Button>
-                    <Button type="submit" size="sm" disabled={isSubmitting}>
+                    <Button type="submit" size="sm" className="h-7 text-xs px-2" disabled={isSubmitting}>
                       Save
                     </Button>
                   </>
@@ -326,6 +327,7 @@ export function EventDetails({
                   <Button
                     variant="outline"
                     size="sm"
+                    className="h-7 text-xs px-2"
                     onClick={() => setIsEditing(true)}
                   >
                     Edit
@@ -334,9 +336,9 @@ export function EventDetails({
               </div>
             )}
           </CardHeader>
-          <CardContent className="p-4 pt-4">
+          <CardContent className="p-3 pt-2">
             {uploadProgress !== null && (
-              <div className="mb-4 space-y-1">
+              <div className="mb-2 space-y-1">
                 <div className="flex justify-between text-xs font-medium">
                   <span>Uploading background...</span>
                   <span>{Math.round(uploadProgress)}%</span>
@@ -344,15 +346,16 @@ export function EventDetails({
                 <Progress value={uploadProgress} className="h-1" />
               </div>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label htmlFor="name">My-Plan Name</Label>
+            <div className="grid grid-cols-1 gap-1">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="name" className="text-xs shrink-0 font-bold">Plan Name</Label>
                 <Controller
                   name="name"
                   control={control}
                   render={({ field }) => (
                     <Input
                       id="name"
+                      className="h-7 text-xs flex-1"
                       {...field}
                       placeholder="Life you are celebrating..."
                       disabled={!isEditing}
@@ -361,8 +364,8 @@ export function EventDetails({
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="eventLocation">Event Location</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="eventLocation" className="text-xs shrink-0 font-bold">Venue</Label>
                 <Controller
                   name="eventLocation"
                   control={control}
@@ -370,9 +373,10 @@ export function EventDetails({
                     <Popover
                       open={ready && status === "OK" && autocompleteData.length > 0}
                     >
-                      <PopoverAnchor>
+                      <PopoverAnchor className="flex-1">
                         <Input
                           id="eventLocation"
+                          className="h-7 text-xs w-full"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
@@ -418,8 +422,8 @@ export function EventDetails({
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="eventDate">Event Date</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="eventDate" className="text-xs shrink-0 font-bold">Event Date</Label>
                 <Controller
                   name="eventDate"
                   control={control}
@@ -427,6 +431,7 @@ export function EventDetails({
                     <Input
                       id="eventDate"
                       type="date"
+                      className="h-7 text-xs flex-1"
                       {...field}
                       disabled={!isEditing}
                     />
@@ -434,8 +439,8 @@ export function EventDetails({
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="expectedGuests">Number of Guests</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="expectedGuests" className="text-xs shrink-0 font-bold">Guest Count</Label>
                 <Controller
                   name="expectedGuests"
                   control={control}
@@ -443,6 +448,7 @@ export function EventDetails({
                     <Input
                       id="expectedGuests"
                       type="number"
+                      className="h-7 text-xs flex-1"
                       {...field}
                       onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
                       disabled={!isEditing}
@@ -453,8 +459,8 @@ export function EventDetails({
               </div>
 
               {effectiveEventType === 'birthday' && (
-                <div className="space-y-1">
-                  <Label htmlFor="birthdayAge">Birthday Age</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="birthdayAge" className="text-xs shrink-0 font-bold">Birthday Age</Label>
                   <Controller
                     name="birthdayAge"
                     control={control}
@@ -465,6 +471,7 @@ export function EventDetails({
                         min="1"
                         max="120"
                         placeholder="e.g. 30"
+                        className="h-7 text-xs flex-1"
                         {...field}
                         value={field.value ?? ''}
                         onChange={(e) => field.onChange(e.target.valueAsNumber || undefined)}

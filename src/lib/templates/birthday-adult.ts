@@ -55,7 +55,7 @@ export const birthdayAdultBudgetData: BudgetCategory[] = [
       },
       {
         id: "b-cat-drinks",
-        name: "Drinks & Refreshments",
+        name: "Refreshments",
         total: 0,
         order: 4,
         items: [

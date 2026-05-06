@@ -35,7 +35,7 @@ const MotivationalQuote = ({ quote: propQuote }: { quote?: string }) => {
   }
 
   return (
-    <p className="mt-4 text-base italic text-muted-foreground">
+    <p className="mt-1 text-xs italic text-muted-foreground">
       {`"${quote}"`}
     </p>
   );

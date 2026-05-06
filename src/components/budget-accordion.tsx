@@ -9,14 +9,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -54,6 +46,8 @@ import {
   ChevronDown,
   Search,
   CheckCircle2,
+  Minus,
+  Plus,
 } from "lucide-react";
 import React from "react";
 import { useSortable } from '@dnd-kit/sortable';
@@ -69,7 +63,7 @@ interface BudgetAccordionProps {
   supplierRequests?: Budget['supplierRequests'];
   onFindSupplier?: (item: BudgetItem, itemTotal: number) => void;
   onMarkAsFound?: (itemId: string, leadId: string) => void;
-  updatedCategories?: Set<string>;
+  categoryProgress?: Record<string, Set<number>>;
   openCategories?: string[];
   onOpenChange?: (value: string[]) => void;
 }
@@ -130,6 +124,14 @@ function countAllItems(cats: BudgetCategory[]): number {
   }, 0);
 }
 
+function countPricedItems(cats: BudgetCategory[]): number {
+  return cats.reduce((sum, cat) => {
+    const direct = (cat.items || []).filter(item => (item.unitPrice ?? 0) > 0).length;
+    const nested = countPricedItems(cat.subCategories || []);
+    return sum + direct + nested;
+  }, 0);
+}
+
 const SortableCategory = ({
   category,
   onItemChange,
@@ -140,7 +142,7 @@ const SortableCategory = ({
   supplierRequests,
   onFindSupplier,
   onMarkAsFound,
-  updatedCategories,
+  categoryProgress,
   openCategories,
 }: { category: BudgetCategory } & Omit<BudgetAccordionProps, 'categories'>) => {
   const {
@@ -159,35 +161,36 @@ const SortableCategory = ({
 
   const isTopLevel = categoryPath.length === 0;
   const isOpen = isTopLevel && openCategories ? openCategories.includes(category.id) : false;
-  const isUpdated = isTopLevel && updatedCategories ? updatedCategories.has(category.id) : false;
-  const itemCount = countAllItems([category]);
+  const totalCount = countAllItems([category]);
+  const touchedCount = categoryProgress?.[category.id]?.size ?? 0;
+
+  const isComplete = totalCount > 0 && touchedCount >= totalCount;
+  const isStarted  = touchedCount > 0 && !isComplete;
 
   const itemClassName = cn(
-    "group mb-4 rounded-lg border-b-0 shadow-sm overflow-hidden transition-colors duration-200",
-    isTopLevel
-      ? isOpen
-        ? "bg-white dark:bg-zinc-900 border-l-[3px] border-l-teal-500"
-        : isUpdated
-          ? "bg-white dark:bg-zinc-900"
-          : "bg-gray-50 dark:bg-zinc-950 pulse-border-teal"
-      : "bg-card"
+    "group/item mb-4 rounded-lg border-b-0 shadow-sm overflow-hidden transition-colors duration-200",
+    isOpen
+      ? "bg-white dark:bg-zinc-900 border-l-[3px] border-l-teal-500"
+      : isComplete
+        ? "bg-white dark:bg-zinc-900"
+        : "bg-gray-50 dark:bg-zinc-950 pulse-border-teal"
   );
 
   return (
     <div ref={setNodeRef} style={style}>
       <AccordionItem value={category.id} className={itemClassName}>
-        <AccordionTrigger className="px-4 py-2 text-lg hover:no-underline [&>svg]:hidden">
-          <div className="flex items-center w-full">
-            {/* Delete button */}
-            <div onClick={(e) => e.stopPropagation()} className="mr-3 shrink-0">
+        <AccordionTrigger className="px-3 py-1 hover:no-underline [&>svg]:hidden">
+          <div className="flex items-center gap-1.5 w-full min-w-0">
+            {/* Cancel (delete) */}
+            <div onClick={(e) => e.stopPropagation()} className="-ml-2 shrink-0">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3.5 w-3.5" />
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -207,188 +210,196 @@ const SortableCategory = ({
               </AlertDialog>
             </div>
 
-            {/* Chevron — points down when collapsed, up when expanded */}
-            <ChevronDown className="h-5 w-5 text-primary transition-transform duration-200 mr-3 shrink-0 group-data-[state=open]:rotate-180" />
+            {/* Expand chevron */}
+            <ChevronDown className="h-4 w-4 text-primary transition-transform duration-200 shrink-0 group-data-[state=open]/item:rotate-180" />
 
-            {/* Category icon + name + item count */}
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              {Icon && <Icon className="h-5 w-5 text-primary/70 shrink-0" />}
-              <div className="flex flex-col items-start min-w-0">
-                <span className="font-headline font-semibold text-base text-left leading-tight">{category.name}</span>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  {isTopLevel && (
-                    isUpdated ? (
-                      <span className="inline-flex items-center rounded-full bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
-                        Updated
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900 dark:text-amber-300">
-                        Not updated
-                      </span>
-                    )
-                  )}
-                  <span className="text-xs text-muted-foreground group-data-[state=open]:hidden">
-                    {isTopLevel ? '· ' : ''}{itemCount} {itemCount === 1 ? 'item' : 'items'}
-                  </span>
-                </div>
-              </div>
-            </div>
+            {/* Category icon */}
+            {Icon && <Icon className="h-4 w-4 text-primary/70 shrink-0" />}
 
-            {/* Total badge */}
-            <Badge variant="secondary" className="font-mono ml-2 shrink-0 text-xs">{formatCurrency(category.total)}</Badge>
+            {/* Category name — takes all remaining space, truncates */}
+            <span className="font-semibold text-sm text-left leading-none truncate flex-1 min-w-0">{category.name}</span>
+
+            {/* Progress counter */}
+            <span className={cn(
+              "text-xs font-semibold shrink-0 px-1 rounded-sm",
+              isComplete
+                ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                : "animate-pulse bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+            )}>
+              {touchedCount}/{totalCount}
+            </span>
+
+            {/* Total */}
+            <Badge variant="secondary" className="font-mono shrink-0 text-xs ml-auto min-w-[5rem] justify-end rounded-sm font-bold px-0 py-0">{formatCurrency(category.total)}</Badge>
           </div>
         </AccordionTrigger>
 
         <AccordionContent className="bg-card">
           {(category.items && category.items.length > 0) && (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-10"></TableHead>
-                    <TableHead className="min-w-[150px]">Item</TableHead>
-                    <TableHead>Metric</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Unit Price</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead className="w-1/3">Comments</TableHead>
-                    {onFindSupplier && <TableHead className="w-44"></TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {category.items.map((item, itemIndex) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Item?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to remove "{item.name || 'this item'}" from your plan?
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => onDeleteItem(currentPath, itemIndex)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        <Input
-                          type="text"
-                          value={item.name}
-                          onChange={(e) => onItemChange(currentPath, itemIndex, 'name', e.target.value)}
-                          placeholder="Item name"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="text"
-                          value={item.metric}
-                          onChange={(e) => onItemChange(currentPath, itemIndex, 'metric', e.target.value)}
-                          className="w-24"
-                        />
-                      </TableCell>
-                      <TableCell>
+            <div className="px-2 pt-1 pb-2 space-y-1.5">
+              {category.items.map((item, itemIndex) => (
+                <div key={item.id} className="rounded-lg border bg-background p-2 space-y-1.5">
+
+                  {/* Name + delete */}
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={item.name}
+                      onChange={(e) => onItemChange(currentPath, itemIndex, 'name', e.target.value)}
+                      placeholder="Item name"
+                      className="flex-1 h-7 text-xs font-bold text-foreground"
+                    />
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Item?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to remove "{item.name || 'this item'}" from your plan?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDeleteItem(currentPath, itemIndex)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+
+                  {/* Metric + Quantity */}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <div className="space-y-0">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Metric</p>
+                      <Input
+                        type="text"
+                        value={item.metric}
+                        onChange={(e) => onItemChange(currentPath, itemIndex, 'metric', e.target.value)}
+                        className="h-7 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-0">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Quantity</p>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7 shrink-0"
+                          onClick={() => onItemChange(currentPath, itemIndex, 'quantity', Math.max(0, (item.quantity || 0) - 1))}
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
                         <Input
                           type="number"
-                          value={item.quantity}
+                          value={item.quantity || ''}
                           onChange={(e) => onItemChange(currentPath, itemIndex, 'quantity', e.target.value)}
-                          className="w-20"
+                          onFocus={(e) => e.target.select()}
+                          className="h-7 text-xs text-center flex-1 min-w-0"
                           min="0"
                         />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          value={item.unitPrice}
-                          onChange={(e) => onItemChange(currentPath, itemIndex, 'unitPrice', e.target.value)}
-                          className="w-24"
-                          min="0"
-                          step="0.01"
-                        />
-                      </TableCell>
-                      <TableCell className="font-mono">{formatCurrency(item.total)}</TableCell>
-                      <TableCell>
-                        <Textarea
-                          value={item.comment}
-                          onChange={(e) => onItemChange(currentPath, itemIndex, 'comment', e.target.value)}
-                          rows={1}
-                          className="min-h-[38px] text-sm"
-                        />
-                      </TableCell>
-                      {onFindSupplier && (
-                        <TableCell className="whitespace-nowrap">
-                          {(() => {
-                            if (!item.name) return null;
-                            const req = supplierRequests?.[item.id];
-                            if (!req) {
-                              return (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-xs h-7 border-teal-600 text-teal-700 hover:bg-teal-50"
-                                  onClick={() => onFindSupplier(item, item.total)}
-                                >
-                                  <Search className="h-3 w-3 mr-1" />
-                                  Find Supplier
-                                </Button>
-                              );
-                            }
-                            if (req.status === 'closed') {
-                              return (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1">
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  Supplier Found
-                                </span>
-                              );
-                            }
-                            return (
-                              <div className="flex flex-col gap-1.5">
-                                <span className="inline-flex items-center gap-1 rounded-full bg-teal-100 text-teal-800 text-xs font-medium px-2.5 py-1">
-                                  <Search className="h-3 w-3" />
-                                  Requested &middot; {req.matchedCount} notified
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-xs h-6 text-muted-foreground hover:text-foreground px-2"
-                                  onClick={() => onMarkAsFound?.(item.id, req.leadId)}
-                                >
-                                  Mark as Found
-                                </Button>
-                              </div>
-                            );
-                          })()}
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7 shrink-0"
+                          onClick={() => onItemChange(currentPath, itemIndex, 'quantity', (item.quantity || 0) + 1)}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Unit Price + Total */}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <div className="space-y-0">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Unit Price</p>
+                      <Input
+                        type="number"
+                        value={item.unitPrice || ''}
+                        onChange={(e) => onItemChange(currentPath, itemIndex, 'unitPrice', e.target.value)}
+                        onFocus={(e) => e.target.select()}
+                        className="h-7 text-xs"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                    <div className="space-y-0">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Total</p>
+                      <div className="h-7 flex items-center px-2 rounded-md border bg-muted/50">
+                        <span className="text-xs font-mono font-semibold">{formatCurrency(item.total)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Comments */}
+                  <div className="space-y-0">
+                    <p className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Comments</p>
+                    <Textarea
+                      value={item.comment}
+                      onChange={(e) => onItemChange(currentPath, itemIndex, 'comment', e.target.value)}
+                      rows={1}
+                      className="min-h-[28px] text-xs py-1 resize-none"
+                    />
+                  </div>
+
+                  {/* Find Supplier */}
+                  {onFindSupplier && item.name && (() => {
+                    const req = supplierRequests?.[item.id];
+                    if (!req) {
+                      return (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full h-8 text-xs gap-1.5 border-teal-600 text-teal-700 hover:bg-teal-50"
+                          onClick={() => onFindSupplier(item, item.total)}
+                        >
+                          <Search className="h-3.5 w-3.5" />
+                          Find Supplier
+                        </Button>
+                      );
+                    }
+                    if (req.status === 'closed') {
+                      return (
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-md px-3 py-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Supplier Found
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-teal-700 bg-teal-50 rounded-md px-3 py-1.5">
+                          <Search className="h-3.5 w-3.5" />
+                          Requested · {req.matchedCount} notified
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full h-7 text-xs text-muted-foreground hover:text-foreground"
+                          onClick={() => onMarkAsFound?.(item.id, req.leadId)}
+                        >
+                          Mark as Found
+                        </Button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              ))}
             </div>
           )}
           {(!category.items || category.items.length === 0) && (!category.subCategories || category.subCategories.length === 0) && (
             <p className="px-6 pb-4 text-muted-foreground">No items in this category.</p>
           )}
 
-          <div className="px-6 pt-4 pb-4">
-            <Button variant="outline" onClick={() => onAddItem(currentPath)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add New Item
-            </Button>
-          </div>
-
           {category.subCategories && category.subCategories.length > 0 && (
-            <div className="px-6 pb-4">
+            <div className="pl-2 pr-0 pb-2">
               <BudgetAccordion
                 categories={category.subCategories}
                 onItemChange={onItemChange}
@@ -399,10 +410,17 @@ const SortableCategory = ({
                 supplierRequests={supplierRequests}
                 onFindSupplier={onFindSupplier}
                 onMarkAsFound={onMarkAsFound}
-                updatedCategories={updatedCategories}
+                categoryProgress={categoryProgress}
               />
             </div>
           )}
+
+          <div className="px-3 pt-2 pb-3">
+            <Button variant="outline" size="sm" className="h-7 text-xs px-2 gap-1.5" onClick={() => onAddItem(currentPath)}>
+              <PlusCircle className="h-3 w-3" />
+              Add New Item
+            </Button>
+          </div>
         </AccordionContent>
       </AccordionItem>
     </div>
@@ -419,7 +437,7 @@ export function BudgetAccordion({
   supplierRequests,
   onFindSupplier,
   onMarkAsFound,
-  updatedCategories,
+  categoryProgress,
   openCategories,
   onOpenChange,
 }: BudgetAccordionProps) {
@@ -443,7 +461,7 @@ export function BudgetAccordion({
           supplierRequests={supplierRequests}
           onFindSupplier={onFindSupplier}
           onMarkAsFound={onMarkAsFound}
-          updatedCategories={updatedCategories}
+          categoryProgress={categoryProgress}
           openCategories={openCategories}
           onOpenChange={onOpenChange}
         />

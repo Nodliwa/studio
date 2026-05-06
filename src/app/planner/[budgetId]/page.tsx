@@ -91,6 +91,38 @@ function countAllItems(cats: BudgetCategory[]): number {
   }, 0);
 }
 
+function collectTouchedFlatIndices(cat: BudgetCategory): Set<number> {
+  const touched = new Set<number>();
+  let flatIdx = 0;
+  const isTouched = (item: BudgetItem) =>
+    item.name !== "" || item.metric !== "" || (item.quantity ?? 0) !== 0 || (item.unitPrice ?? 0) !== 0 || item.comment !== "";
+  const traverse = (items: BudgetItem[], subCats: BudgetCategory[]) => {
+    for (const item of items) {
+      if (isTouched(item)) touched.add(flatIdx);
+      flatIdx++;
+    }
+    for (const sub of subCats) traverse(sub.items || [], sub.subCategories || []);
+  };
+  traverse(cat.items || [], cat.subCategories || []);
+  return touched;
+}
+
+function getFlatIndex(rootCat: BudgetCategory, categoryPath: string[], itemIndex: number): number {
+  let flatIdx = 0;
+  const traverse = (cat: BudgetCategory, remainingPath: string[]): boolean => {
+    if (remainingPath.length === 0) { flatIdx += itemIndex; return true; }
+    const targetId = remainingPath[0];
+    flatIdx += (cat.items || []).length;
+    for (const sub of (cat.subCategories || [])) {
+      if (sub.id === targetId) return traverse(sub, remainingPath.slice(1));
+      flatIdx += countAllItems([sub]);
+    }
+    return false;
+  };
+  traverse(rootCat, categoryPath.slice(1));
+  return flatIdx;
+}
+
 function countTemplateOnlyItems(cats: BudgetCategory[]): number {
   return cats.reduce((sum, cat) => {
     const direct = (cat.items || []).filter(item => item.is_template === true).length;
@@ -156,11 +188,11 @@ export default function PlannerPage({
   const plannerOpenedRef = useRef(false);
 
   // Category UX state
-  const [updatedCategories, setUpdatedCategories] = useState<Set<string>>(new Set());
+  const [categoryProgress, setCategoryProgress] = useState<Record<string, Set<number>>>({});
   const [openCategories, setOpenCategories] = useState<string[]>([]);
-  const [hintDismissed, setHintDismissed] = useState(true);
+  const [hintDismissed, setHintDismissed] = useState(false);
   const autoExpandFiredRef = useRef(false);
-  const updatedCategoriesInitRef = useRef(false);
+  const categoryProgressInitRef = useRef(false);
 
   const handleFindSupplier = useCallback((item: BudgetItem, itemTotal: number) => {
     setFindSupplierItem({ item, itemTotal });
@@ -451,22 +483,14 @@ export default function PlannerPage({
     localStorage.setItem(`hint_dismissed_${budgetId}`, 'true');
   }, [openCategories, hintDismissed, budgetId, isTemplateMode]);
 
-  // Initialise updatedCategories from existing plan data (runs once after data loads)
+  // Initialise categoryProgress (runs once after data loads — all start at 0)
   useEffect(() => {
-    if (updatedCategoriesInitRef.current || !budget || budgetData.length === 0) return;
-    updatedCategoriesInitRef.current = true;
-    if (!budget.is_customized) return;
-    const hasNonZeroUnitPrice = (cats: BudgetCategory[]): boolean =>
-      cats.some(c =>
-        (c.items || []).some(item => (item.unitPrice || 0) > 0) ||
-        hasNonZeroUnitPrice(c.subCategories || [])
-      );
-    const pre = new Set<string>();
-    budgetData.forEach(cat => {
-      if (hasNonZeroUnitPrice([cat])) pre.add(cat.id);
-    });
-    setUpdatedCategories(pre);
-  }, [budget, budgetData]);
+    if (categoryProgressInitRef.current || budgetData.length === 0) return;
+    categoryProgressInitRef.current = true;
+    const initial: Record<string, Set<number>> = {};
+    budgetData.forEach(cat => { initial[cat.id] = new Set<number>(); });
+    setCategoryProgress(initial);
+  }, [budgetData]);
 
   const handleItemChange = (categoryPath: string[], itemIndex: number, field: keyof BudgetItem, value: string | number) => {
     const updated = JSON.parse(JSON.stringify(budgetData));
@@ -486,11 +510,27 @@ export default function PlannerPage({
       setBudgetData(categories);
       setGrandTotal(newGrandTotal);
 
-      if (field === 'unitPrice') {
-        const rootId = categoryPath[0];
-        setUpdatedCategories(prev => {
-          const next = new Set(prev);
-          next.add(rootId);
+      const rootId = categoryPath[0];
+      const rootCatForIdx = budgetData.find(c => c.id === rootId);
+      if (rootCatForIdx) {
+        setCategoryProgress(prev => {
+          const next = { ...prev };
+          // Update root category
+          const rootFlatIdx = getFlatIndex(rootCatForIdx, categoryPath, itemIndex);
+          const rootSet = new Set(next[rootId] ?? []);
+          rootSet.add(rootFlatIdx);
+          next[rootId] = rootSet;
+          // Update every sub-category in the path with its own flat index
+          let currentCat: BudgetCategory | undefined = rootCatForIdx;
+          for (let depth = 1; depth < categoryPath.length; depth++) {
+            const subId = categoryPath[depth];
+            currentCat = currentCat?.subCategories?.find(s => s.id === subId);
+            if (!currentCat) break;
+            const subFlatIdx = getFlatIndex(currentCat, categoryPath.slice(depth), itemIndex);
+            const subSet = new Set(next[subId] ?? []);
+            subSet.add(subFlatIdx);
+            next[subId] = subSet;
+          }
           return next;
         });
       }
@@ -675,11 +715,11 @@ export default function PlannerPage({
     <div className="min-h-screen w-full bg-secondary">
       <div className="bg-background shadow-2xl min-h-full container mx-auto flex flex-col">
         <PageHeader />
-        <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
-          <Greeter />
+        <main className="flex-grow flex flex-col mb-16">
+          <div className="px-4"><Greeter /></div>
 
           {showQuickStartBanner && (
-            <div className="mt-4 flex items-center gap-3 rounded-lg border border-pink-200 bg-pink-50 px-4 py-3 text-sm text-pink-800 dark:border-pink-800 dark:bg-pink-950 dark:text-pink-200">
+            <div className="mt-4 mx-4 flex items-center gap-3 rounded-lg border border-pink-200 bg-pink-50 px-4 py-3 text-sm text-pink-800 dark:border-pink-800 dark:bg-pink-950 dark:text-pink-200">
               <span className="flex-1">This is a default plan — tap any section to personalise it.</span>
               <button
                 onClick={() => setShowQuickStartBanner(false)}
@@ -691,12 +731,12 @@ export default function PlannerPage({
           )}
 
           {!isTemplateMode && budget?.birthdayMeta?.isMilestone && (
-            <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-1.5 text-sm font-semibold text-amber-800 dark:bg-amber-900 dark:text-amber-100">
+            <div className="mt-4 mx-4 inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-1.5 text-sm font-semibold text-amber-800 dark:bg-amber-900 dark:text-amber-100">
               🎉 Milestone Birthday!
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <EventDetails
               budget={budget}
               budgetRef={budgetDocRef}
@@ -722,7 +762,7 @@ export default function PlannerPage({
             <Collapsible
               open={requestsSectionOpen}
               onOpenChange={setRequestsSectionOpen}
-              className="mt-6"
+              className="mt-6 px-4"
             >
               <CollapsibleTrigger className="flex w-full items-center justify-between py-2">
                 <div className="flex items-center gap-2">
@@ -849,10 +889,10 @@ export default function PlannerPage({
             </Collapsible>
           )}
 
-          <div className="mt-8">
-            {!isTemplateMode && !hintDismissed && (
-              <p className="text-xs text-muted-foreground text-center mb-3">
-                Tap each section 👇 to update your items and prices
+          <div className="mt-4">
+            {!hintDismissed && (
+              <p className="px-4 text-xs text-muted-foreground text-center mb-3">
+                Tap each section 👇🏾 to update your items and prices
               </p>
             )}
             <Suspense fallback={<ComponentLoader />}>
@@ -867,7 +907,7 @@ export default function PlannerPage({
                     supplierRequests={!isTemplateMode ? budget?.supplierRequests : undefined}
                     onFindSupplier={!isTemplateMode ? handleFindSupplier : undefined}
                     onMarkAsFound={!isTemplateMode ? handleMarkAsFound : undefined}
-                    updatedCategories={updatedCategories}
+                    categoryProgress={categoryProgress}
                     openCategories={openCategories}
                     onOpenChange={setOpenCategories}
                   />
@@ -877,16 +917,16 @@ export default function PlannerPage({
           </div>
 
           {!isTemplateMode && budget && budgetDocRef && (
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Suspense fallback={<ComponentLoader />}>
+                <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
+              </Suspense>
               <Suspense fallback={<ComponentLoader />}>
                 <CollaboratorManager
                   budget={budget}
                   budgetRef={budgetDocRef}
                   inviterName={user?.displayName || 'A SimpliPlan User'}
                 />
-              </Suspense>
-              <Suspense fallback={<ComponentLoader />}>
-                <MustDosSummary budgetId={budgetId} mustDos={mustDos} />
               </Suspense>
               <div className="md:col-span-2">
                 <Suspense fallback={<ComponentLoader />}>

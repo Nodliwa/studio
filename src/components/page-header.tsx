@@ -287,7 +287,6 @@ export default function PageHeader() {
         </div>
       </nav>
 
-      <div className="md:hidden h-16" />
     </>
   );
 }
