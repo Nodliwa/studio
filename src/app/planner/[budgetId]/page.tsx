@@ -155,6 +155,13 @@ export default function PlannerPage({
   const fetchedLeadIdsRef = useRef<Set<string>>(new Set());
   const plannerOpenedRef = useRef(false);
 
+  // Category UX state
+  const [updatedCategories, setUpdatedCategories] = useState<Set<string>>(new Set());
+  const [openCategories, setOpenCategories] = useState<string[]>([]);
+  const [hintDismissed, setHintDismissed] = useState(true);
+  const autoExpandFiredRef = useRef(false);
+  const updatedCategoriesInitRef = useRef(false);
+
   const handleFindSupplier = useCallback((item: BudgetItem, itemTotal: number) => {
     setFindSupplierItem({ item, itemTotal });
     setFindSupplierOpen(true);
@@ -423,6 +430,44 @@ export default function PlannerPage({
     setDoc(budgetDocRef, { plannerLastOpenedAt: serverTimestamp() }, { merge: true }).catch(console.error);
   }, [budgetDocRef, isTemplateMode]);
 
+  // Load hint dismissed state from localStorage
+  useEffect(() => {
+    if (isTemplateMode || !budgetId) return;
+    const dismissed = localStorage.getItem(`hint_dismissed_${budgetId}`) === 'true';
+    setHintDismissed(dismissed);
+  }, [budgetId, isTemplateMode]);
+
+  // Auto-expand first category on initial load (fires once)
+  useEffect(() => {
+    if (autoExpandFiredRef.current || budgetData.length === 0 || isTemplateMode) return;
+    autoExpandFiredRef.current = true;
+    setOpenCategories([budgetData[0].id]);
+  }, [budgetData, isTemplateMode]);
+
+  // Dismiss hint when any category is first expanded
+  useEffect(() => {
+    if (hintDismissed || openCategories.length === 0 || isTemplateMode) return;
+    setHintDismissed(true);
+    localStorage.setItem(`hint_dismissed_${budgetId}`, 'true');
+  }, [openCategories, hintDismissed, budgetId, isTemplateMode]);
+
+  // Initialise updatedCategories from existing plan data (runs once after data loads)
+  useEffect(() => {
+    if (updatedCategoriesInitRef.current || !budget || budgetData.length === 0) return;
+    updatedCategoriesInitRef.current = true;
+    if (!budget.is_customized) return;
+    const hasNonZeroUnitPrice = (cats: BudgetCategory[]): boolean =>
+      cats.some(c =>
+        (c.items || []).some(item => (item.unitPrice || 0) > 0) ||
+        hasNonZeroUnitPrice(c.subCategories || [])
+      );
+    const pre = new Set<string>();
+    budgetData.forEach(cat => {
+      if (hasNonZeroUnitPrice([cat])) pre.add(cat.id);
+    });
+    setUpdatedCategories(pre);
+  }, [budget, budgetData]);
+
   const handleItemChange = (categoryPath: string[], itemIndex: number, field: keyof BudgetItem, value: string | number) => {
     const updated = JSON.parse(JSON.stringify(budgetData));
     let current = updated;
@@ -440,6 +485,15 @@ export default function PlannerPage({
       const { categories, grandTotal: newGrandTotal } = calculateTotals(updated);
       setBudgetData(categories);
       setGrandTotal(newGrandTotal);
+
+      if (field === 'unitPrice') {
+        const rootId = categoryPath[0];
+        setUpdatedCategories(prev => {
+          const next = new Set(prev);
+          next.add(rootId);
+          return next;
+        });
+      }
 
       if (!isTemplateMode && budget?.userId) {
         const rootId = categoryPath[0];
@@ -796,6 +850,11 @@ export default function PlannerPage({
           )}
 
           <div className="mt-8">
+            {!isTemplateMode && !hintDismissed && (
+              <p className="text-xs text-muted-foreground text-center mb-3">
+                Tap each section 👇 to update your items and prices
+              </p>
+            )}
             <Suspense fallback={<ComponentLoader />}>
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={budgetData} strategy={verticalListSortingStrategy}>
@@ -808,6 +867,9 @@ export default function PlannerPage({
                     supplierRequests={!isTemplateMode ? budget?.supplierRequests : undefined}
                     onFindSupplier={!isTemplateMode ? handleFindSupplier : undefined}
                     onMarkAsFound={!isTemplateMode ? handleMarkAsFound : undefined}
+                    updatedCategories={updatedCategories}
+                    openCategories={openCategories}
+                    onOpenChange={setOpenCategories}
                   />
                 </SortableContext>
               </DndContext>
