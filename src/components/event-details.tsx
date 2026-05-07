@@ -363,24 +363,26 @@ export function EventDetails({
                     name="eventLocation"
                     control={control}
                     render={({ field }) => (
-                      <div className="flex items-center gap-1 flex-1 min-w-0">
+                      <>
                         {mapsLoaded ? (
-                          <Autocomplete
-                            onLoad={(a) => { autocompleteRef.current = a; }}
-                            onPlaceChanged={handlePlaceChanged}
-                          >
-                            <Input
-                              id="eventLocation"
-                              className="h-7 text-xs w-full"
-                              name={field.name}
-                              value={field.value}
-                              onChange={(e) => field.onChange(e.target.value)}
-                              onBlur={field.onBlur}
-                              disabled={!isEditing}
-                              placeholder="Start typing your address..."
-                              autoComplete="off"
-                            />
-                          </Autocomplete>
+                          <div className="flex-1 min-w-0">
+                            <Autocomplete
+                              onLoad={(a) => { autocompleteRef.current = a; }}
+                              onPlaceChanged={handlePlaceChanged}
+                            >
+                              <Input
+                                id="eventLocation"
+                                className="h-7 text-xs w-full"
+                                name={field.name}
+                                value={field.value}
+                                onChange={(e) => field.onChange(e.target.value)}
+                                onBlur={field.onBlur}
+                                disabled={!isEditing}
+                                placeholder="Start typing your address..."
+                                autoComplete="off"
+                              />
+                            </Autocomplete>
+                          </div>
                         ) : (
                           <Input
                             id="eventLocation"
@@ -394,18 +396,7 @@ export function EventDetails({
                             autoComplete="off"
                           />
                         )}
-                        {isEditing && field.value && (
-                          <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(field.value)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0 text-muted-foreground hover:text-primary"
-                            title="Open in Google Maps"
-                          >
-                            <MapPin className="h-4 w-4" />
-                          </a>
-                        )}
-                      </div>
+                      </>
                     )}
                   />
                 )}
