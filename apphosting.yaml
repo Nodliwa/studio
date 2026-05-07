@@ -21,3 +21,7 @@ env:
     secret: GOOGLE_GENAI_API_KEY
   - variable: OPENAI_API_KEY
     secret: OPENAI_API_KEY
+  - variable: NEXT_PUBLIC_POSTHOG_KEY
+    value: phc_qpZTa5ZbrFjtB7G3qFHTudebqjbsNYdASMWbjyHFW39N
+  - variable: NEXT_PUBLIC_POSTHOG_HOST
+    value: https://us.i.posthog.com
