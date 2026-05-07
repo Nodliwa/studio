@@ -5,7 +5,7 @@ import { FirebaseClientProvider } from "@/firebase/client-provider";
 import { Toaster } from "@/components/ui/toaster";
 import Script from "next/script";
 import { ConditionalFooter } from "@/components/conditional-footer";
-
+import PostHogProvider from '@/components/PostHogProvider'
 const ptSans = PT_Sans({ subsets: ["latin"], weight: ["400", "700"] });
 
 export const metadata: Metadata = {
@@ -21,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body className={`${ptSans.className} h-full flex flex-col`}>
+        <PostHogProvider />
         {/* Google Tag (gtag.js) */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-17873532827"
