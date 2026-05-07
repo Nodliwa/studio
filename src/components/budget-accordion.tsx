@@ -445,7 +445,7 @@ export function BudgetAccordion({
 
   const controlledProps = isTopLevel && openCategories !== undefined && onOpenChange
     ? { value: openCategories, onValueChange: onOpenChange }
-    : {};
+    : { defaultValue: categories.length > 0 ? [categories[0].id] : [] };
 
   return (
     <Accordion type="multiple" {...controlledProps} className="w-full space-y-4">

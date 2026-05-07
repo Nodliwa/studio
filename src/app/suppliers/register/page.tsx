@@ -15,8 +15,8 @@ import {
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import type { User } from "firebase/auth";
 import { useFirebase, useUser } from "@/firebase";
-import { Autocomplete, useLoadScript } from "@react-google-maps/api";
-import { PlacesAutocompleteProvider } from "@/components/places-autocomplete-provider";
+import { Autocomplete } from "@react-google-maps/api";
+import { PlacesAutocompleteProvider, useMapsLoaded } from "@/components/places-autocomplete-provider";
 import { PhoneOtpForm } from "@/components/suppliers/phone-otp-form";
 import { ServiceSelector } from "@/components/suppliers/service-selector";
 import { Button } from "@/components/ui/button";
@@ -27,8 +27,6 @@ import { CheckCircle, Loader2, ImageOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import type { ServiceOffering } from "@/lib/supplier-types";
-
-const MAPS_LIBS: "places"[] = ["places"];
 
 const schema = z.object({
   tradingAs: z.string().min(2, "Trading name is required"),
@@ -97,10 +95,7 @@ function RegisterFormInner() {
   const autocompleteRef = useRef<any>(null);
   const justRegistered = useRef(false);
 
-  const { isLoaded: mapsLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    libraries: MAPS_LIBS,
-  });
+  const mapsLoaded = useMapsLoaded();
 
   const {
     register,

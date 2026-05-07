@@ -21,6 +21,8 @@ env:
     secret: GOOGLE_GENAI_API_KEY
   - variable: OPENAI_API_KEY
     secret: OPENAI_API_KEY
+  - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    value: AIzaSyCnjKO3lhhjTBXE634WqSKErfulkE94LIM
   - variable: NEXT_PUBLIC_POSTHOG_KEY
     value: phc_qpZTa5ZbrFjtB7G3qFHTudebqjbsNYdASMWbjyHFW39N
   - variable: NEXT_PUBLIC_POSTHOG_HOST

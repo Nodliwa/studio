@@ -12,16 +12,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { DocumentReference, collection, getDocs, doc, writeBatch, serverTimestamp } from "firebase/firestore";
 import { planActivityFields } from "@/lib/plan-activity";
-import usePlacesAutocomplete from "use-places-autocomplete";
-import {
-  Popover,
-  PopoverContent,
-  PopoverAnchor,
-} from "@/components/ui/popover";
+import { Autocomplete } from "@react-google-maps/api";
+import { useMapsLoaded } from "@/components/places-autocomplete-provider";
 import { useRouter } from "next/navigation";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Progress } from "@/components/ui/progress";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -46,7 +42,7 @@ interface EventDetailsProps {
 
 const formSchema = z.object({
   name: z.string().min(1, "Plan name is required"),
-  eventLocation: z.string().optional(),
+  eventLocation: z.string().min(1, "Venue is required"),
   eventDate: z.string().optional(),
   expectedGuests: z.coerce.number().int().min(0).optional(),
   birthdayAge: z.coerce.number().int().min(1).max(120).optional(),
@@ -87,25 +83,9 @@ export function EventDetails({
 
   const effectiveEventType = eventType || budget?.eventType || "";
 
-  const {
-    init,
-    ready,
-    suggestions: { status, data: autocompleteData },
-    setValue: setAutocompleteValue,
-    clearSuggestions,
-  } = usePlacesAutocomplete({
-    debounce: 300,
-    initOnMount: false,
-  });
+  const mapsLoaded = useMapsLoaded();
 
-  useEffect(() => {
-    if (isEditing) {
-      init();
-      setAutocompleteValue('', false);
-    } else {
-      clearSuggestions();
-    }
-  }, [isEditing]);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   const {
     control,
@@ -186,7 +166,6 @@ export function EventDetails({
 
     setDocumentNonBlocking(budgetRef, { ...dataToSave, ...planActivityFields(budget?.is_customized) }, { merge: true });
     setIsEditing(false);
-    clearSuggestions();
   };
 
   const handleReplaceTemplate = async () => {
@@ -225,9 +204,13 @@ export function EventDetails({
     }
   };
 
-  const handleLocationSelect = (description: string) => {
-    setFormValue("eventLocation", description, { shouldDirty: true });
-    clearSuggestions();
+  const handlePlaceChanged = () => {
+    const place = autocompleteRef.current?.getPlace();
+    if (place?.formatted_address) {
+      setFormValue("eventLocation", place.formatted_address, { shouldDirty: true });
+    } else if (place?.name) {
+      setFormValue("eventLocation", place.name, { shouldDirty: true });
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -314,7 +297,6 @@ export function EventDetails({
                           });
                         }
                         setIsEditing(false);
-                        clearSuggestions();
                       }}
                     >
                       Cancel
@@ -366,60 +348,67 @@ export function EventDetails({
 
               <div className="flex items-center gap-2">
                 <Label htmlFor="eventLocation" className="text-xs shrink-0 font-bold">Venue</Label>
-                <Controller
-                  name="eventLocation"
-                  control={control}
-                  render={({ field }) => (
-                    <Popover
-                      open={ready && status === "OK" && autocompleteData.length > 0}
-                    >
-                      <PopoverAnchor className="flex-1">
-                        <Input
-                          id="eventLocation"
-                          className="h-7 text-xs w-full"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            setAutocompleteValue(e.target.value);
-                          }}
-                          disabled={!isEditing}
-                          placeholder={ready ? "Start typing your address..." : "Loading location..."}
-                          autoComplete="off"
-                        />
-                      </PopoverAnchor>
-                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                        {status === "OK" && (
-                          <div className="flex flex-col gap-2 p-2">
-                            {autocompleteData.map((suggestion) => {
-                              const {
-                                place_id,
-                                structured_formatting: { main_text, secondary_text },
-                                description,
-                              } = suggestion;
-                              return (
-                                <Button
-                                  key={place_id}
-                                  type="button"
-                                  variant="ghost"
-                                  className="justify-start h-auto text-left"
-                                  onClick={() => handleLocationSelect(description)}
-                                >
-                                  <div>
-                                    <strong>{main_text}</strong>
-                                    <br />
-                                    <small className="text-muted-foreground">
-                                      {secondary_text}
-                                    </small>
-                                  </div>
-                                </Button>
-                              );
-                            })}
-                          </div>
+                {!isEditing && budget?.eventLocation ? (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(budget.eventLocation)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 flex-1 min-w-0 text-xs text-primary hover:underline truncate"
+                  >
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{budget.eventLocation}</span>
+                  </a>
+                ) : (
+                  <Controller
+                    name="eventLocation"
+                    control={control}
+                    render={({ field }) => (
+                      <div className="flex items-center gap-1 flex-1 min-w-0">
+                        {mapsLoaded ? (
+                          <Autocomplete
+                            onLoad={(a) => { autocompleteRef.current = a; }}
+                            onPlaceChanged={handlePlaceChanged}
+                          >
+                            <Input
+                              id="eventLocation"
+                              className="h-7 text-xs w-full"
+                              name={field.name}
+                              value={field.value}
+                              onChange={(e) => field.onChange(e.target.value)}
+                              onBlur={field.onBlur}
+                              disabled={!isEditing}
+                              placeholder="Start typing your address..."
+                              autoComplete="off"
+                            />
+                          </Autocomplete>
+                        ) : (
+                          <Input
+                            id="eventLocation"
+                            className="h-7 text-xs flex-1"
+                            name={field.name}
+                            value={field.value}
+                            onChange={(e) => field.onChange(e.target.value)}
+                            onBlur={field.onBlur}
+                            disabled={!isEditing}
+                            placeholder="Loading location..."
+                            autoComplete="off"
+                          />
                         )}
-                      </PopoverContent>
-                    </Popover>
-                  )}
-                />
+                        {isEditing && field.value && (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(field.value)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 text-muted-foreground hover:text-primary"
+                            title="Open in Google Maps"
+                          >
+                            <MapPin className="h-4 w-4" />
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  />
+                )}
               </div>
 
               <div className="flex items-center gap-2">

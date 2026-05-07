@@ -471,10 +471,10 @@ export default function PlannerPage({
 
   // Auto-expand first category on initial load (fires once)
   useEffect(() => {
-    if (autoExpandFiredRef.current || budgetData.length === 0 || isTemplateMode) return;
+    if (autoExpandFiredRef.current || budgetData.length === 0) return;
     autoExpandFiredRef.current = true;
     setOpenCategories([budgetData[0].id]);
-  }, [budgetData, isTemplateMode]);
+  }, [budgetData]);
 
   // Dismiss hint when any category is first expanded
   useEffect(() => {

@@ -8,8 +8,8 @@ import { z } from "zod";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { useFirebase, useUser } from "@/firebase";
 import { useSupplierProfile } from "@/firebase/supplier-hooks";
-import { Autocomplete, useLoadScript } from "@react-google-maps/api";
-import { PlacesAutocompleteProvider } from "@/components/places-autocomplete-provider";
+import { Autocomplete } from "@react-google-maps/api";
+import { PlacesAutocompleteProvider, useMapsLoaded } from "@/components/places-autocomplete-provider";
 import { ServiceSelector } from "@/components/suppliers/service-selector";
 import { PhoneUpdateForm } from "@/components/suppliers/phone-update-form";
 import { Button } from "@/components/ui/button";
@@ -19,8 +19,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, ImageOff, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { ServiceOffering } from "@/lib/supplier-types";
-
-const MAPS_LIBS: "places"[] = ["places"];
 
 const schema = z.object({
   tradingAs: z.string().min(2, "Trading name is required"),
@@ -78,10 +76,7 @@ function ProfilePageInner() {
   const [initialized, setInitialized] = useState(false);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
-  const { isLoaded: mapsLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    libraries: MAPS_LIBS,
-  });
+  const mapsLoaded = useMapsLoaded();
 
   const {
     register,
