@@ -13,10 +13,6 @@ export default function PostHogProvider() {
       }
     );
 
-    console.log('PostHog initialized');
-
-    posthog.capture('test_event');
-
     // expose globally for debugging
     (window as any).posthog = posthog;
   }, []);
