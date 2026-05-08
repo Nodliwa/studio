@@ -244,10 +244,7 @@ function AuthPageInner() {
     setIsGoogleLoading(true);
     setError("");
     try {
-      const result = await initiateGoogleSignIn(auth);
-      if (result) {
-        await saveUserToFirestore(result.user, result.user.displayName || "");
-      }
+      await initiateGoogleSignIn(auth);
     } catch (e: any) {
       setError("Could not complete Google sign-in. Please try again.");
     } finally {

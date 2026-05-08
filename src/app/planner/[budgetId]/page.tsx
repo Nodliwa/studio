@@ -319,19 +319,26 @@ export default function PlannerPage({
 
   const { data: budget, isLoading: budgetLoading } = useDoc<Budget>(budgetDocRef);
 
+  // Resolved once budget.userId arrives; falls back to user.uid so sub-collections
+  // can start immediately without waiting for the budget doc.
+  const planOwnerId = useMemo(
+    () => budget?.userId || user?.uid || null,
+    [budget?.userId, user?.uid]
+  );
+
   const categoriesCollection = useMemoFirebase(
     () =>
-      user && budgetId && !isTemplateMode
-        ? collection(firestore, "users", budget?.userId || user.uid, "budgets", budgetId, "categories")
+      user && budgetId && !isTemplateMode && planOwnerId
+        ? collection(firestore, "users", planOwnerId, "budgets", budgetId, "categories")
         : null,
-    [user, firestore, budgetId, isTemplateMode, budget?.userId]
+    [user, firestore, budgetId, isTemplateMode, planOwnerId]
   );
 
   const { data: fetchedCategories, isLoading: categoriesLoading } = useCollection<BudgetCategory>(categoriesCollection);
 
   const mustDosCollection = useMemoFirebase(
-    () => (!isTemplateMode && budget?.userId && budgetId ? collection(firestore, "users", budget.userId, "budgets", budgetId, "mustDos") : null),
-    [isTemplateMode, budget?.userId, budgetId, firestore]
+    () => (!isTemplateMode && planOwnerId && budgetId ? collection(firestore, "users", planOwnerId, "budgets", budgetId, "mustDos") : null),
+    [isTemplateMode, planOwnerId, budgetId, firestore]
   );
 
   const mustDosQuery = useMemoFirebase(
@@ -342,8 +349,8 @@ export default function PlannerPage({
   const { data: mustDos } = useCollection<MustDo>(mustDosQuery);
 
   const rsvpsCollection = useMemoFirebase(
-    () => (!isTemplateMode && budget?.userId && budgetId ? collection(firestore, "users", budget.userId, "budgets", budgetId, "rsvps") : null),
-    [isTemplateMode, budget?.userId, budgetId, firestore]
+    () => (!isTemplateMode && planOwnerId && budgetId ? collection(firestore, "users", planOwnerId, "budgets", budgetId, "rsvps") : null),
+    [isTemplateMode, planOwnerId, budgetId, firestore]
   );
 
   const rsvpsQuery = useMemoFirebase(

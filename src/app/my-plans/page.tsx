@@ -16,7 +16,8 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import type { ElementType } from "react";
 import type { Budget, BudgetCategory, BirthdayMeta, MustDo } from "@/lib/types";
 import { getAgeGroup, isMilestoneBirthday, cn } from "@/lib/utils";
@@ -50,7 +51,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   ListChecks,
@@ -84,16 +84,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { budgetTemplates } from "@/lib/templates";
 import { collectionGroup, query as firestoreQuery, where as firestoreWhere, getDocs as firestoreGetDocs } from "firebase/firestore";
-import { Autocomplete } from "@react-google-maps/api";
-import { useMapsLoaded } from "@/components/places-autocomplete-provider";
+
+const CreatePlanDialog = dynamic(() => import("@/components/create-plan-dialog"), { ssr: false });
 
 const eventTypeImages: { [key: string]: string } = {
   wedding: "/images/wedding.jpg",
@@ -282,27 +276,6 @@ function SparklineSVG({ color }: { color: string }) {
     </svg>
   );
 }
-
-// ── Form schema ───────────────────────────────────────────────────────────────
-
-const planSchema = z.object({
-  name: z.string().min(1, "Celebration name is required"),
-  eventType: z.string().min(1, "Event type is required"),
-  eventDate: z.string().min(1, "Event date is required"),
-  eventLocation: z.string().min(1, "Event location is required"),
-  expectedGuests: z.coerce.number().int().min(1, "At least 1 guest expected"),
-  birthdayAge: z.coerce.number().int().min(1).max(120).optional(),
-}).superRefine((data, ctx) => {
-  if (data.eventType === 'birthday' && !data.birthdayAge) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Age being celebrated is required",
-      path: ['birthdayAge'],
-    });
-  }
-});
-
-type PlanFormValues = z.infer<typeof planSchema>;
 
 function calculateInitialTotal(categories: BudgetCategory[]): number {
   let total = 0;
@@ -629,6 +602,7 @@ export default function MyPlansPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [initialEventType, setInitialEventType] = useState("");
   const [isQuickStartLoading, setIsQuickStartLoading] = useState(false);
   const [sharedPlans, setSharedPlans] = useState<Budget[]>([]);
   const [sharedPlansLoading, setSharedPlansLoading] = useState(false);
@@ -641,29 +615,6 @@ export default function MyPlansPage() {
 
   const { data: budgets, isLoading: budgetsLoading } = useCollection<Budget>(budgetsCollection);
 
-  const mapsLoaded = useMapsLoaded();
-  const locationAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-
-  const { control, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<PlanFormValues>({
-    resolver: zodResolver(planSchema) as any,
-    defaultValues: {
-      name: "",
-      eventType: "",
-      eventDate: "",
-      eventLocation: "",
-      expectedGuests: 50,
-      birthdayAge: undefined,
-    }
-  });
-
-  const watchedEventType = watch('eventType');
-
-  useEffect(() => {
-    if (watchedEventType !== 'birthday') {
-      setValue('birthdayAge', undefined);
-    }
-  }, [watchedEventType, setValue]);
-
   useEffect(() => {
     if (!isUserLoading && (!user || user.isAnonymous)) {
       router.push("/auth");
@@ -675,25 +626,32 @@ export default function MyPlansPage() {
     const fetchSharedPlans = async () => {
       setSharedPlansLoading(true);
       try {
+        const contacts = [user.email, user.phoneNumber].filter(Boolean) as string[];
+        const snaps = await Promise.all(
+          contacts.map(contact =>
+            firestoreGetDocs(
+              firestoreQuery(
+                collectionGroup(firestore, "budgets"),
+                firestoreWhere("collaboratorEmails", "array-contains", contact)
+              )
+            ).catch(e => {
+              console.error("Query error for contact:", contact, e);
+              return null;
+            })
+          )
+        );
+        const seen = new Set<string>();
         const results: Budget[] = [];
-        const contacts = [user.email, user.phoneNumber].filter(Boolean);
-        for (const contact of contacts) {
-          try {
-            const q = firestoreQuery(
-              collectionGroup(firestore, "budgets"),
-              firestoreWhere("collaboratorEmails", "array-contains", contact)
-            );
-            const snap = await firestoreGetDocs(q);
-            snap.docs.forEach(d => {
-              const plan = { id: d.id, ...d.data() } as Budget;
-              if (!results.find(r => r.id === plan.id) && plan.userId !== user.uid) {
-                results.push(plan);
-              }
-            });
-          } catch (e) {
-            console.error("Query error for contact:", contact, e);
-          }
-        }
+        snaps.forEach(snap => {
+          if (!snap) return;
+          snap.docs.forEach(d => {
+            const plan = { id: d.id, ...d.data() } as Budget;
+            if (!seen.has(plan.id) && plan.userId !== user.uid) {
+              seen.add(plan.id);
+              results.push(plan);
+            }
+          });
+        });
         setSharedPlans(results);
       } catch (e) {
         console.error("Error fetching shared plans:", e);
@@ -705,35 +663,26 @@ export default function MyPlansPage() {
   }, [user, firestore]);
 
   // ── Load all incomplete must-dos across the user's plans ─────────────────────
-  const budgetIdsCacheKey = useMemo(
-    () => budgets?.map(b => b.id).sort().join(",") ?? "",
-    [budgets],
-  );
   useEffect(() => {
-    if (!user || user.isAnonymous || !firestore || !budgets || budgets.length === 0) {
+    if (!user || user.isAnonymous || !firestore) {
       setAllMustDos([]);
       return;
     }
     (async () => {
       try {
-        const snaps = await Promise.all(
-          budgets.map(b =>
-            getDocs(
-              firestoreQuery(
-                collection(firestore, "users", user.uid, "budgets", b.id, "mustDos"),
-                firestoreWhere("status", "==", "todo"),
-              )
-            )
+        const snap = await firestoreGetDocs(
+          firestoreQuery(
+            collectionGroup(firestore, "mustDos"),
+            firestoreWhere("userId", "==", user.uid),
+            firestoreWhere("status", "==", "todo"),
           )
         );
-        const items: MustDo[] = [];
-        snaps.forEach(snap => snap.docs.forEach(d => items.push({ id: d.id, ...d.data() } as MustDo)));
-        setAllMustDos(items);
+        setAllMustDos(snap.docs.map(d => ({ id: d.id, ...d.data() } as MustDo)));
       } catch (e) {
         console.error("Error fetching must-dos:", e);
       }
     })();
-  }, [user, firestore, budgetIdsCacheKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, firestore]);
 
   const handleDeletePlan = async (budgetId: string) => {
     if (!user || !firestore) return;
@@ -759,6 +708,7 @@ export default function MyPlansPage() {
     setIsQuickStartLoading(true);
     const newId = uuidv4();
     const budgetRef = doc(firestore, "users", user.uid, "budgets", newId);
+    const { budgetTemplates } = await import("@/lib/templates");
     const template = budgetTemplates.birthday_adult;
     const initialTotal = calculateInitialTotal(template);
     const newBudget: Budget = {
@@ -798,70 +748,9 @@ export default function MyPlansPage() {
     }
   };
 
-  const handleCreateNewPlan = async (data: PlanFormValues) => {
-    if (!user || !firestore) return;
-
-    const newId = uuidv4();
-    const budgetRef = doc(firestore, "users", user.uid, "budgets", newId);
-
-    let templateKey = data.eventType as keyof typeof budgetTemplates;
-    let birthdayMeta: BirthdayMeta | undefined;
-
-    if (data.eventType === 'birthday' && data.birthdayAge) {
-      const ageGroup = getAgeGroup(data.birthdayAge);
-      templateKey = `birthday_${ageGroup}` as keyof typeof budgetTemplates;
-      birthdayMeta = {
-        birthdayAge: data.birthdayAge,
-        ageGroup,
-        isMilestone: isMilestoneBirthday(data.birthdayAge),
-      };
-    }
-
-    const template = budgetTemplates[templateKey] || budgetTemplates.other;
-    const initialTotal = calculateInitialTotal(template);
-
-    const newBudget: Budget = {
-      id: newId,
-      name: data.name,
-      grandTotal: initialTotal,
-      userId: user.uid,
-      eventType: data.eventType,
-      eventDate: new Date(data.eventDate).toISOString(),
-      eventLocation: data.eventLocation,
-      expectedGuests: data.expectedGuests,
-      ...(birthdayMeta && { birthdayMeta }),
-      createdAt: serverTimestamp(),
-      last_activity_at: serverTimestamp(),
-      is_customized: false,
-      customized_at: null,
-      itemCount: countTemplateItems(template),
-      addedItemCount: 0,
-      removedItemCount: 0,
-    };
-
-    try {
-      const batch = writeBatch(firestore);
-      batch.set(budgetRef, newBudget);
-
-      template.forEach((category, index) => {
-        const catRef = doc(collection(budgetRef, "categories"));
-        batch.set(catRef, { ...markTemplateItems(category), id: catRef.id, order: index, budgetId: newId });
-      });
-
-      await batch.commit();
-      toast({ title: "Plan created successfully!" });
-      setIsDialogOpen(false);
-      reset();
-      router.push(`/planner/${newId}`);
-    } catch (error) {
-      console.error("Creation failed:", error);
-      toast({ variant: "destructive", title: "Failed to create plan" });
-    }
-  };
-
   // Opens the dialog with an event type pre-selected
   const handleOpenDialogWithType = (type: string) => {
-    setValue("eventType", type);
+    setInitialEventType(type);
     setIsDialogOpen(true);
   };
 
@@ -905,138 +794,17 @@ export default function MyPlansPage() {
         <PageHeader />
         <main className="container mx-auto px-4 flex-grow flex flex-col mb-16">
 
-          {/* ── Dialog — always mounted so empty-state CTAs can open it ── */}
-          <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { reset(); } }}>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Start a New Celebration</DialogTitle>
-                <DialogDescription>Every great event starts with a solid plan. Tell us what you&apos;re celebrating.</DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit(handleCreateNewPlan as any)} className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Plan Name (e.g., Mom&apos;s 60th)</Label>
-                  <Controller
-                    name="name"
-                    control={control}
-                    render={({ field }) => <Input id="name" {...field} placeholder="Life you are celebrating..." />}
-                  />
-                  {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="eventType">Celebration Type</Label>
-                  <Controller
-                    name="eventType"
-                    control={control}
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="wedding">Wedding</SelectItem>
-                          <SelectItem value="funeral">Funeral</SelectItem>
-                          <SelectItem value="umemulo">uMemulo</SelectItem>
-                          <SelectItem value="umgidi">uMgidi</SelectItem>
-                          <SelectItem value="birthday">Birthday</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.eventType && <p className="text-xs text-destructive">{errors.eventType.message}</p>}
-                </div>
-
-                {watchedEventType === 'birthday' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="birthdayAge">Age being celebrated</Label>
-                    <Controller
-                      name="birthdayAge"
-                      control={control}
-                      render={({ field }) => (
-                        <Input
-                          id="birthdayAge"
-                          type="number"
-                          min={1}
-                          max={120}
-                          placeholder="e.g. 30"
-                          {...field}
-                          value={field.value ?? ''}
-                        />
-                      )}
-                    />
-                    {errors.birthdayAge && <p className="text-xs text-destructive">{errors.birthdayAge.message}</p>}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="eventDate">Date</Label>
-                    <Controller
-                      name="eventDate"
-                      control={control}
-                      render={({ field }) => <Input id="eventDate" type="date" {...field} />}
-                    />
-                    {errors.eventDate && <p className="text-xs text-destructive">{errors.eventDate.message}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expectedGuests">Guests</Label>
-                    <Controller
-                      name="expectedGuests"
-                      control={control}
-                      render={({ field }) => <Input id="expectedGuests" type="number" {...field} />}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="eventLocation">Location</Label>
-                  <Controller
-                    name="eventLocation"
-                    control={control}
-                    render={({ field }) => (
-                      mapsLoaded ? (
-                        <Autocomplete
-                          onLoad={(a) => { locationAutocompleteRef.current = a; }}
-                          onPlaceChanged={() => {
-                            const place = locationAutocompleteRef.current?.getPlace();
-                            if (place?.formatted_address) field.onChange(place.formatted_address);
-                            else if (place?.name) field.onChange(place.name);
-                          }}
-                        >
-                          <Input
-                            id="eventLocation"
-                            name={field.name}
-                            value={field.value}
-                            onChange={(e) => field.onChange(e.target.value)}
-                            onBlur={field.onBlur}
-                            placeholder="Start typing your address..."
-                            autoComplete="off"
-                          />
-                        </Autocomplete>
-                      ) : (
-                        <Input
-                          id="eventLocation"
-                          name={field.name}
-                          value={field.value}
-                          onChange={(e) => field.onChange(e.target.value)}
-                          onBlur={field.onBlur}
-                          placeholder="Loading location..."
-                          autoComplete="off"
-                        />
-                      )
-                    )}
-                  />
-                  {errors.eventLocation && <p className="text-xs text-destructive">{errors.eventLocation.message}</p>}
-                </div>
-
-                <DialogFooter className="pt-4">
-                  <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>
-                    {isSubmitting ? "Creating Plan..." : "Create and Start Planning"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          {/* ── Create Plan Dialog — only mounts when open ── */}
+          {isDialogOpen && (
+            <CreatePlanDialog
+              open={isDialogOpen}
+              onOpenChange={(open) => {
+                setIsDialogOpen(open);
+                if (!open) setInitialEventType("");
+              }}
+              initialEventType={initialEventType}
+            />
+          )}
 
           {/* ── Content area ── */}
           {budgetsLoading ? (
