@@ -15,12 +15,6 @@ import type { SupplierNotification } from "@/lib/supplier-types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 
-const RandIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="10"/>
-    <text x="12" y="16" textAnchor="middle" fontSize="11" fontWeight="bold" fill="currentColor" stroke="none">R</text>
-  </svg>
-);
 
 export default function PageHeader() {
   const pathname = usePathname();
@@ -185,10 +179,6 @@ export default function PageHeader() {
         <LayoutGrid className="h-5 w-5" />
         <span className="text-[10px] font-medium">My Plans</span>
       </Link>
-      <Link href="/pricing" className={cn("flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors", pathname === "/pricing" ? "text-muted-foreground" : "text-primary")}>
-        <RandIcon />
-        <span className="text-[10px] font-medium">Pricing</span>
-      </Link>
       <Link href="/suppliers" className="flex flex-col items-center justify-center px-3 py-1 rounded-lg text-muted-foreground/50 hover:text-muted-foreground transition-colors">
         <span className="text-[10px] font-medium">Suppliers</span>
       </Link>
@@ -205,7 +195,6 @@ export default function PageHeader() {
           <nav className="hidden md:flex items-center justify-center gap-6 text-lg">
             <Link href="/" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>Home</Link>
             <Link href="/my-plans" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/my-plans" ? "text-foreground" : "text-foreground/60")}>MyPlans</Link>
-            <Link href="/pricing" className={cn("font-bold transition-colors hover:text-foreground/80", pathname === "/pricing" ? "text-foreground" : "text-foreground/60")}>Pricing</Link>
             <Link href="/suppliers" className="text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors font-normal">Suppliers</Link>
           </nav>
           {!isUserLoading && user && !user.isAnonymous ? (
